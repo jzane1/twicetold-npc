@@ -93,6 +93,7 @@ its surrounding spaces both become hyphens, so `Name — 2026-07-28` anchors as 
 - [Phase D1 — latency, believability, and the model-slate lock — 2026-08-19](#phase-d1--latency-believability-and-the-model-slate-lock--2026-08-19)
 - [Phase E1 rulings + build record — the authoring guide and demo corpus landed — 2026-08-19](#phase-e1-rulings--build-record--the-authoring-guide-and-demo-corpus-landed--2026-08-19)
 - [Phase E2 rulings + build record — choreography, the code gaps, and the Ledger live feed — 2026-08-19](#phase-e2-rulings--build-record--choreography-the-code-gaps-and-the-ledger-live-feed--2026-08-19)
+- [E2 rehearsal executed — blockers cleared, the recording state pinned — 2026-08-22](#e2-rehearsal-executed--blockers-cleared-the-recording-state-pinned--2026-08-22)
 
 ## Primary decisions
 
@@ -4191,3 +4192,42 @@ is the promotion path if the never-hardcoded invariant is ever read strictly aga
 surface); the loader cannot probe "does a pinned take exist" without new SQL (the hygiene
 test), so `--fresh` being required-to-act IS the guard — a pinned take can only be destroyed
 deliberately.
+
+## E2 rehearsal executed — blockers cleared, the recording state pinned — 2026-08-22
+
+**Context.** Jack cleared both rehearsal blockers (the `.env` batch-role sync; the Unity MCP
+bridge connected). This session verified them and ran the beat-script rehearsal end to end.
+No new Jack rulings — this entry records the verification and one choreography finding made
+inside the delegated beat-script authorship (the 2026-08-19 E2 entry's "Rehearsal state"
+paragraph is superseded by this one; append-only, so it stands as written).
+
+**Blockers, verified deeply.** `LONGMEM_MODEL_REFLECTION` / `LONGMEM_MODEL_COMPILER` present,
+`load_settings` clean in real mode, both at `claude-opus-4-8` (the locked slate), then proven
+on live calls: a real reflect wrote 3 reflections, and the compiler worker auto-ran once
+reflections existed — `completed`, 3 pairs, 0 failed, 1246/175 tokens, 3 bundles. The
+interactive Unity play-mode gate ran GREEN through the live bridge (8 checks; the fake-mode
+serve on a scratch, autoProvision/autoRun flipped in memory and restored, the committed scene
+untouched by the gate).
+
+**The rehearsal (two real-provider provisions).** Dry-run first: all three beats + the owed
+2026-07-22 beat-1 guard (ref 0's served relevance moved up across the correction; the
+post-fix money answer carried the five-shillings debt verbatim-in-substance). Its beat-2
+take ECHOED (the E1 bimodal case, working as documented) — discarded by re-provision, the
+ruled loop. Final provision, pinned and live in `longmem_demo`: agent
+`3f7355f1-fd90-4fce-8d8d-c7e652e33af9`; June layer rolled at the scene-1 prewarm + k=9 asks
+(wrong-belief answers on the nose); beat-2 take a real edit — gist_precision **1.00** (3/3),
+detail_recall 0.58, 0 fabricated entities, constancy byte-identical on the re-ask; the
+correction and beat 3 VIRGIN for camera; no failed worker runs; the Ledger verified
+camera-ready on this exact state. The scene's inspector carries the pasted ids (committed).
+
+**The choreography finding (folded into `demo-beat-script.md`): beat-1 asks run at k=9.**
+At the June-25 basis under the real corpus config, 23 days of episodic decay (tau 10 d)
+buried the June-2 Halvard memory below k=3 — the E1 correction probe had certified k=3 only
+under the NEUTRALIZED eval config. k = corpus size is roll-proof; beat 2 keeps its certified
+k=3. Corollaries, also folded in: scene 1 carries its own prewarm probe (the June basis
+already serves reconstructed for June-2 memories); the post-correction ask visibly re-forms
+the telling (the correction's sanctioned cache eviction) and is kept as an on-camera beat,
+with re-firing the same correction as the retake lever.
+
+**Standing instruction until E3 records: do not run the demo loader again** — `--fresh` is
+the only destructive path and it would destroy the pinned take.

@@ -2039,6 +2039,35 @@ session.
     editor session, ordering encoded in the beat script (gate BEFORE pasting the agent id).
   - **Abandoned:** nothing. **Next: the real rehearsal (beat-script checklist), then E3.**
 
+## **E2 rehearsal — executed 2026-08-22 (blockers cleared; the recording state pinned in `longmem_demo`).**
+
+- **Session (2026-08-22).** Jack cleared both blockers (`.env` batch roles + Unity MCP);
+  this session verified them and ran the rehearsal end to end.
+  - **Blockers verified, deeply:** `load_settings` clean in real mode, both batch roles at
+    `claude-opus-4-8`, then PROVEN on live calls — a real reflect wrote 3 reflections and
+    the compiler worker auto-ran (`completed`, 3 pairs, 1246/175 tokens, 3 bundles, 0
+    failed); the interactive Unity play-mode gate ran GREEN through the live bridge
+    (8 checks; autoProvision/autoRun flipped in-memory and restored, scene file untouched
+    by the gate).
+  - **Rehearsed (two provisions, real providers):** a full dry-run (beats 1–3 + the owed
+    beat-1 relevance-move guard — PASSED; the beat-2 take echoed on that roll, the E1
+    bimodal case working as documented), then the final provision: June layer + beat-2 take
+    pinned (real edit, gist_precision 1.00, detail_recall 0.58, 0 fabrications, constancy
+    byte-identical), correction + beat 3 VIRGIN for camera. The Ledger verified camera-ready
+    on the pinned state (identity pane, drift visible per row, turn feed live). The scene's
+    inspector carries the pasted agent + correction ids (committed).
+  - **Found (folded into the beat script):** beat-1 asks need **k=9** — at the June-25
+    basis real decay buries the June-2 Halvard memory below k=3 (the E1 correction probe
+    had certified k=3 only under the NEUTRALIZED eval config; "validate in the beat's own
+    condition" now proven against beat 1 too). Also: the June basis serves reconstructed
+    (a June-2 memory is past theta by June 25), so scene 1 carries its own prewarm probe;
+    the post-correction ask visibly re-forms the telling (cache eviction) — kept as a beat;
+    re-firing the same correction is the retake lever.
+  - **Blocked / Abandoned:** nothing. Session tooling (serve launchers, the rehearse.py
+    beat driver) lives in the session scratchpad, not the repo (the D1 precedent).
+  - **Spend note:** two real loader provisions + ~14 turns + 1 reflect + 1 compile —
+    roughly a dollar. **Next: E3 (record + edit) on the pinned state.**
+
 ---
 
 ## Archived phase headers

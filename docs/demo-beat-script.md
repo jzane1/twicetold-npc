@@ -25,8 +25,16 @@ validated in E1 — `identity-authoring.md` §8). On-screen text obeys the em-da
 - Unity: `SampleScene` — the adapter is committed attach-mode (`autoProvision` off);
   paste the loader's printed agent id into `agentIdOverride` before Play. The driver's
   inspector carries the beat controls: `correctionMemoryId` (paste ref 0's memory id),
-  `correctionText` (below), `prewarmContext` (the drovers question), `sayK = 3`
-  (the certified beat condition is the utterance's, not the agent's), `jumpDays = 60`.
+  `correctionText` (below), `prewarmContext` (the drovers question), `sayK` (see the k
+  rule below), `jumpDays = 60`.
+- **The k rule (a 2026-08-22 rehearsal finding): beat-1 asks run at k=9, beat-2 at k=3.**
+  At the June-25 basis under the real corpus config, 23 days of episodic decay (tau 10 d)
+  buried the June-2 Halvard memory below k=3 — the E1 correction probe had only certified
+  k=3 under the neutralized eval config, not the live condition. k = corpus size makes
+  beat-1 membership roll-proof. Choreography: `sayK = 9` through scene 1, flip the
+  inspector field to `3` at the scene-2 cut (beat 2 keeps its certified condition).
+  Scene 1's boundary also carries a prewarm probe (the beat-1 question), so the June-basis
+  retells roll during the cut, not inside the first on-camera ask.
 - OBS frame (0–8 s): left "what the character says", right "what they actually remember,
   and how". The Ledger's identity pane shows Branwen's seed identity on camera (E1 ruling).
 
@@ -45,12 +53,14 @@ The corpus's June runs 2026-06-02 → 2026-06-24T21:00Z (nine observes). The dem
 The wrong belief is authored: ref 0 has Halvard settling his account **in full** (eleven
 shillings, a round for the room). The designer knows he only paid six.
 
-1. Set as_of to 2026-06-25T19:00Z ("+N days" is not needed; set before Play or via the
-   session default — rehearsal pins the exact mechanism), **Scene boundary** (freezes the
-   June basis).
-2. Say (k=3): **"Did Halvard settle his account before he rode north?"** → Branwen answers
-   from the wrong belief. Ledger turn panel: ref 0 served, `read_mode` verbatim, its score
-   on screen.
+1. Set as_of to 2026-06-25T19:00Z (SetAsOf before the boundary), **Scene boundary** with
+   `prewarmContext` = the beat-1 question (freezes the June basis; the June retells are
+   already pinned from rehearsal, so the prewarm reports cache hits).
+2. Say (k=9): **"Did Halvard settle his account before he rode north?"** → Branwen answers
+   from the wrong belief (rehearsed answer: "Aye, he did — counted out every farthing...
+   eleven shillings"). Ledger turn panel: ref 0 served with its score on screen
+   (`read_mode` reconstructed — the June basis is already past theta for a June-2 memory;
+   the retelling faithfully carries the wrong belief, which is the point).
 3. **Correct** (the driver button; `correctionMemoryId` = ref 0's id) with the probe-certified
    override text:
    > Halvard paid only six of the eleven shillings before riding north; the other five stand
@@ -58,11 +68,17 @@ shillings, a round for the room). The designer knows he only paid six.
 4. Ledger chain view on ref 0 (a scene cut can deep-link `&memory=<id>`): the original
    telling **greyed but present**, the `authorial_correction` head live — superseded, never
    deleted.
-5. Say (k=3): **"How much does Halvard still owe the house?"** → the corrected answer.
-   Retrieval follows the fix (the fact chain moved with the correction).
+5. Say (k=9): **"How much does Halvard still owe the house?"** → the corrected answer
+   (rehearsed shape: "Five shillings, and I've marked it plain in my ledger against his
+   name"). Retrieval follows the fix (the fact chain moved with the correction), and the
+   correction evicted the memory's reconstruction cache (a sanctioned cause), so this ask
+   visibly re-forms the telling around the fix — a beat, not a bug. Retake lever: if that
+   re-formed retell rolls badly, re-fire the same Correct (a fresh head + a fresh eviction
+   re-rolls the retell without touching the drovers take).
 
-Guard (owed since the 2026-07-22 script): rehearse the exact correction on the demo DB and
-confirm the served score/rank of ref 0 moves across the fix on the money question.
+Guard: SATISFIED at the 2026-08-22 rehearsal — on the dry-run provision the served
+relevance of ref 0 moved up across the fix, and the post-correction money answer carried
+the five-shillings debt.
 
 ## BEAT 2 — Constancy-first drift (~30–55 s)
 
@@ -113,7 +129,28 @@ The instrumentation close, all judge-free numbers already earned:
   corpus: fabricated entities **0**, keyword retention **0.979** (E1)
 - the tagline: self-hostable — your Postgres, your models.
 
-## Rehearsal checklist (E2's guard; re-run until the take is good)
+## Rehearsal record (2026-08-22): EXECUTED — the recording state is pinned
+
+The checklist below ran end to end on 2026-08-22 (both blockers cleared: the `.env` batch
+roles verified at `claude-opus-4-8` and proven on live calls — a real reflect wrote 3
+reflections and the compiler worker auto-ran `completed`, 3 bundles, 0 failed; the Unity
+play-mode gate ran GREEN through the live editor, 8 checks). Two provisions: a full dry-run
+(all beats + the correction guard, then discarded), then the final provision whose state is
+**pinned and live in `longmem_demo` — do not run the loader again before recording**:
+
+- agent `3f7355f1-fd90-4fce-8d8d-c7e652e33af9` (also pasted into the committed scene's
+  `agentIdOverride`, with ref 0's id in `correctionMemoryId`)
+- ref 0 Halvard `f28784f7-…` (importance 0.620, correction VIRGIN) · ref 3 drovers
+  `9b43a8be-…` (importance 0.720, 4 spans)
+- the June layer pinned (scene-1 prewarm + both beat-1 asks at k=9, wrong-belief answers
+  on the nose); the beat-2 take pinned (a real edit, not an echo: gist_precision **1.00**,
+  detail_recall 0.58, 0 fabrications, constancy byte-identical on the re-ask); beat 3
+  virgin; no failed worker runs; the Ledger verified camera-ready on this exact state.
+
+What remains for E3 is performance, not validation: drive the same beats through the Unity
+driver + OBS.
+
+## Rehearsal checklist (the E2 guard; re-run only if the state is ever re-provisioned)
 
 0. `.env`: batch roles synced to Opus 4.8 (Jack's pending action — binds now), real mode,
    `DATABASE_URI` → `longmem_demo`.

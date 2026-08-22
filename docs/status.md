@@ -1,8 +1,16 @@
 # longmem-npc — Status
 
 **Last updated:** 2026-08-19
-**Phase:** **Road to completion — Phases A–D DONE. Phase E (demo) IN PROGRESS: E1 ✅, E2 built
-(rehearsal staged, blocked on two Jack-side steps), then E3.**
+**Phase:** **Road to completion — Phases A–D DONE. Phase E (demo) IN PROGRESS: E1 ✅, E2 ✅
+DONE (rehearsal executed 2026-08-22, recording state PINNED in `longmem_demo`), next E3.**
+**E2 rehearsal completed 2026-08-22:** both blockers cleared (batch roles at Opus 4.8, proven
+on live calls — reflect 3 reflections, compiler auto-ran `completed`; Unity play-mode gate
+GREEN through the live editor). Final provision pinned: agent `3f7355f1-…`, beat-2 take a
+real edit (gist_precision 1.00, detail_recall 0.58, 0 fabrications, constancy byte-identical),
+correction + beat 3 virgin for camera; the scene carries the pasted ids. One choreography
+finding folded into the beat script: **beat-1 asks at k=9** (real decay buries the June-2
+memory below k=3 — the neutralized-config probe had hidden this), beat 2 stays k=3.
+**DO NOT run the demo loader again before E3 records** — `--fresh` destroys the pinned take.
 **E2 landed 2026-08-19** (demo-scoped by ruling: no floors row): the beat script
 **`docs\demo-beat-script.md`**, the corpus→demo-DB loader (`python -m app.demo_loader`,
 `--fresh`-guarded), the Ledger live turn feed (`GET /v1/ledger/turns` — the server tee, an
@@ -65,15 +73,9 @@ re-openable: re-verifying one is a step, never an argument against a design impr
 
 ## Open questions needing Jack's ruling
 
-**Pending Jack — the two steps blocking the E2 rehearsal (now binding):**
-(1) **sync the live `.env` batch roles to Opus 4.8** — the demo agent's workers are ON by
-ruling and the live `.env` carries NEITHER `LONGMEM_MODEL_REFLECTION` nor
-`LONGMEM_MODEL_COMPILER` (checked by key presence at the E2 wrap; values never echoed).
-Running the rehearsal without them lands a `failed` compiler run row + a loud reflect error
-on camera. (2) **an interactive Unity editor session** for the Play-mode gate + the on-screen
-dry-run (no Unity MCP bridge was connected in the E2 session) — the ordering is encoded in
-`demo-beat-script.md` step 1 and `SETUP.md` §8: gate BEFORE pasting the demo agent id.
-Then run the beat-script rehearsal checklist end to end (steps 0–6).
+**The E2 rehearsal blockers: CLEARED 2026-08-22** (Jack synced the `.env` batch roles and
+connected the Unity MCP bridge; both verified and the rehearsal executed — the header block
+above and `demo-beat-script.md`'s rehearsal record).
 
 **Pending Jack (from the D1 landing, non-blocking):** (1) **ratify or redirect the
 dissonance-multiplier defaults** — D1 found no objective metric to tune them against, so the
@@ -116,16 +118,13 @@ the E2 wrap-up (size tripwire); full records in `floors.md` + `decisions.md`.
 - **E1. Identity authoring guide + demo corpus.** ✅ DONE 2026-08-19 (docs + data only; no
   floors row by ruling) — the header pointer above; the E1 `decisions.md` entry has the
   five authoring lessons.
-- **E2. Choreography + rehearsal.** ✅ BUILT 2026-08-19 (demo-scoped by ruling — no floors
-  row; four spec rulings in the dated `decisions.md` entry). Landed: `demo-beat-script.md`
-  (correction-override lead → constancy-first drift on the certified drovers memory at k=3 →
-  the game-authored action-observe beat, first-person per the E1 render-voice finding, +
-  the rehearsal checklist), the corpus→demo-DB loader, the Ledger live feed + identity pane +
-  label sweep, the C# `PrewarmContext` mirror + harness beat [17], the `NpcMemoryNpc`
-  passthroughs, the Branwen scene retarget + DLL refresh. **The real rehearsal is staged,
-  not run** — blocked on the two pending-Jack steps above; the rehearsal guard (inspect the
-  provisioned roll, re-provision until good, the take pins by constancy) is encoded in the
-  beat script's checklist.
+- **E2. Choreography + rehearsal.** ✅ DONE (built 2026-08-19, demo-scoped by ruling — no
+  floors row; rehearsal executed 2026-08-22 after the blockers cleared). Landed:
+  `demo-beat-script.md` (correction-override lead → constancy-first drift on the certified
+  drovers memory → the action-observe beat + the executed rehearsal record), the
+  corpus→demo-DB loader, the Ledger live feed + identity pane + label sweep, the C#
+  `PrewarmContext` mirror + harness beat [17], the `NpcMemoryNpc` passthroughs, the Branwen
+  scene retarget + DLL refresh. The recording state is pinned (the header block above).
 - **E3. Record + edit** — Unity + The Ledger split-screen in OBS; real providers only.
 
 ### Phase F — Release (~3 sessions)

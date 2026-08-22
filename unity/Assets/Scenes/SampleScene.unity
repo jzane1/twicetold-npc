@@ -527,6 +527,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NpcMemory.Unity.NpcDemoDriver
   npc: {fileID: 526319682}
   autoRun: 0
+  correctionMemoryId: f28784f7-84f7-4190-82f9-a2f6a08877ad
+  correctionText: Halvard paid only six of the eleven shillings before riding north;
+    the other five stand as debt against his return.
+  prewarmContext: Do you remember the two drovers you turned away at the door in
+    June?
+  sayK: 9
+  jumpDays: 60
 --- !u!114 &526319682
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -541,10 +548,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NpcMemory.Unity.NpcMemoryNpc
   baseUrl: http://127.0.0.1:8000
   autoProvision: 0
-  agentIdOverride:
+  agentIdOverride: 3f7355f1-fd90-4fce-8d8d-c7e652e33af9
   agentName: branwen-waystone
-  seedIdentity: I am Branwen, and I keep the Waystone Inn where the north road crosses the drove way below Harrowmere. My mother kept it before me, and her mother before that, and the long cellar under the taproom has never flooded on my watch. I know every regular by their knock, old Fenn the carter loudest of all, and I know what each one owes the house to the farthing. Travelers' news is half my trade; ale and a dry bed are the other half. I forget a face slower than the road forgets a wheel rut, and I forgive an unpaid debt slower still.
-  diagnosticityGoal: what threatens the house, who owes it, and what news the road brings
+  seedIdentity: I am Branwen, and I keep the Waystone Inn where the north road crosses
+    the drove way below Harrowmere. My mother kept it before me, and her mother before
+    that, and the long cellar under the taproom has never flooded on my watch. I
+    know every regular by their knock, old Fenn the carter loudest of all, and I
+    know what each one owes the house to the farthing. Travelers' news is half my
+    trade; ale and a dry bed are the other half. I forget a face slower than the
+    road forgets a wheel rut, and I forgive an unpaid debt slower still.
+  diagnosticityGoal: what threatens the house, who owes it, and what news the road
+    brings
   episodicTauSeconds: 864000
   semanticTauSeconds: 15552000
   phaseTag: unity
