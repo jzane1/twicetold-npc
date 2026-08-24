@@ -95,6 +95,7 @@ its surrounding spaces both become hyphens, so `Name — 2026-07-28` anchors as 
 - [Phase E2 rulings + build record — choreography, the code gaps, and the Ledger live feed — 2026-08-19](#phase-e2-rulings--build-record--choreography-the-code-gaps-and-the-ledger-live-feed--2026-08-19)
 - [E2 rehearsal executed — blockers cleared, the recording state pinned — 2026-08-22](#e2-rehearsal-executed--blockers-cleared-the-recording-state-pinned--2026-08-22)
 - [E3 first attempt — recorded and QA'd, master not cut; presentation redesign ruled — 2026-08-24](#e3-first-attempt--recorded-and-qad-master-not-cut-presentation-redesign-ruled--2026-08-24)
+- [Roadmap re-sequenced — F0 audit pass added; the demo endgame moves after Phase F; Phase G re-pointed — 2026-08-24](#roadmap-re-sequenced--f0-audit-pass-added-the-demo-endgame-moves-after-phase-f-phase-g-re-pointed--2026-08-24)
 
 ## Primary decisions
 
@@ -4323,3 +4324,35 @@ pre-flight probes in the session scratchpad.
    latency numbers the close card claims).
 4. Visual QA needs frames, not gates: every flaw in ruling 6 was invisible to the compile,
    play-mode, and API-level gates and surfaced only in extracted full-res frames.
+
+## Roadmap re-sequenced — F0 audit pass added; the demo endgame moves after Phase F; Phase G re-pointed — 2026-08-24
+
+**Context.** Ruled by Jack at the close of the E3 first-attempt session, superseding the
+ordering in the same day's E3 entry (append-only: that entry stands as written). The demo
+recording pauses; release work comes first.
+
+**The ruling — the road from here to the end, in order:**
+
+1. **Phase F opens with a NEW F0: a whole-project audit/test/improve pass** — the latency
+   numbers the best they can be, the wording at its most believable, and everything
+   polished to Jack's liking. (F0 naturally inherits the deferred latency levers — prompt
+   caching, deferred at C7/D1 pending the slate lock — alongside the believability wording
+   work; F0's concrete scope settles at its own session spec.)
+2. **F1 → F2 → F3 as already scoped** (the full README; packaging; release hygiene + the
+   public flip).
+3. **Then the demo endgame:** the presentation redesign (per Jack's rulings when that
+   session opens) → the re-record (the E3 second attempt: fresh provision + re-pin +
+   record + edit) → **the video publish.**
+4. **The parked rulings stay parked** — the walker scratch-DB refactor, the
+   dissonance-multiplier defaults, the offline gold re-labeling — each decided whenever it
+   needs to be surfaced.
+5. **Phase G stays optional but its contents are REPLACED.** The real-game plug-in clip
+   (the 2026-07-27 demo-vehicle entry's epilogue) is out; the optional step is now
+   **embedding the project into Jack's personal website** so people browsing it can
+   interact with the system somehow. Details deliberately deferred — decided only if the
+   step is ever brought forward into a working session.
+
+**Sequencing consequence (recorded, not a fork):** the repo flips public at F3 while the
+demo video does not yet exist, so the README ships without the video link; the link lands
+as a small docs touch in the publish step. The finish-line end state is unchanged: repo
+public + video published + package downloadable.

@@ -189,8 +189,9 @@ driver + OBS.
 All four segments were recorded through the attach-mode rig (Jack on the overlay + OBS,
 Claude cueing and QA'ing live) and every beat guard PASSED; the cut was abandoned after
 footage QA and Jack ruled a demo-presentation redesign session of his own before a fresh
-provision + full re-record (the dated E3 entry in `decisions.md`). What the next version
-inherits:
+provision + full re-record (the dated E3 entry in `decisions.md`; the same day's
+re-sequencing entry then moved the whole demo endgame — redesign → re-record → publish —
+to AFTER Phase F). What the next version inherits:
 
 1. **A provision serves beat 1 exactly once.** The correction moves ref 0's fact chain and
    evicts the June caches — the wrong-belief answer is unreproducible afterwards. Plan every

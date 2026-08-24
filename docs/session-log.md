@@ -2091,8 +2091,13 @@ session.
   - **Abandoned:** the ffmpeg assembly of today's footage (a flawed master is not worth
     cutting). Raw takes + assets kept under `C:\Users\jacks\Videos\longmem-demo\`.
   - **Spend note:** ~7 real dialogue turns + 1 re-fired correction; the takes themselves
-    replayed pinned caches. **Next: Jack's presentation redesign, then the E3 second
-    attempt.**
+    replayed pinned caches.
+  - **Re-sequenced at the session close (ruled, the second dated 2026-08-24 entry):** the
+    demo pauses entirely. The road is now F0 (a NEW whole-project audit/test/improve pass —
+    latency, believability wording, polish) → F1–F3 → the presentation redesign → the
+    re-record → the video publish. Phase G stays optional but re-pointed: the real-game
+    plug-in clip is out, replaced by a personal-website embed of the project (details
+    deferred until the step is ever brought forward). **Next: F0.**
 
 ---
 

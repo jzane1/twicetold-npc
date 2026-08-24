@@ -1,23 +1,22 @@
 # longmem-npc — Status
 
 **Last updated:** 2026-08-24
-**Phase:** **Road to completion — Phases A–D DONE. Phase E (demo) IN PROGRESS: E1 ✅, E2 ✅,
-E3 FIRST ATTEMPT 2026-08-24 (recorded + QA'd, master NOT cut). Next: Jack's demo-presentation
-redesign session, then the E3 second attempt (fresh provision + full re-record, ruled).**
+**Phase:** **Road to completion — Phases A–D DONE. Phase E (demo) PAUSED after the E3 first
+attempt (recorded + QA'd 2026-08-24, master NOT cut). RE-SEQUENCED 2026-08-24 (the dated
+entry): next is **F0** (whole-project audit/test/improve — latency, believability wording,
+polish), then F1–F3; the demo endgame (redesign → re-record → publish) follows Phase F.**
 **E3 first attempt 2026-08-24:** all four segments recorded through the new attach-mode rig
-and every beat PASSED live QA (wrong belief → correction → the five-shillings answer; the
-pinned drovers take, constancy byte-identical on the SERVED retelling — the streamed wrapper
-varies by design; owned beat-3 recall in verbatim mode). The cut was NOT made: footage QA
-found the Branwen nameplate MIRRORED in every Unity frame (invisible to the API-level gates)
-plus lesser blemishes (browser chrome, Game toolbar strip, ford-era input default) — **noted,
-deliberately NOT fixed by ruling**: Jack redesigns the demo presentation in its own session
-first, then a fresh provision + full re-record (`--fresh` sanctioned for it). **The
+and every beat PASSED live QA (the per-segment receipts in the dated E3 entry; one nuance
+carried to the captions — constancy binds the SERVED retelling, the streamed wrapper varies
+by design). The cut was NOT made: footage QA found the Branwen nameplate MIRRORED in every
+Unity frame plus lesser blemishes (the register: the beat script's E3 record) — **noted,
+deliberately NOT fixed by ruling**: the presentation redesign owns them; the re-record runs
+on a fresh provision (`--fresh` sanctioned). **The
 2026-08-22 pinned state is SPENT** — a provision serves beat 1 exactly once (the correction
 moves the fact chain and evicts the June caches). The E3 rig is provision-independent and
-ready: driver `startAsOf` (attach-mode June basis on Play, live-verified) + em-dash overlay
-fix + committed scene-1 start state; OBS + ffmpeg installed; close card, run sheet, and raw
-takes under `C:\Users\jacks\Videos\longmem-demo\`. Full record: the dated E3 entry in
-`decisions.md` + the E3 record in `demo-beat-script.md`.
+ready (driver `startAsOf`, committed scene-1 start state, OBS + ffmpeg, close card + run
+sheet + raw takes under `C:\Users\jacks\Videos\longmem-demo\`); full record: the dated E3
+entry + `demo-beat-script.md`'s E3 record.
 **E2 landed 2026-08-19** (demo-scoped, no floors row): beat script + loader + Ledger live
 feed + C# prewarm parity + the Branwen retarget; rehearsal executed 2026-08-22. The verbatim
 block moved to `session-log.md`'s archive at the E3 wrap-up (size tripwire); full record in
@@ -33,9 +32,8 @@ Unity adapter + gray-box scene, The Ledger, eval-harness stages 1–4, deferred 
 reflection, the parameter compiler, the dissonance path, the agent-state read + async observes,
 the purge endpoint, the concurrency cap + scene-boundary pre-warm (C7) — schema at
 migrations 001–008.
-What is proven lives in
-`docs\floors.md`, why in `decisions.md`, the narrative in `session-log.md`; this file
-carries only what is live.
+What is proven lives in `docs\floors.md`, why in `decisions.md`, the narrative in
+`session-log.md`; this file carries only what is live.
 
 This is the *living* file — update it at the end of every working session. `architecture.md`
 changes only when design changes; `decisions.md` is append-only. Size tripwire (ruled
@@ -72,10 +70,6 @@ re-openable: re-verifying one is a step, never an argument against a design impr
 
 ## Open questions needing Jack's ruling
 
-**The E2 rehearsal blockers: CLEARED 2026-08-22** (Jack synced the `.env` batch roles and
-connected the Unity MCP bridge; both verified and the rehearsal executed — the header block
-above and `demo-beat-script.md`'s rehearsal record).
-
 **Pending Jack (from the D1 landing, non-blocking):** (1) **ratify or redirect the
 dissonance-multiplier defaults** — D1 found no objective metric to tune them against, so the
 principled ordering was kept unchanged (an eyeball run of the defend/update beat is available on
@@ -83,16 +77,11 @@ request); (2) offline gold re-labeling if
 calibrated judged-prose numbers are wanted on screen (kappa 0.37, unquotable — non-blocking; the
 on-screen numbers are judge-free).
 
-**Recently closed** (pointers only): the E2 forks — four ruled at plan approval 2026-08-19
-(server tee + poll; worker flags at load end via `merge_agent_config`; demo-scoped, no floors
-row; no migration — the dated E2 entry); the E1 forks — four ruled at plan approval 2026-08-19 (new
-demo character; first-person paragraph seed; held-out run in E1; docs+data-only scope, no floors
-row — the dated E1 entry); the D1 forks — three settled at plan approval 2026-08-19
-(stronger batch roles; judge-free + judged believability; flip-in-D1-on-the-data → slate locked,
-workers stay OFF per-agent, caching deferred — the dated D1 entry); the C7 forks — three ruled
-2026-08-18; the C6 forks — four ruled 2026-08-18. Full history — C1–C5, the status.md size
-tripwire, the C2/C3 lines, and earlier closures — lives in `decisions.md`'s index and the
-`session-log.md` archive.
+**Recently closed** (pointers only): the E3 forks + the roadmap re-sequencing — ruled
+2026-08-24 (the two dated entries); the E2 rehearsal blockers — cleared 2026-08-22; the
+E2/E1/D1 fork batches — ruled at plan approvals 2026-08-19 (the dated entries); the C7/C6
+forks — 2026-08-18. Full history lives in `decisions.md`'s index and the `session-log.md`
+archive.
 
 ## The roadmap (re-planned 2026-08-04; ordering delegated to Claude on efficiency grounds)
 
@@ -112,7 +101,7 @@ C1–C7 (floors rows 25–32, each plan-to-floor) and D1 (2026-08-19, measure-on
 confirmed, slate LOCKED, no floor). The verbatim blocks moved to `session-log.md`'s archive at
 the E2 wrap-up (size tripwire); full records in `floors.md` + `decisions.md`.
 
-### Phase E — Demo (~3–4 sessions)
+### Phase E — Demo (E1–E2 DONE; the endgame re-sequenced AFTER Phase F, ruled 2026-08-24)
 
 - **E1. Identity authoring guide + demo corpus.** ✅ DONE 2026-08-19 (docs + data only; no
   floors row by ruling) — the header pointer above; the E1 `decisions.md` entry has the
@@ -126,14 +115,18 @@ the E2 wrap-up (size tripwire); full records in `floors.md` + `decisions.md`.
   scene retarget + DLL refresh. The recording state is pinned (the header block above).
 - **E3. Record + edit** — Unity + The Ledger split-screen in OBS; real providers only.
   FIRST ATTEMPT 2026-08-24: recorded + QA'd end to end, master not cut (the mirrored-nameplate
-  scene flaw; the header block above). Re-record on a fresh provision after Jack's
-  presentation-redesign session; the recording rig and cue flow are ready and
-  provision-independent.
+  scene flaw; the header block above). PAUSED — the demo endgame (below) now follows Phase F;
+  the recording rig and cue flow are ready and provision-independent.
 
-### Phase F — Release (~3 sessions)
+### Phase F — Release (~4 sessions; F0 added by the 2026-08-24 re-sequencing)
 
+- **F0. Whole-project audit/test/improve pass** (NEW, ruled 2026-08-24) — the latency numbers
+  the best they can be (inherits the deferred prompt-caching lever from C7/D1), the wording
+  at its most believable, everything polished to Jack's liking. Scope settles at its own
+  session spec.
 - **F1. Full README build** — incl. the destructive-compression counter-example and the honest
-  "what this is not" paragraph (no auth, no rate limiting; loopback-bound by default).
+  "what this is not" paragraph (no auth, no rate limiting; loopback-bound by default). Ships
+  WITHOUT the video link (the video publishes last; the link lands in the publish step).
 - **F2. Packaging** — the ruled end product: the Unity Package Manager package + the one-command
   backend spin-up (compose: Postgres/pgvector + API + migrations).
 - **F3. Release hygiene + the public flip** — the Unity MCP pin fix + manifest/lockfile
@@ -141,12 +134,22 @@ the E2 wrap-up (size tripwire); full records in `floors.md` + `decisions.md`.
   check-8 teeth, CRLF renormalization, `~\.claude.json` duplicate keys, the Unity-gate
   session-ordering note — swept or consciously dropped), docs finalization, Apache-2.0 flip.
 
+### The demo endgame (AFTER Phase F — re-sequenced 2026-08-24)
+
+1. **The presentation redesign** — Jack's rulings at its own session; the E3 flaw register
+   in `demo-beat-script.md` is its input.
+2. **The re-record** (the E3 second attempt) — fresh provision + re-pin (`--fresh`
+   sanctioned; a provision serves beat 1 exactly once), record + edit on the proven rig.
+3. **The video publish** — plus the small README video-link touch.
+
 **The finish line: repo public + video published + package downloadable.**
 
 ### Phase G — Optional epilogue (time-permitting, explicitly droppable)
 
-- **G1.** The real-game plug-in clip: a C#-moddable game reusing `NpcMemory.Core`
-  (Stardew/SMAPI or RimWorld — not Skyrim; see the 2026-07-27 demo-vehicle entry).
+- **The personal-website embed** (REPLACED the real-game plug-in clip by the 2026-08-24
+  re-sequencing): embed the project into Jack's personal website so people browsing it can
+  interact with it somehow. Details deliberately deferred — decided only if this step is
+  ever brought forward into a working session.
 
 ## Cut from scope (ruled 2026-08-04)
 
