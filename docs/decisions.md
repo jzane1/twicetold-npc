@@ -94,6 +94,7 @@ its surrounding spaces both become hyphens, so `Name — 2026-07-28` anchors as 
 - [Phase E1 rulings + build record — the authoring guide and demo corpus landed — 2026-08-19](#phase-e1-rulings--build-record--the-authoring-guide-and-demo-corpus-landed--2026-08-19)
 - [Phase E2 rulings + build record — choreography, the code gaps, and the Ledger live feed — 2026-08-19](#phase-e2-rulings--build-record--choreography-the-code-gaps-and-the-ledger-live-feed--2026-08-19)
 - [E2 rehearsal executed — blockers cleared, the recording state pinned — 2026-08-22](#e2-rehearsal-executed--blockers-cleared-the-recording-state-pinned--2026-08-22)
+- [E3 first attempt — recorded and QA'd, master not cut; presentation redesign ruled — 2026-08-24](#e3-first-attempt--recorded-and-qad-master-not-cut-presentation-redesign-ruled--2026-08-24)
 
 ## Primary decisions
 
@@ -4231,3 +4232,94 @@ with re-firing the same correction as the retake lever.
 
 **Standing instruction until E3 records: do not run the demo loader again** — `--fresh` is
 the only destructive path and it would destroy the pinned take.
+
+## E3 first attempt — recorded and QA'd, master not cut; presentation redesign ruled — 2026-08-24
+
+**Context.** E3 (record + edit) ran on the 2026-08-22 pinned state: forks settled at plan
+approval, the recording executed end to end through a new attach-mode rig (Jack driving the
+Unity overlay + OBS, Claude cueing and QA'ing each segment live over the Ledger feed and
+chain reads), then footage QA found a scene flaw no edit can fix, and Jack redirected the
+endgame (ruling 6).
+
+**Rulings (Jack).**
+
+1. **The edit is Claude + ffmpeg** (cards, captions, per-segment assembly scripted; hard
+   cuts) — over an NLE hand-off or a record-only session split.
+2. **Captions only, silent** — no audio track; on-screen text carries the framing and the
+   close numbers.
+3. **E3 scope: demo-scoped, no floors row** (the E1/E2 precedent); nothing enters the repo
+   but docs. (Rulings 4–5 amended this mid-session with the sanctioned rig edits below.)
+4. **`startAsOf` added to the driver** (a mid-session stop-and-report). Attach mode had NO
+   operator surface for the June-25 basis: the overlay only has the +60 button, the session
+   clock starts at real now, and recording as-is would have rolled fresh retells over the
+   pinned June layer and put beat 2 on an unpinned basis (the echo risk returns). The
+   rehearsal never hit this because it drove HTTP with explicit `as_of` per call; the beat
+   script's "SetAsOf before the boundary" named a method with no control. Ruled: an ~8-line
+   `NpcDemoDriver` field (default `2026-06-25T19:00:00Z`, applied via the existing
+   `SetAsOf` once the adapter attaches; the autoRun gate's own timeline untouched) — over an
+   off-camera bridge call per take (fragile: a missed step silently re-rolls the June layer).
+5. **The overlay's on-camera em-dash fixed** (`longmem-npc · {status}`) — the E2 label
+   sweep covered the Ledger page but missed the equally-on-camera Unity overlay.
+6. **The retake fork: fresh provision + full re-record, but AFTER a demo-presentation
+   redesign session of Jack's own.** Footage QA (full-res frame pulls) found the Branwen
+   nameplate mirrored in every Unity frame — TextMesh rotY 180, facing away from the
+   camera, invisible to the API-level E2 gates — plus lesser blemishes: browser tab/URL bar
+   on camera, the Game-view toolbar strip captured, the input field's ford-era default
+   text. Jack: the whole setup "does not make it easy to capture someone's attention"; he
+   will alter the presentation in a separate session, so the flaws are **noted, not
+   implemented** (they may not survive the redesign), no re-record this session, and
+   `--fresh` is sanctioned for the next provision.
+
+**Landed (code, sanctioned by rulings 4–5).** `NpcDemoDriver.cs`: `startAsOf` +
+`ApplyStartAsOfAsync` (waits for the adapter, parses invariant-UTC, sets the session clock,
+and statuses the overlay — attach mode previously showed "(connecting…)" forever), the `·`
+label, the +60 button statusing the new date. The scene: `startAsOf` serialized;
+`prewarmContext` set to the beat-1 Halvard question as the committed scene-1 start state
+(both prewarm texts are cache-safe at the June basis — the pinned June layer covered all 9
+memories). Verified: bridge compile clean, a live attach smoke (Play → clock exactly
+2026-06-25T19:00Z with the console receipt; attach init makes zero network calls, confirmed
+in `InitializeAsync`), and the pinned-state probe PASS after every editor step. One editor
+lesson: the first smoke raced a pending recompile into play mode and produced an
+inconsistent domain (Ready true, Session null) — enter play only when the editor is idle.
+
+**Landed (rig, outside the repo by ruling 3).** OBS Studio + ffmpeg 9.0 installed (winget;
+neither was present); `C:\Users\jacks\Videos\longmem-demo\` (raw takes, assets, final); the
+close card (1920x1080, Ledger palette, the four judge-free numbers, the em-dash-free
+tagline "Self-hostable: your Postgres, your models."); the recording run sheet; GET-only
+pre-flight probes in the session scratchpad.
+
+**The recording (executed 2026-08-24; every beat PASSED live QA).**
+
+- SEG A (beat 1, k=9): the wrong belief on the nose ("eleven shillings to the farthing...
+  bought a round"), the correction landed, and the money ask re-formed carrying the debt
+  ("Five shillings, though I'd not expect it back anytime soon").
+- SEG B (chain close-up): the same-correction re-fire lever was exercised deliberately
+  before the shot — the on-camera ask order leaves the correction head superseded by the
+  re-formed retell, and the ruled frame wants the amber `authorial_correction` live; one
+  HTTP re-fire restored it (chain 5 rows, live = the operator text verbatim).
+- SEG C (beat 2, k=3): the pinned drovers take served with no re-roll (gist 1.00, recall
+  0.583, 0 fabricated); **constancy PASSED on the served retelling — byte-identical across
+  the re-ask.** The streamed dialogue wrapper differed (temp-sampled per turn; a dialogue
+  turn persists nothing): the invariant binds stored/served text, never conversational
+  delivery — the beat script's "byte-identical text" camera line is loose on this and the
+  caption must carry the precise claim. Also: the re-ask's gate fired (`entity_tripwire`,
+  3 fetched), so the second ask served 6 rows vs 3 — working as designed, on camera.
+- SEG D (beat 3, k=3): both action observes landed first-person owned (index 9 → 11), the
+  recall served the cart memory in `verbatim` mode (fresh, below theta — correct), owned
+  first-person answer. No worker runs mid-take; pressure 0.594 → 0.659.
+
+**Found (durable, for the next version):**
+
+1. **A provision serves beat 1 exactly once.** The correction moves ref 0's fact chain and
+   evicts the June caches; afterwards the wrong-belief answer is unreproducible on that
+   provision. Every beat-1 recording attempt costs a fresh provision + re-pin — which is
+   also why today's footage admitted no selective re-shoot.
+2. The 2026-08-22 pinned state in `longmem_demo` is now SPENT (three correction heads on
+   ref 0, the two beat-3 memories present). The 2026-08-22 standing do-not-run-loader
+   instruction is superseded by ruling 6: the next provision runs `--fresh`.
+3. Raw takes kept as reference (A 93.5 s / B 24.5 s / C 53.7 s / D 43.5 s, 1080p30; ~215 s
+   raw against the ~75 s script target — an honest cut at natural streaming speed lands
+   nearer 100 s; speeding up streams was rejected out of hand as it would misrepresent the
+   latency numbers the close card claims).
+4. Visual QA needs frames, not gates: every flaw in ruling 6 was invisible to the compile,
+   play-mode, and API-level gates and surfaced only in extracted full-res frames.

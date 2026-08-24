@@ -2068,6 +2068,32 @@ session.
   - **Spend note:** two real loader provisions + ~14 turns + 1 reflect + 1 compile —
     roughly a dollar. **Next: E3 (record + edit) on the pinned state.**
 
+## **E3 first attempt — recorded + QA'd 2026-08-24; master not cut (presentation redesign ruled).**
+
+- **Session (2026-08-24).** Forks settled at plan approval (edit = Claude + ffmpeg;
+  captions-only silent; demo-scoped, no floors row, docs-only commit — amended mid-session
+  by the sanctioned rig edits).
+  - **Landed:** the attach-mode recording rig — driver `startAsOf` (a stop-and-report: no
+    operator surface existed for the June basis; ruled, built, live-verified through the
+    bridge), the overlay em-dash fix, the committed scene-1 start state; OBS + ffmpeg
+    installed; the close card + run sheet; GET-only pre-flight probes (pinned state PASS at
+    every step). All four segments recorded with live QA — every beat guard PASSED (wrong
+    belief → correction → the five-shillings answer; the pinned drovers take with constancy
+    byte-identical on the served retelling, the streamed wrapper varying by design; owned
+    beat-3 recall in verbatim mode). The SEG B frame restored via the ruled re-fire lever.
+  - **Blocked / redirected:** the cut. Footage QA (full-res frame pulls) found the Branwen
+    nameplate mirrored in every Unity frame (TextMesh rotY 180 — invisible to the API-level
+    gates) plus browser chrome, the Game toolbar strip, and the ford-era input default. Beat
+    1 is unreproducible on a spent provision (the correction moves the fact chain), so no
+    selective re-shoot exists. **Jack ruled: he redesigns the demo presentation in his own
+    session first; the flaws stay noted, NOT fixed; then a fresh provision + full re-record
+    (`--fresh` sanctioned).**
+  - **Abandoned:** the ffmpeg assembly of today's footage (a flawed master is not worth
+    cutting). Raw takes + assets kept under `C:\Users\jacks\Videos\longmem-demo\`.
+  - **Spend note:** ~7 real dialogue turns + 1 re-fired correction; the takes themselves
+    replayed pinned caches. **Next: Jack's presentation redesign, then the E3 second
+    attempt.**
+
 ---
 
 ## Archived phase headers
@@ -2076,6 +2102,20 @@ session.
 at the top of the living file — each a snapshot of what the current phase was when it was
 written. Kept verbatim: they are the most readable summary of each build era, and the
 session-log entries below them carry the detail. Newest first, as they were.*
+
+**(moved 2026-08-24 at the E3 wrap-up, the ≤12 KB tripwire — the E2 phase-header paragraph,
+verbatim from `status.md`:)**
+
+**E2 landed 2026-08-19** (demo-scoped by ruling: no floors row): the beat script
+**`docs\demo-beat-script.md`**, the corpus→demo-DB loader (`python -m app.demo_loader`,
+`--fresh`-guarded), the Ledger live turn feed (`GET /v1/ledger/turns` — the server tee, an
+explicit ruled carve-out to the route pass-through contract) + identity pane + em-dash label
+sweep, C# prewarm parity (`PrewarmContext` / `SceneResult.Prewarm`) + harness beat [17]
+(17 beats, 53 checks GREEN), the `NpcMemoryNpc` observe passthroughs, the Unity scene
+retargeted to Branwen (attach-mode; the stale plugin DLL refreshed). New in-place write site
+sanctioned: `agents.config` via `db.merge_agent_config` (the pinned-toggle precedent). **The
+real rehearsal is staged, not run** — see the pending items. Full record in `decisions.md`'s
+E2 entry.
 
 **(moved 2026-08-19 at the E2 wrap-up, the ≤12 KB tripwire — the E1 phase-header paragraph
 and the Phase C/D roadmap blocks, verbatim from `status.md`:)**

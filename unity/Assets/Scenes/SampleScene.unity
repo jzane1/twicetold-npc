@@ -530,10 +530,10 @@ MonoBehaviour:
   correctionMemoryId: f28784f7-84f7-4190-82f9-a2f6a08877ad
   correctionText: Halvard paid only six of the eleven shillings before riding north;
     the other five stand as debt against his return.
-  prewarmContext: Do you remember the two drovers you turned away at the door in
-    June?
+  prewarmContext: Did Halvard settle his account before he rode north?
   sayK: 9
   jumpDays: 60
+  startAsOf: 2026-06-25T19:00:00Z
 --- !u!114 &526319682
 MonoBehaviour:
   m_ObjectHideFlags: 0

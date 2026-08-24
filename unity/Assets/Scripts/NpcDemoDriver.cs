@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -51,6 +52,12 @@ namespace NpcMemory.Unity
         [Tooltip("Day count for the as-of jump button.")]
         public int jumpDays = 60;
 
+        [Tooltip("Starting as-of applied once the adapter attaches (the E3 "
+            + "recording rig, attach mode only; empty = real time). The demo "
+            + "timeline needs the June-25 basis so every take and retake "
+            + "lands on the pinned reconstruction caches.")]
+        public string startAsOf = "2026-06-25T19:00:00Z";
+
         private string _input = "What has happened at the ford lately?";
         private string _dialogue = "";
         private string _status = "(connecting…)";
@@ -78,6 +85,14 @@ namespace NpcMemory.Unity
         {
             if (!autoRun)
             {
+                try
+                {
+                    await ApplyStartAsOfAsync();
+                }
+                catch (Exception exc)
+                {
+                    Debug.LogException(exc, this);
+                }
                 return;
             }
             try
@@ -89,6 +104,35 @@ namespace NpcMemory.Unity
                 Debug.LogException(exc, this);
                 Debug.LogError("[npc-demo] PLAY-MODE BEATS FAILED");
             }
+        }
+
+        /// <summary>Attach-mode start basis (the scripted gate owns its own
+        /// timeline, so autoRun skips this). Waits for the adapter, then
+        /// pins the session clock so the boundary bases match rehearsal.</summary>
+        private async Task ApplyStartAsOfAsync()
+        {
+            var deadline = Time.realtimeSinceStartup + 30f;
+            while (npc == null || !npc.Ready)
+            {
+                if (Time.realtimeSinceStartup > deadline)
+                {
+                    _status = "adapter never became Ready";
+                    return;
+                }
+                await Task.Yield();
+            }
+            if (string.IsNullOrWhiteSpace(startAsOf))
+            {
+                _status = "attached (real time)";
+                return;
+            }
+            var t = DateTimeOffset.Parse(
+                startAsOf,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
+            npc.SetAsOf(t);
+            _status = $"as of {t:yyyy-MM-dd HH:mm}Z";
+            Debug.Log($"[npc-demo] startAsOf applied: {t:o}");
         }
 
         private int _checks;
@@ -189,7 +233,7 @@ namespace NpcMemory.Unity
         {
             // The dev-tool overlay IS the intended aesthetic (ruled 2026-07-22).
             GUILayout.BeginArea(new Rect(12, 12, 560, 340), GUI.skin.box);
-            GUILayout.Label($"longmem-npc — {_status}");
+            GUILayout.Label($"longmem-npc · {_status}");
             var pending = npc != null ? npc.PendingObserves : 0;
             GUILayout.Label($"{_gateLine}   pending observes: {pending}");
             GUILayout.Space(6);
@@ -245,7 +289,9 @@ namespace NpcMemory.Unity
             if (GUILayout.Button($"+{jumpDays} days"))
             {
                 var now = npc.Session.AsOf ?? DateTimeOffset.UtcNow;
-                npc.SetAsOf(now.AddDays(jumpDays));
+                var next = now.AddDays(jumpDays);
+                npc.SetAsOf(next);
+                _status = $"as of {next:yyyy-MM-dd HH:mm}Z";
             }
             GUILayout.EndHorizontal();
             GUI.enabled = true;

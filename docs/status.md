@@ -1,31 +1,30 @@
 # longmem-npc — Status
 
-**Last updated:** 2026-08-19
-**Phase:** **Road to completion — Phases A–D DONE. Phase E (demo) IN PROGRESS: E1 ✅, E2 ✅
-DONE (rehearsal executed 2026-08-22, recording state PINNED in `longmem_demo`), next E3.**
-**E2 rehearsal completed 2026-08-22:** both blockers cleared (batch roles at Opus 4.8, proven
-on live calls — reflect 3 reflections, compiler auto-ran `completed`; Unity play-mode gate
-GREEN through the live editor). Final provision pinned: agent `3f7355f1-…`, beat-2 take a
-real edit (gist_precision 1.00, detail_recall 0.58, 0 fabrications, constancy byte-identical),
-correction + beat 3 virgin for camera; the scene carries the pasted ids. One choreography
-finding folded into the beat script: **beat-1 asks at k=9** (real decay buries the June-2
-memory below k=3 — the neutralized-config probe had hidden this), beat 2 stays k=3.
-**DO NOT run the demo loader again before E3 records** — `--fresh` destroys the pinned take.
-**E2 landed 2026-08-19** (demo-scoped by ruling: no floors row): the beat script
-**`docs\demo-beat-script.md`**, the corpus→demo-DB loader (`python -m app.demo_loader`,
-`--fresh`-guarded), the Ledger live turn feed (`GET /v1/ledger/turns` — the server tee, an
-explicit ruled carve-out to the route pass-through contract) + identity pane + em-dash label
-sweep, C# prewarm parity (`PrewarmContext` / `SceneResult.Prewarm`) + harness beat [17]
-(17 beats, 53 checks GREEN), the `NpcMemoryNpc` observe passthroughs, the Unity scene
-retargeted to Branwen (attach-mode; the stale plugin DLL refreshed). New in-place write site
-sanctioned: `agents.config` via `db.merge_agent_config` (the pinned-toggle precedent). **The
-real rehearsal is staged, not run** — see the pending items. Full record in `decisions.md`'s
-E2 entry.
-**E1 landed 2026-08-19** (docs + data, no floor by ruling): `identity-authoring.md` + Branwen
-of the Waystone Inn, validated on real providers, the drovers memory certified as the drift
-target. Phase E = three sessions by ruling (E1 / E2 / E3). The verbatim block moved to
-`session-log.md`'s archive at the E2 wrap-up (size tripwire); the five authoring lessons live
-in `decisions.md`'s E1 entry.
+**Last updated:** 2026-08-24
+**Phase:** **Road to completion — Phases A–D DONE. Phase E (demo) IN PROGRESS: E1 ✅, E2 ✅,
+E3 FIRST ATTEMPT 2026-08-24 (recorded + QA'd, master NOT cut). Next: Jack's demo-presentation
+redesign session, then the E3 second attempt (fresh provision + full re-record, ruled).**
+**E3 first attempt 2026-08-24:** all four segments recorded through the new attach-mode rig
+and every beat PASSED live QA (wrong belief → correction → the five-shillings answer; the
+pinned drovers take, constancy byte-identical on the SERVED retelling — the streamed wrapper
+varies by design; owned beat-3 recall in verbatim mode). The cut was NOT made: footage QA
+found the Branwen nameplate MIRRORED in every Unity frame (invisible to the API-level gates)
+plus lesser blemishes (browser chrome, Game toolbar strip, ford-era input default) — **noted,
+deliberately NOT fixed by ruling**: Jack redesigns the demo presentation in its own session
+first, then a fresh provision + full re-record (`--fresh` sanctioned for it). **The
+2026-08-22 pinned state is SPENT** — a provision serves beat 1 exactly once (the correction
+moves the fact chain and evicts the June caches). The E3 rig is provision-independent and
+ready: driver `startAsOf` (attach-mode June basis on Play, live-verified) + em-dash overlay
+fix + committed scene-1 start state; OBS + ffmpeg installed; close card, run sheet, and raw
+takes under `C:\Users\jacks\Videos\longmem-demo\`. Full record: the dated E3 entry in
+`decisions.md` + the E3 record in `demo-beat-script.md`.
+**E2 landed 2026-08-19** (demo-scoped, no floors row): beat script + loader + Ledger live
+feed + C# prewarm parity + the Branwen retarget; rehearsal executed 2026-08-22. The verbatim
+block moved to `session-log.md`'s archive at the E3 wrap-up (size tripwire); full record in
+`decisions.md`'s E2 entries.
+**E1 landed 2026-08-19** (docs + data, no floor by ruling): `identity-authoring.md` +
+Branwen, the drovers memory certified as the drift target — the roadmap bullet below; the
+five authoring lessons in `decisions.md`'s E1 entry.
 D1 (optimization, 2026-08-19, no new code): perceived-first-word **p50 938 ms**, believability
 no regression (gist_precision 0.823), **model slate LOCKED** (Haiku latency-bound; Opus 4.8
 batch roles in `.env.example`), workers OFF per-agent, prompt caching DEFERRED — the D1 entry.
@@ -126,6 +125,10 @@ the E2 wrap-up (size tripwire); full records in `floors.md` + `decisions.md`.
   `PrewarmContext` mirror + harness beat [17], the `NpcMemoryNpc` passthroughs, the Branwen
   scene retarget + DLL refresh. The recording state is pinned (the header block above).
 - **E3. Record + edit** — Unity + The Ledger split-screen in OBS; real providers only.
+  FIRST ATTEMPT 2026-08-24: recorded + QA'd end to end, master not cut (the mirrored-nameplate
+  scene flaw; the header block above). Re-record on a fresh provision after Jack's
+  presentation-redesign session; the recording rig and cue flow are ready and
+  provision-independent.
 
 ### Phase F — Release (~3 sessions)
 

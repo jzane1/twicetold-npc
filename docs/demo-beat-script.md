@@ -25,8 +25,12 @@ validated in E1 — `identity-authoring.md` §8). On-screen text obeys the em-da
 - Unity: `SampleScene` — the adapter is committed attach-mode (`autoProvision` off);
   paste the loader's printed agent id into `agentIdOverride` before Play. The driver's
   inspector carries the beat controls: `correctionMemoryId` (paste ref 0's memory id),
-  `correctionText` (below), `prewarmContext` (the drovers question), `sayK` (see the k
-  rule below), `jumpDays = 60`.
+  `correctionText` (below), `prewarmContext` (committed as the beat-1 Halvard question —
+  the scene-1 start state; flipped to the drovers question at the scene-2 cut), `sayK`
+  (see the k rule below), `jumpDays = 60`, and **`startAsOf`** (E3, 2026-08-24: applied
+  via `SetAsOf` once the adapter attaches, so Play alone lands the June-25 basis — attach
+  mode previously had NO operator surface for the starting clock and would have run at
+  real now, re-rolling the pinned June layer).
 - **The k rule (a 2026-08-22 rehearsal finding): beat-1 asks run at k=9, beat-2 at k=3.**
   At the June-25 basis under the real corpus config, 23 days of episodic decay (tau 10 d)
   buried the June-2 Halvard memory below k=3 — the E1 correction probe had only certified
@@ -179,6 +183,37 @@ driver + OBS.
    constancy: repeat reads are byte-identical.
 6. Record timings per beat for the E3 edit; confirm the Ledger turn feed rendered every
    turn live (poll ON) and the identity pane shows the seed identity.
+
+## E3 first attempt (2026-08-24): recorded + QA'd, master NOT cut — findings for the next version
+
+All four segments were recorded through the attach-mode rig (Jack on the overlay + OBS,
+Claude cueing and QA'ing live) and every beat guard PASSED; the cut was abandoned after
+footage QA and Jack ruled a demo-presentation redesign session of his own before a fresh
+provision + full re-record (the dated E3 entry in `decisions.md`). What the next version
+inherits:
+
+1. **A provision serves beat 1 exactly once.** The correction moves ref 0's fact chain and
+   evicts the June caches — the wrong-belief answer is unreproducible afterwards. Plan every
+   recording attempt as fresh-provision + re-pin (`rehearse.py --take-only` shape); the
+   2026-08-22 provision is SPENT.
+2. **Flaws found on camera, noted NOT fixed by ruling** (may not survive the redesign): the
+   Branwen nameplate renders MIRRORED (TextMesh rotY 180, faces away from the camera —
+   invisible to every API-level gate; visual QA needs extracted frames), the browser tab/URL
+   bar and the Game-view toolbar strip are in frame, and the overlay input's default text
+   still names the ford (pre-Branwen). A pre-record visual frame check belongs in the next
+   rehearsal checklist.
+3. **The constancy camera line is loose.** The invariant binds the STORED/SERVED retelling
+   (byte-identical across the re-ask, verified) — the streamed dialogue wrapper varies per
+   turn by design. The beat-2 caption must claim exactly that; the two asks will not sound
+   identical.
+4. The re-ask's retrieval gate fired (`entity_tripwire`) and served 6 rows vs the first
+   ask's 3 — designed behavior, visible on the Ledger.
+5. The post-ask chain leaves the correction head superseded by the re-formed retell; the
+   chain close-up's ruled frame (amber correction LIVE) is restored by re-firing the same
+   correction before the shot — the documented lever, exercised and verified.
+6. Timing reality: ~215 s of raw across the four segments against the ~75 s target. Streams
+   play at natural speed (speeding them up would misrepresent the latency claims), so an
+   honest cut lands nearer 100 s; the next choreography pass should budget for it.
 
 ## What E2 built for this script (pointers)
 
