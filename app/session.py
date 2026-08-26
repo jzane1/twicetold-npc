@@ -168,7 +168,7 @@ class SessionRunner:
         settings = settings if settings is not None else load_settings()
         owns_pool = pool is None
         if pool is None:
-            pool = build_pool(settings.database_uri)
+            pool = build_pool(settings.database_uri, max_size=settings.db_pool_max_size)
             await pool.open()
         owns_providers = providers is None
         providers = providers if providers is not None else build_providers(settings)

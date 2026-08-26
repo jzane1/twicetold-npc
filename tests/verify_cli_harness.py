@@ -234,9 +234,11 @@ def request(agent_id, **overrides) -> DialogueTurnRequest:
     return DialogueTurnRequest(**base)
 
 
-def prompt_memory_ids(prompt: str) -> list[str]:
-    """The [memories] block's rendered IDs, in order (structural extract)."""
-    return re.findall(r"^- \(([0-9a-f-]{36})\)", prompt, flags=re.MULTILINE)
+def prompt_memory_lines(prompt: str) -> list[str]:
+    """The [memories] block's rendered line texts, in order — a structural
+    extract of fixture-authored content, never model output (the in-prompt
+    id left the line at F0, 2026-08-26)."""
+    return re.findall(r"^- (.+)$", prompt, flags=re.MULTILINE)
 
 
 def crafted_item(memory_id, score, relevance, recency, importance_norm):
@@ -352,8 +354,10 @@ async def main(database_uri: str) -> None:
     order = [p1.index(b) for b in ("[identity]", "[memories]", "[output]")]
     check(order == sorted(order), "prose prompt blocks ride in spec order")
     check(
-        all(str(item.memory_id) in p1 for item in r1.items),
-        "retrieved memory IDs carried into the prose prompt",
+        all(item.content in p1 for item in r1.items)
+        and not any(str(item.memory_id) in p1 for item in r1.items),
+        "retrieved memory content rides the prose prompt; the id does not "
+        "(stripped from the character-facing block at F0, 2026-08-26)",
     )
     check(
         "reputation" not in p1
@@ -372,9 +376,10 @@ async def main(database_uri: str) -> None:
         and [v.score for v in r1.dialogue_view] == [i.score for i in r1.items],
         "parity at default weights: dialogue_view == items (id, score) projection",
     )
+    content_by_id = {i.memory_id: i.content for i in r1.items}
     check(
-        prompt_memory_ids(recording.last_system_prompt or "")
-        == [str(v.memory_id) for v in r1.dialogue_view],
+        prompt_memory_lines(recording.last_system_prompt or "")
+        == [content_by_id[v.memory_id] for v in r1.dialogue_view],
         "prose prompt [memories] renders the weight-ranked (== served) order",
     )
     # Re-rank (service level): an override re-scores the SAME served set; the
@@ -398,8 +403,8 @@ async def main(database_uri: str) -> None:
         "override: dialogue_view == the pure-function re-rank of the served set",
     )
     check(
-        prompt_memory_ids(recording.last_system_prompt or "")
-        == [str(v.memory_id) for v in rw.dialogue_view],
+        prompt_memory_lines(recording.last_system_prompt or "")
+        == [content_by_id[v.memory_id] for v in rw.dialogue_view],
         "override: the prose prompt renders in the re-ranked order",
     )
     # Pure re-rank proof on crafted items (deterministic, no model call):
@@ -578,6 +583,7 @@ async def main(database_uri: str) -> None:
         "query_embed",
         "first_word",
         "perceived_first_word",
+        "pre_prose",
         "dialogue_total",
         "turn_total",
     ):

@@ -96,6 +96,7 @@ its surrounding spaces both become hyphens, so `Name — 2026-07-28` anchors as 
 - [E2 rehearsal executed — blockers cleared, the recording state pinned — 2026-08-22](#e2-rehearsal-executed--blockers-cleared-the-recording-state-pinned--2026-08-22)
 - [E3 first attempt — recorded and QA'd, master not cut; presentation redesign ruled — 2026-08-24](#e3-first-attempt--recorded-and-qad-master-not-cut-presentation-redesign-ruled--2026-08-24)
 - [Roadmap re-sequenced — F0 audit pass added; the demo endgame moves after Phase F; Phase G re-pointed — 2026-08-24](#roadmap-re-sequenced--f0-audit-pass-added-the-demo-endgame-moves-after-phase-f-phase-g-re-pointed--2026-08-24)
+- [F0 spec rulings + build record — the audit/test/improve pass landed — 2026-08-26](#f0-spec-rulings--build-record--the-audittestimprove-pass-landed--2026-08-26)
 
 ## Primary decisions
 
@@ -4356,3 +4357,144 @@ recording pauses; release work comes first.
 demo video does not yet exist, so the README ships without the video link; the link lands
 as a small docs touch in the publish step. The finish-line end state is unchanged: repo
 public + video published + package downloadable.
+
+---
+
+## F0 spec rulings + build record — the audit/test/improve pass landed — 2026-08-26
+
+F0's scope settled at its own session spec (the 2026-08-24 re-sequencing's escape hatch): a
+plan-mode exploration pass (three sweeps + a latency design + the doc-auditor agent) fed one
+AskUserQuestion batch of four forks. Jack ruled; the approved plan is the spec (the C5
+precedent). All numbers below were independently re-verified by a floor-verifier pass the
+same day (**pass**; the dated floors.md Re-verification entry is the evidence record).
+
+**The four spec rulings (Jack, at the plan batch):**
+
+1. **Latency: "overlap + attribute"** (the recommended option). Build the safe turn-path
+   overlap, the pool-size knob, and a `pre_prose` driver series; A/B-measure real; land only
+   what the numbers justify. The duplicate-read dedupe (the agent row fetched twice per turn —
+   `dialogue.py` + `retrieval.py` — and identity resolved twice, whose removal would also
+   close the acknowledged mid-request-mutation window but touches the `/v1/dialogue/init`
+   wire model) was NOT selected: recorded here as a surfaced fork, not built.
+2. **The big levers: "keep locks, record ceiling"** (recommended). No cache markup, no
+   embed-swap spec, no slate re-open. The recorded ceiling: the OpenAI query embed is
+   ~230–270 ms ≈ 28% of the perceived median — an embed swap (a 50–100 ms embedder) would
+   put the headline near **770–870 ms** but re-opens the locked embedding constant AND the
+   stored-vector space (re-embed or a parallel column — its own session); prompt caching
+   stays inert on the locked Haiku slate (4096-token minimum cacheable prefix vs our
+   ~0.5–1K-token heads — markup would silently never fire); the dialogue slate stays Haiku
+   (latency rules, settled a fourth time by declining the re-open). Also surfaced, not
+   built: a driver time-jump arm for isolated reconstruction-stall timing (the existing
+   believability-run number — 918 ms perceived with 34 write-backs — stands as the
+   reconstruction-inclusive evidence); the retrieval-internal overlaps REJECTED at design
+   (gate_ms is a ruled timing contract spanning the loaded-set/components fetches — not
+   re-opened for ~2–4 ms); and the design note that under concurrency the query embed
+   queues behind whole-stream prose slots on the same semaphore (invisible to the serial
+   driver; a C7-shaped future question).
+3. **Wording: BOTH prompt surfaces** — the dialogue-prompt UUID audit and the write-prompt
+   voice clause, each gated by the ruled real-mode believability non-regression protocol.
+   The beat-script constancy-line fix and the Ledger label restyle were NOT selected — they
+   stay with the presentation redesign / Jack's later call.
+4. **README: "leave it all to F1."** The public README's false claims (purge "without a
+   handler", "still ahead" list, 25/108/eight counts) stand by explicit ruling until F1's
+   full rebuild. Internal registers were separate surfaces and were reconciled (below).
+
+**What landed (31 files, +397/−201; no migration — ledger 001–008 before and after):**
+
+- **Register repair.** floors.md rows 28–32 moved back INSIDE the table block (they had been
+  stranded after the Re-verification prose, rendering as literal text — the exact failure
+  the file was split out of status.md to fix; byte-pure 5-line relocation, verifier-checked
+  by sorted-multiset diff). Counts reconciled to MEASURED reality: suite **193 collected /
+  178 subset** (the prior "175" in live docs derived from the C6-era floors evidence and had
+  already drifted — E2's three tests included one nlp-marked; always measure, never derive);
+  fifteen walkers everywhere (docs\README.md vocabulary, SETUP.md incl. the four missing
+  walker names, tests\scratch_uri.py); CLAUDE.md migrations 002–008; test-suite.md's count
+  register updated in place with the E2 pair folded in. Cheap doc truths: unity-client.md's
+  timeout passage now leads with the current 8.1 s Haiku number; the never-committed
+  `rehearse.py` reference annotated. The doc-auditor agent then swept the tree and its 16
+  mechanical findings were all fixed: five CONTRADICTIONS (architecture.md "thirteen verbs"
+  → fourteen incl. C4's; packaging-before-video per the re-sequencing; reconstruction.md's
+  drift-anchor set + eviction list each missing a member C4's ruling-8 pass had fixed only
+  in architecture.md; fact-level-correction.md's "only writers" missing migration 006's
+  enrichment writer) + eleven stale current-state claims (SETUP.md 001–007/5-migrations/
+  eleven-routes; mcp-setup.md through 005; migration-01.md's four un-annotated points incl.
+  the seed-immutability correction; authorial-correction.md's "no mechanism writes that
+  cause"; unity-client.md's six-groups list; write-path.md's five-triggers line;
+  test-suite.md's "paper ablations"; docs\README.md's "four queues"). One auditor flag
+  ADJUDICATED AS NOT STALE: unity-client.md's fork-2 "No route exists today" — the section
+  sits under a rulings banner that says "The original fork text below stands as specced";
+  left untouched by its own convention.
+- **The test gap closed.** `test_init_route_error_contract` (Set B, beside init's
+  byte-identity pair): unknown agent → 404, caller-passed unknown identity_version → 422.
+  test-suite.md's Known-gap paragraph now records the closure. Suite 192 → 193 / subset 178.
+- **The turn-path overlap** (`dialogue.py`): retrieval starts as a task; the agent-state
+  fetch, a self-timed bundles task, and an identity-resolution task run under it (none
+  consumes retrieval output — commented "Concurrent by design"); awaits in the original
+  order so error primacy is unchanged (404/422 at all three routes byte-same); cancel-and-
+  drain on BaseException (no TaskGroup — ExceptionGroup would break the routes' except
+  clauses; no bare gather — it leaks pool connections on failure).
+- **The pool-size knob** (`LONGMEM_DB_POOL_MAX_SIZE`, default 8, loud ConfigError shape
+  cloned from the C7-A cap): closes the last hardcoded capacity number against the
+  nothing-hardcoded invariant; `build_pool(uri, *, max_size=…)` keyword default keeps
+  conftest + all fifteen walkers byte-untouched; threaded at the seven app construction
+  sites; `.env.example` gained a Capacity section carrying BOTH this and the C7-A cap var
+  (which had been missing from the template since C7). `min_size=1` stays deliberately
+  un-knobbed — surfaced as a one-line sibling if Jack wants the invariant fully closed.
+- **The dialogue-prompt UUID strip.** The audit established the in-prompt id was vestigial:
+  it entered with the ruled 2026-07-15 prompt shape when `[output]` was a JSON contract and
+  the model cited memories back; A1 removed that contract and orphaned the ids. Nothing in
+  production consumes them (not the fake provider, the C# client, or the Ledger — served IDs
+  ride the payload from retrieval); THREE test-apparatus sites did (two greppable helpers +
+  one inline walker check that only surfaced at runtime) and were reworked to content-based
+  assertions, with walker [2] now asserting the id is ABSENT. `_MEMORY_LINE` is `- {content}`;
+  cli-harness.md's ruled-shape paragraph carries the dated annotation. Measured effect:
+  **dialogue input 40.9–42.4k → 20.6k tokens/100 turns (−51%); all-in $0.109–0.112 →
+  $0.0841/100 turns (−23%)**.
+- **The write-prompt voice clause** (`_WRITE_SYSTEM`): a register clause for
+  `rendered_content` encoding identity-authoring.md §5's three measured rules (the NPC's own
+  actions owned in first person — the witness-voice render bug; witnessed stays witnessed;
+  no invented names — the fabrication metric). JSON key list byte-identical.
+- **The driver rig**: a `pre_prose` per-turn series (perceived − first_word — p50s don't
+  subtract), additive to the cli-harness walker's series list.
+
+**The measurements (real providers, D1's 60-turn shape, fresh pid-scoped scratch per arm):**
+
+- Baseline ×2: perceived p50 **826/835 ms** (p95 1427/1314) — ~100 ms under D1's 938 at
+  today's network conditions; the same-day A/B is the comparison, never cross-day.
+- Overlap arms ×2: perceived p50 873/887 — the +40–50 ms is ENTIRELY provider-side
+  first-word drift (534/572 → 600/583 between measurement windows; the embed and SQL
+  controls are flat and the walkers prove byte-identical prompts, so the code change cannot
+  be the cause). The component the overlap targets — **non-embed pre-prose — fell 27.3/27.7
+  → 20.5/18.4 ms**, both runs, exactly the predicted 3–10 ms mechanism win. Kept on that
+  evidence: the headline is unchanged within provider noise, the p95 tail-hiding is real,
+  and the seam's data-flow is now explicit. The attribution question D1 left open is
+  CLOSED: pre-prose ≈ embed (~230–250 ms, ~90%) + gate evaluation (~11–12 ms) + everything
+  else (~10–15 ms); retrieval SQL p50 rounds to 0.0.
+- Believability gate (the ruled protocol: fake dry-run exit 0 in 29.5 s, then real-mode
+  `run` over judged.jsonl vs the D1 baseline artifact): gist_precision 0.8232 → **0.8309**,
+  detail_recall 0.6603 → **0.8448**, fabrication_rate 0.0435 → **0.0159**,
+  keyword_retention equal at 0.8478, fabricated entities 1 both — **no regression, three
+  metrics up**; both prompt changes landed on it (artifacts
+  `run_20260826T223224Z_pid_5008.json` vs `run_20260819T055215Z_pid_22240.json`).
+- Final post-everything run: perceived p50 **917 / p95 1227** (the best p95 of the day),
+  non-embed pre-prose 21.8 ms, and the token/cost deltas above. Real spend for the whole
+  session ≈ **$0.55** (five driver runs + two believability legs), under the ~$1 plan cap.
+
+**The incident (tooling-side, zero product code implicated):** a 3-hour double-hang in the
+verification chain. Two stacked runner mistakes: a bash `pytest | tail && walkers` chain
+binds `&&` to tail's exit (always 0), so a RED subset still launched a walker phase; and the
+walker runner let children inherit stdin — under a backgrounded shell it never closes, and
+verify_cli_harness's REPL beat blocks on it forever (foreground runs passed only because
+their stdin happened to give EOF). Diagnosed by CPU-time signature (~12 CPU-seconds over
+hours = blocked, not working), fixed with `stdin=DEVNULL` in every wrapper and un-piped
+stage sequencing; the leaked scratch DBs dropped. The hunt also flushed out the third
+in-prompt-UUID consumer. Recorded in the session log; the walker-runner cosmetic (the
+deferred-writes walker's `N/N criteria passed` banner format not matching the runner's
+banner scan) is noted for the carried walker-refactor task, and the verifier's DB inventory
+spotted an orphaned `longmem_eval_14188` scratch from an earlier session (left in place —
+Jack's call to drop).
+
+**Floors consequence:** no new layer, so no new row — the count stays 32; the same-day
+independent floor-verifier **pass** is recorded as a dated entry under floors.md's
+"Re-verification passes" (cli-harness, read-path, write-path, and gate floors re-opened and
+re-closed inside it).

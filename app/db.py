@@ -65,6 +65,7 @@ from pgvector.psycopg import register_vector_async
 from psycopg.types.json import Jsonb
 from psycopg_pool import AsyncConnectionPool
 
+from app.config import DB_POOL_MAX_SIZE_DEFAULT
 from app.providers import NewComponent
 
 
@@ -72,10 +73,21 @@ async def _configure(conn) -> None:
     await register_vector_async(conn)
 
 
-def build_pool(database_uri: str) -> AsyncConnectionPool:
-    """Pool is opened by the caller (await pool.open()) so startup is explicit."""
+def build_pool(
+    database_uri: str, *, max_size: int = DB_POOL_MAX_SIZE_DEFAULT
+) -> AsyncConnectionPool:
+    """Pool is opened by the caller (await pool.open()) so startup is explicit.
+
+    `max_size` is settings.db_pool_max_size (LONGMEM_DB_POOL_MAX_SIZE) at the
+    app/runner construction sites — raise it together with the concurrency cap
+    (the config.py comment pair). The keyword default keeps the walkers' bare
+    build_pool(uri) calls at today's shape; min_size stays 1, not knobbed."""
     return AsyncConnectionPool(
-        database_uri, configure=_configure, open=False, min_size=1, max_size=8
+        database_uri,
+        configure=_configure,
+        open=False,
+        min_size=1,
+        max_size=max_size,
     )
 
 

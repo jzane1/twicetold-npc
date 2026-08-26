@@ -141,7 +141,7 @@ async def run_driver(
     empirical novelty-distance CDF. It never sets the knob.
     """
     script = script if script is not None else generate_script(sessions, turns, seed)
-    pool = build_pool(settings.database_uri)
+    pool = build_pool(settings.database_uri, max_size=settings.db_pool_max_size)
     await pool.open()
     providers = build_providers(settings)
     turn_results: list[DialogueTurnResult] = []
@@ -246,6 +246,13 @@ def _aggregate(
         "first_word": [t.instrumentation.first_word_ms for t in turns],
         "perceived_first_word": [
             t.instrumentation.perceived_first_word_ms for t in turns
+        ],
+        # Pre-prose attribution (F0, 2026-08-26): everything before the prose
+        # call's first chunk, as a per-turn series — p50s don't subtract, so
+        # `perceived p50 - first_word p50` is NOT the pre-prose p50.
+        "pre_prose": [
+            t.instrumentation.perceived_first_word_ms - t.instrumentation.first_word_ms
+            for t in turns
         ],
         "dialogue_total": [t.instrumentation.prose_stream_ms for t in turns],
         "turn_total": [t.instrumentation.total_ms for t in turns],

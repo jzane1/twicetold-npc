@@ -195,8 +195,9 @@ to AFTER Phase F). What the next version inherits:
 
 1. **A provision serves beat 1 exactly once.** The correction moves ref 0's fact chain and
    evicts the June caches — the wrong-belief answer is unreproducible afterwards. Plan every
-   recording attempt as fresh-provision + re-pin (`rehearse.py --take-only` shape); the
-   2026-08-22 provision is SPENT.
+   recording attempt as fresh-provision + re-pin (the `rehearse.py --take-only` shape —
+   session-scratch tooling from the E2 rehearsal, never committed to the repo; rebuild or
+   improvise it at the re-record); the 2026-08-22 provision is SPENT.
 2. **Flaws found on camera, noted NOT fixed by ruling** (may not survive the redesign): the
    Branwen nameplate renders MIRRORED (TextMesh rotY 180, faces away from the camera —
    invisible to every API-level gate; visual QA needs extracted frames), the browser tab/URL

@@ -2099,6 +2099,43 @@ session.
     plug-in clip is out, replaced by a personal-website embed of the project (details
     deferred until the step is ever brought forward). **Next: F0.**
 
+## **F0 — the whole-project audit/test/improve pass landed 2026-08-26 (spec-at-plan → build → independent floor-verify pass, one session).**
+
+- **Landed:** the whole F0 scope as ruled at the plan batch (four forks, three recommendations
+  taken; README ruled wholly to F1 — the fourth divergence). (1) Register repair: floors.md's
+  five newest rows moved back inside the table (they rendered as literal text — the file's
+  founding failure mode, recurred); every live count reconciled to MEASURED reality (suite
+  193/178 — the docs' "175" had silently drifted since E2; fifteen walkers named everywhere;
+  CLAUDE.md 002–008); the doc-auditor's 16 mechanical findings all fixed (five real
+  contradictions incl. architecture.md's verb count and the packaging-before-video ordering;
+  one flag adjudicated not-stale by the doc's own stands-as-specced banner). (2) The init
+  404/422 route-contract test — the suite's one named Known gap, closed (193rd test). (3) The
+  turn-path overlap (bundles + identity + agent-state fetches under the retrieval leg;
+  error primacy preserved; cancel-and-drain) + the `LONGMEM_DB_POOL_MAX_SIZE` knob (the last
+  hardcoded capacity number; .env.example also gained the C7-A cap var it had been missing)
+  + the driver's `pre_prose` series. (4) The dialogue-prompt UUID strip (vestigial since A1;
+  three test-apparatus consumers reworked; **dialogue input −51%, all-in −23% to
+  $0.084/100 turns**) and the write-prompt voice clause (identity-authoring §5's measured
+  register rules, at the source) — both landed through the ruled believability gate:
+  **no regression, three metrics up** (gist 0.8309, detail_recall 0.8448, fabrication 0.0159).
+  Latency truth: perceived p50 sat 826–917 across the day's provider windows; the overlap's
+  target component (non-embed pre-prose) fell 27–28 → 18–21 ms as designed; the D1
+  attribution gap is closed (pre-prose ≈ 90% embed); the ceiling recorded (embed swap ≈
+  770–870 ms headline; caching inert on Haiku; slate stands). Full suite 193 green, fifteen
+  walkers green fresh+serial, C# interop 53 checks green, floor-verifier **pass** — the
+  floors.md Re-verification entry + the dated decisions.md entry carry the evidence.
+- **Blocked (temporarily, self-inflicted):** ~3 hours lost to a verification-chain double-hang
+  — my runner let walker children inherit a backgrounded shell's never-closing stdin
+  (verify_cli_harness's REPL beat blocks on it), stacked on a `pytest | tail &&` chain that
+  bound `&&` to tail's exit. Diagnosed by CPU-time signature, fixed (stdin=DEVNULL
+  everywhere, un-piped stages), leaked scratches dropped; lessons recorded. The hunt also
+  flushed the third in-prompt-UUID consumer the static grep had missed.
+- **Abandoned:** nothing. Surfaced-not-built by ruling: the duplicate-read dedupe, the
+  min_size sibling knob, the driver time-jump arm, cache markup, the embed-swap spec.
+- **Spend:** ≈ $0.55 real (five 60-turn driver runs + two believability legs).
+- **Next: F1** (the full README build — now also inheriting F0's corrected reality:
+  32 floors rows, 193 tests, fifteen walkers, purge built, $0.084/100 turns).
+
 ---
 
 ## Archived phase headers
@@ -2746,3 +2783,29 @@ collides with the locked 1536 dimension).
   real use 2026-08-12).
 - **B3. Eval-harness stage 4.** ✅ LANDED 2026-08-12, floor-verified (floors row 24; its
   first real run decided R7).
+
+## Archived from status.md at the F0 wrap-up (2026-08-26, size tripwire)
+
+**E3 first attempt 2026-08-24:** all four segments recorded through the new attach-mode rig
+and every beat PASSED live QA (the per-segment receipts in the dated E3 entry; one nuance
+carried to the captions — constancy binds the SERVED retelling, the streamed wrapper varies
+by design). The cut was NOT made: footage QA found the Branwen nameplate MIRRORED in every
+Unity frame plus lesser blemishes (the register: the beat script's E3 record) — **noted,
+deliberately NOT fixed by ruling**: the presentation redesign owns them; the re-record runs
+on a fresh provision (`--fresh` sanctioned). **The
+2026-08-22 pinned state is SPENT** — a provision serves beat 1 exactly once (the correction
+moves the fact chain and evicts the June caches). The E3 rig is provision-independent and
+ready (driver `startAsOf`, committed scene-1 start state, OBS + ffmpeg, close card + run
+sheet + raw takes under `C:\Users\jacks\Videos\longmem-demo\`); full record: the dated E3
+entry + `demo-beat-script.md`'s E3 record.
+
+**E2 landed 2026-08-19** (demo-scoped, no floors row): beat script + loader + Ledger live
+feed + C# prewarm parity + the Branwen retarget; rehearsal executed 2026-08-22. The verbatim
+block moved to `session-log.md`'s archive at the E3 wrap-up (size tripwire); full record in
+`decisions.md`'s E2 entries.
+**E1 landed 2026-08-19** (docs + data, no floor by ruling): `identity-authoring.md` +
+Branwen, the drovers memory certified as the drift target — the roadmap bullet below; the
+five authoring lessons in `decisions.md`'s E1 entry.
+D1 (optimization, 2026-08-19, no new code): perceived-first-word **p50 938 ms**, believability
+no regression (gist_precision 0.823), **model slate LOCKED** (Haiku latency-bound; Opus 4.8
+batch roles in `.env.example`), workers OFF per-agent, prompt caching DEFERRED — the D1 entry.

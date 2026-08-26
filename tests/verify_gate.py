@@ -770,12 +770,15 @@ async def main(database_uri: str) -> None:
     ]
     prompt = assemble_prose_prompt(SEED_PROSE, items, loaded_order=[id_a, id_b])
     lines = prompt.splitlines()
-    pos_a = next(i for i, ln in enumerate(lines) if str(id_a) in ln)
-    pos_b = next(i for i, ln in enumerate(lines) if str(id_b) in ln)
+    # Locate memory lines by their CONTENT, not their UUID: the id rode the
+    # rendered line only until the F0 audit (2026-08-26) established nothing
+    # consumes it there and the strip landed — content is the stable locator.
+    pos_a = next(i for i, ln in enumerate(lines) if "first loaded" in ln)
+    pos_b = next(i for i, ln in enumerate(lines) if "second loaded" in ln)
     pos_sub = next(
         i for i, ln in enumerate(lines) if ln == _MEMORY_RECOLLECTION_SUBHEADER
     )
-    pos_c = next(i for i, ln in enumerate(lines) if str(id_c) in ln)
+    pos_c = next(i for i, ln in enumerate(lines) if "the recollection" in ln)
     check(
         pos_a < pos_b < pos_sub < pos_c,
         "gated prompt: loaded items in the caller's append-only order, then "

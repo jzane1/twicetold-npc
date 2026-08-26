@@ -104,7 +104,7 @@ def _tee_turn(result: DialogueTurnResult) -> None:
 @asynccontextmanager
 async def _lifespan(app: FastAPI):
     settings = load_settings()
-    pool = build_pool(settings.database_uri)
+    pool = build_pool(settings.database_uri, max_size=settings.db_pool_max_size)
     await pool.open()
     await asyncio.to_thread(warm_pipelines)  # model load is startup cost
     providers = build_providers(settings)

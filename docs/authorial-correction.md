@@ -150,7 +150,9 @@ Ruled at spec time (fork 2). Prompt assembly (`assemble_reconstruction_prompt`,
   keys the cache and the trajectory, it just no longer selects a thinning slice for these
   chains).
 - **`update_with_resentment`-anchored chains:** decided with the dissonance path (sequenced
-  post-August); until then no mechanism writes that cause.
+  post-August as written; **ruled and built at C4, 2026-08-17** — `dissonance.md` ruling 4
+  gives accepted heads the authorial fixed-anchor treatment; annotated at the F0 audit,
+  2026-08-26). Until C4, no mechanism wrote that cause.
 - The drift budget itself is unchanged — candidates embed against the corrected anchor, as
   already built.
 

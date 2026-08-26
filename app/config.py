@@ -74,10 +74,17 @@ JUDGE_MAX_TOKENS_DEFAULT = 2048
 # ModelCallGate enforces (app\concurrency.py). Process-level like the worker
 # poll intervals (an agent cannot own a thread pool), so it is a Settings field
 # with its own env var, not a per-agent SERVICE_DEFAULTS knob. Default aligns
-# with the DB pool max_size (db.build_pool) so the cap never starves on a
-# connection; raise both together. Integrator-tunable — nothing hardcoded.
+# with the DB pool max_size (LONGMEM_DB_POOL_MAX_SIZE below) so the cap never
+# starves on a connection; raise both together. Integrator-tunable — nothing
+# hardcoded.
 ENV_MAX_CONCURRENT_MODEL_CALLS = "LONGMEM_MAX_CONCURRENT_MODEL_CALLS"
 MAX_CONCURRENT_MODEL_CALLS_DEFAULT = 8
+# DB pool ceiling (F0, 2026-08-26): db.build_pool's max_size, the other half
+# of the "raise both together" pair — the same process-level shape, closing
+# the last hardcoded capacity number (the nothing-hardcoded invariant).
+# min_size stays 1 in build_pool: not knobbed, surfaced at F0.
+ENV_DB_POOL_MAX_SIZE = "LONGMEM_DB_POOL_MAX_SIZE"
+DB_POOL_MAX_SIZE_DEFAULT = 8
 
 # Optional per-Mtok USD prices (CLI-harness build ruling, 2026-07-15): cost
 # fields carry token counts unconditionally; USD appears only when these are
@@ -407,6 +414,7 @@ def load_env(path: Path = ENV_PATH) -> dict[str, str]:
             ENV_DIALOGUE_THINKING,
             ENV_JUDGE_MAX_TOKENS,
             ENV_MAX_CONCURRENT_MODEL_CALLS,
+            ENV_DB_POOL_MAX_SIZE,
         }
         | set(PRICE_ENV_KEYS)
     )
@@ -441,6 +449,9 @@ class Settings:
     judge_max_tokens: int = JUDGE_MAX_TOKENS_DEFAULT
     # Process-level concurrency cap (C7): max provider calls in flight at once.
     max_concurrent_model_calls: int = MAX_CONCURRENT_MODEL_CALLS_DEFAULT
+    # DB pool ceiling (F0): db.build_pool max_size — the cap's "raise both
+    # together" sibling.
+    db_pool_max_size: int = DB_POOL_MAX_SIZE_DEFAULT
     anthropic_api_key: str = field(default="", repr=False)
     openai_api_key: str = field(default="", repr=False)
     defaults: dict[str, float] = field(default_factory=lambda: dict(SERVICE_DEFAULTS))
@@ -564,6 +575,21 @@ def load_settings(env: dict[str, str] | None = None) -> Settings:
     else:
         max_concurrent_model_calls = MAX_CONCURRENT_MODEL_CALLS_DEFAULT
 
+    raw_pool_max = env.get(ENV_DB_POOL_MAX_SIZE, "")
+    if raw_pool_max:
+        try:
+            db_pool_max_size = int(raw_pool_max)
+        except ValueError as exc:
+            raise ConfigError(
+                f"{ENV_DB_POOL_MAX_SIZE} must be an integer, got {raw_pool_max!r}."
+            ) from exc
+        if db_pool_max_size < 1:
+            raise ConfigError(
+                f"{ENV_DB_POOL_MAX_SIZE} must be >= 1, got {db_pool_max_size}."
+            )
+    else:
+        db_pool_max_size = DB_POOL_MAX_SIZE_DEFAULT
+
     prices: dict[str, float] = {}
     for env_key, price_key in PRICE_ENV_KEYS.items():
         raw = env.get(env_key, "")
@@ -587,6 +613,7 @@ def load_settings(env: dict[str, str] | None = None) -> Settings:
         dialogue_thinking=dialogue_thinking,
         judge_max_tokens=judge_max_tokens,
         max_concurrent_model_calls=max_concurrent_model_calls,
+        db_pool_max_size=db_pool_max_size,
         anthropic_api_key=anthropic_key,
         openai_api_key=openai_key,
         prices=prices,

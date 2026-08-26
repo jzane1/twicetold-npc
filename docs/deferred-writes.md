@@ -132,8 +132,8 @@ while worked, so a second process (API + REPL against one DB) can re-claim it mi
 completion guard makes the loser a rolled-back no-op. **Worst case is duplicate model spend,
 never duplicate rows**, and the run log makes it measurable. The client `event_id` dedup stays
 deferred (the standing write-path `[SETTLE-AT-BUILD]`). The worker holds a pool connection only
-inside db calls, never across a model call; the pool (`max_size = 8`) is shared with request
-handlers.
+inside db calls, never across a model call; the pool (`max_size` = `LONGMEM_DB_POOL_MAX_SIZE`,
+default 8 — knobbed at F0, 2026-08-26) is shared with request handlers.
 
 ## Knobs (all in `SERVICE_DEFAULTS`, floats, `agent_knob` contract)
 

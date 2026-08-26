@@ -94,7 +94,9 @@ plain-prose re-introduction — and ruled on the re-presentation):
   (stop and report if the build surfaces one). The operator's text itself is stored byte-verbatim
   in both chains; no render pass ever touches it.
 - **Verb discrimination by `write_cause` alone.** The fact chain reuses the existing vocabulary —
-  its only writers are the observe insert (`original`) and this verb (`authorial_correction`).
+  its writers are the observe insert (`original`), this verb (`authorial_correction`), and — since
+  migration 006 — the deferred-enrichment worker's embedding-repair version (`enrichment`; the
+  CHECK widened with C1, 2026-08-12, and this line missed it until the F0 audit, 2026-08-26).
   No `corrections`-table row (still diegetic-only by CHECK); no marker on prior rows.
 - **The eviction invariant** (standing): the combined verb is still a chain writer — it evicts
   **all** `reconstruction_cache` rows for the memory_id, same transaction, unchanged from v1.
@@ -155,8 +157,10 @@ The existing operator verb, grown — no new route, no new REPL command:
    2. Insert the corrected telling head — `write_cause = 'authorial_correction'`,
       `valid_at = t_c` (v1, unchanged).
    3. Supersede the live fact head — predicate + rowcount. No second CAS field: the telling-head
-      CAS already serializes racing corrections, and this verb is the fact chain's only
-      post-observe writer.
+      CAS already serializes racing corrections, and this verb was the fact chain's only
+      post-observe writer as built *(since migration 006 the enrichment worker's embedding
+      repair also writes the chain; its interaction with in-flight corrections is
+      deferred-writes.md's contract — annotated at the F0 audit, 2026-08-26)*.
    4. Insert the corrected fact row — `basis_text` = operator content byte-verbatim,
       `embedding` = the pre-computed vector, `write_cause = 'authorial_correction'`,
       `valid_at = t_c`. Prior `invalid_at` = new `valid_at` on both chains — the

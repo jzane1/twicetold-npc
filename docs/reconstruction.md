@@ -189,7 +189,9 @@ format and quantum knob — suggested `{identity_version}|b{index}` with
   **progressive pre-demo drift trajectory** despite the static seed-only identity — the 60-day
   beat's mechanism.
 - **Eviction invariant (standing, generalized):** cache writes happen only in the reconstruction
-  path; **any other writer to a chain — correction, diegetic write, purge — evicts all cache rows
+  path; **any other writer to a chain — correction, diegetic write, deferred-enrichment completion
+  (2026-08-12, every completion shape including facts-only; this line missed the C1 member until
+  the F0 audit, 2026-08-26 — architecture.md §7 had it), purge — evicts all cache rows
   for that memory_id** (application code, not triggers). The authorial endpoint inherits
   this obligation (built 2026-07-18); **purge honors it too (C6, 2026-08-18)** — the per-memory
   DELETE removes the memory's `reconstruction_cache` rows outright, as an ordered step of the
@@ -208,7 +210,9 @@ On a cache miss, after the call returns a candidate retelling:
 
 1. **Drift check.** Embed the candidate and the **anchor** and measure distance. The anchor is
    derivable, no pointer (register): the latest chain row with `write_cause` in
-   {`original`, `authorial_correction`, `update_with_resentment`}. Both texts embed **at check
+   {`original`, `authorial_correction`, `update_with_resentment`, `enrichment`} *(the fourth
+   member since migration 006; C4's ruling-8 doc pass fixed architecture.md §7 but missed this
+   parallel line — closed at the F0 audit, 2026-08-26)*. Both texts embed **at check
    time** — `memory_details` has no embedding column (frozen schema), and `memories.embedding`
    embeds `observation_text`, not the rendered head. `[SETTLE-AT-BUILD]` metric + knob —
    suggested cosine distance (the HNSW opclass) against integrator knob `drift_budget_threshold`

@@ -991,11 +991,20 @@ def _lenient_json_text(text: str) -> str:
     return stripped.strip()
 
 
+# The rendered_content voice clause (F0, 2026-08-26) encodes the three
+# measured register rules from identity-authoring.md §5: the render model's
+# witness-voice default ("I watched Branwen turn away..." for the NPC's OWN
+# action), invented casual names (the fabrication metric counts them), and
+# report-register drift. Key list and JSON contract unchanged.
 _WRITE_SYSTEM = (
     "You are the write-time memory scorer for a game NPC. Given an observation, "
     "return ONLY a JSON object with keys: rendered_content (a first-person prose "
-    "telling of the observation), importance_raw (float 0..1, anchored to the "
-    "NPC's diagnosticity goal){typology_clause}. No other text."
+    "telling of the observation in the NPC's own plain spoken register: actions "
+    "the NPC performed are owned in first person, never narrated as if watched; "
+    "events the NPC witnessed stay witnessed; use only people and things the "
+    "observation itself establishes, never inventing names), importance_raw "
+    "(float 0..1, anchored to the NPC's diagnosticity goal){typology_clause}. "
+    "No other text."
 )
 _TYPOLOGY_CLAUSE = (
     ", typology (one of observed|told|inferred|reflected), "

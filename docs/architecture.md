@@ -72,8 +72,9 @@ developer path is recorded anywhere, so a clone works from any location. Unity 6
 (CharacterController + mouse-look, raycast-plus-key interactables); Unity's external script editor
 is VS Code. Global Python 3.14.3 on PATH. Secrets live in `.env` at repo root, never in docs.
 C# root namespace `NpcMemory`; Unity scripts under `Assets\Scripts\` until the package layout
-(`com.jacksonzane.npc-memory`) is settled; Unity Package Manager packaging is deferred until after
-the demo video.
+(`com.jacksonzane.npc-memory`) is settled; Unity Package Manager packaging lands at Phase F2,
+BEFORE the demo video *(the 2026-08-24 re-sequencing moved the whole demo endgame after Phase F;
+this line originally read "after the demo video" — corrected at F0, 2026-08-26)*.
 
 **Backend.** FastAPI; psycopg v3 with `AsyncConnectionPool`; hand-written SQL (no ORM);
 PostgreSQL 16 + pgvector in Docker (the `pgvector/pgvector` image); UUID primary keys minted
@@ -576,9 +577,11 @@ A demo inspector surface like `/ledger`, not integrator API).
 
 **The client package** *(built 2026-07-27)*: `client\NpcMemory.Core` — netstandard2.1,
 engine-agnostic (**zero `UnityEngine` types** by ruling), one flat `NpcMemoryClient` covering all
-thirteen verbs 1:1 *(the metrics read joined 2026-07-29; the reflect verb 2026-08-15 — "eleven"
+fourteen verbs 1:1 *(the metrics read joined 2026-07-29; the reflect verb 2026-08-15 — "eleven"
 stood stale here until the 2026-08-17 correction; C3 adds no verb, its scene_type rides the
-turn request; the agent-state read joined with C5, 2026-08-17)*, plus `NpcSession`, the C# port
+turn request; the diegetic-correct verb joined with C4 and the agent-state read with C5, both
+2026-08-17 — "thirteen" missed C4's verb until the F0 audit, 2026-08-26; purge is server-only,
+no client verb)*, plus `NpcSession`, the C# port
 of the Python runner's turn bookkeeping *(C5 added the session's fire-and-forget observe
 surface — `unity-client.md`)*. Unity gets a
 thin MonoBehaviour adapter over it; a `dotnet run` console harness plays every demo beat headless.
@@ -603,7 +606,8 @@ retention policy? Can a player's memories be deleted?
 ## 13. Positioning & research angle
 
 **README positioning:** non-destructive bi-temporal storage vs destructive LLM compression, citing a
-real counter-example system (still unpicked — see the artifact queue in `status.md`).
+real counter-example system (still unpicked — carried by the F1 README bullet in `status.md`'s
+roadmap; the old "artifact queue" structure is gone).
 
 **Citations on record:** compressive-RAG framing (Spens & Burgess); the CoALA supersede-vs-decay gap
 is answered by bi-temporal invalidation + differential decay classes; Talk of the Town's

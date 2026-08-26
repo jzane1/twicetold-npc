@@ -85,12 +85,12 @@ Apply the schema:
 python db\migrate.py
 ```
 
-First run applies migrations 001–007 and records each in `schema_migrations` **in the same
+First run applies migrations 001–008 and records each in `schema_migrations` **in the same
 transaction as its DDL** — a half-applied migration can never be logged complete. Re-running is a
 clean no-op:
 
 ```
-Up to date: 5 migration(s) applied, 0 pending.
+Up to date: 8 migration(s) applied, 0 pending.
 ```
 
 Point it elsewhere with `--database-uri <uri>` (this is how the fixtures migrate scratch
@@ -109,7 +109,8 @@ python -m app.serve
 
 Useful once it is up:
 
-- `http://127.0.0.1:8000/docs` — the generated OpenAPI surface (eleven routes; `/ledger` is deliberately `include_in_schema=False`)
+- `http://127.0.0.1:8000/docs` — the generated OpenAPI surface (fifteen routes; `/ledger` and
+  `/v1/ledger/turns` are deliberately `include_in_schema=False`)
 - `http://127.0.0.1:8000/ledger` — **The Ledger**, the browser inspector. Paste an agent UUID to
   see its memories, and click one to see the immutable observation beside both version chains
   with superseded rows greyed but present.
@@ -140,30 +141,34 @@ python -m app.load_driver
 
 Two systems, deliberately distinct — see `docs\README.md` for what each is for.
 
-**The suite** (128 scenarios, self-managing scratch DB, no arguments needed):
+**The suite** (193 scenarios, self-managing scratch DB, no arguments needed):
 
 ```powershell
 python -m pytest tests -q
-python -m pytest tests -q -m "not nlp"   # 114, the turn-end subset — seconds, not minutes
+python -m pytest tests -q -m "not nlp"   # 178, the turn-end subset — seconds, not minutes
 ```
 
 Postgres unreachable ⇒ every scenario skips loudly and the run exits green, by ruling.
 
-**The walkers** (eleven structural done-when scripts) need a scratch DB you create yourself:
+**The walkers** (fifteen structural done-when scripts) need a scratch DB you create yourself:
 
 ```powershell
 $scratch = "postgresql://longmem:change-me@localhost:5432/longmem_test"
 docker exec longmem-pg psql -U longmem -d postgres -c "CREATE DATABASE longmem_test"
 python db\migrate.py --database-uri $scratch
 python tests\verify_write_path.py --database-uri $scratch
-# ... verify_dissonance (C4, 2026-08-17), verify_compiler (C3, 2026-08-17),
+# ... verify_prewarm (C7-B, 2026-08-18), verify_concurrency (C7-A, 2026-08-18),
+#     verify_purge (C6, 2026-08-18), verify_agent_state (C5, 2026-08-17),
+#     verify_dissonance (C4, 2026-08-17), verify_compiler (C3, 2026-08-17),
 #     verify_reflection (C2, 2026-08-15), verify_deferred_writes (C1, 2026-08-12),
 #     verify_read_path, verify_cli_harness, verify_gate, verify_reconstruction,
 #     verify_authorial_correction, verify_fact_correction
 docker exec longmem-pg psql -U longmem -d postgres -c "DROP DATABASE longmem_test WITH (FORCE)"
 ```
 
-Run them serially on a FRESH scratch, elder walkers before `verify_dissonance` — two of the
+Run them serially on a FRESH scratch, elder walkers before `verify_dissonance` (the four
+newest — agent_state, purge, concurrency, prewarm — are id-scoped and re-runnable, so their
+position is free) — two of the
 correction walkers assert the corrections table is empty of diegetic rows, which is true in
 sweep order on a fresh scratch and false after a dissonance run (the shared-scratch
 fragility recorded in `status.md`'s carried item; `verify_reflection` additionally requires

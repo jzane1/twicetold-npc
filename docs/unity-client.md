@@ -48,13 +48,15 @@ register entry):
 
 ## Principles this build honors
 
-- **The server is stateless; the client owns scene state.** All six scene-state groups ride the
-  request (`reputation_snapshot`, `identity_version` + `scene_started_at`, `loaded_memory_ids` +
-  `gate_fruitless_streak`, context fields, `recent_actions`, `as_of`); `NpcSession` is the one
-  place the bookkeeping lives, mirroring `app\session.py` exactly.
-- **Nothing integrator-configurable is hardcoded**: base URL, per-route timeouts, action
-  vocabulary, k, weight overrides — all constructor/config surface. No hardcoded model names or
-  pricing anywhere in C#.
+- **The server is stateless; the client owns scene state.** Four scene-state groups ride the
+  request (`identity_version` + `scene_started_at`, `loaded_memory_ids` +
+  `gate_fruitless_streak`, context fields, `as_of`); `NpcSession` is the one
+  place the bookkeeping lives, mirroring `app\session.py` exactly. *(As written this listed six
+  groups incl. `reputation_snapshot` and `recent_actions` — both removed by the A1 re-shape,
+  2026-08-04, like the `:142` annotation below; corrected at the F0 audit, 2026-08-26.)*
+- **Nothing integrator-configurable is hardcoded**: base URL, per-route timeouts, k, weight
+  overrides — all constructor/config surface (the action vocabulary left with A1). No hardcoded
+  model names or pricing anywhere in C#.
 - **IDs + scores always surfaced.** The client exposes the full structured results (items with
   memory IDs, scores, `read_mode`; both scored views; instrumentation) — never prose-only.
 - **Structural tests only.** C# tests assert structure (IDs, flags, state transitions), never
@@ -113,11 +115,10 @@ eval-harness stage 1 and the table was never updated; corrected again 2026-08-17
 
 HTTP errors map to typed exceptions (the Python service-error precedent — never swallowed,
 never retried silently). Timeouts are per-route config: `init` must tolerate the cold
-reconstruction pre-warm (16.3 s real-mode against the sonnet-5 stopgap; *re-measured 2026-07-29
-on the ruled Haiku class — 8.1 s headline, 3.3–8.6 s across the cold snaps; (b2) done, the quote
-embargo is lifted, and the generous timeout stays safe; with C7-B a probed scene boundary
-absorbs this cost at the cut, but an unprobed cold init can still pay it — the timeout
-stands*), `turn` the full turn (~30 s ceiling),
+reconstruction pre-warm (8.1 s headline, 3.3–8.6 s across the cold snaps — measured 2026-07-29
+on the ruled Haiku class, replacing the retired sonnet-5 stopgap's 16.3 s; with C7-B a probed
+scene boundary absorbs this cost at the cut, but an unprobed cold init can still pay it — the
+timeout stands), `turn` the full turn (~30 s ceiling),
 `observe` ~10 s; fire-and-forget observe is the session's job, not hidden retry logic here
 (built with C5, 2026-08-17 — the "Async observes" subsection below).
 

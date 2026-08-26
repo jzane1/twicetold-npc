@@ -92,7 +92,13 @@ DIALOGUE_FALLBACK_LINE = "..."
 # byte-identical prompts (memories arrive in a deterministic rank order).
 _BLOCK_IDENTITY = "[identity]\n{seed}"
 _BLOCK_MEMORIES_HEADER = "[memories]\nWhat you remember, most salient first:"
-_MEMORY_LINE = "- ({memory_id}) {content}"
+# The memory line carried its UUID ("- ({memory_id}) {content}") from the
+# ruled 2026-07-15 prompt shape, when [output] was a JSON contract and the
+# model cited memories back. A1 (2026-08-04) removed that contract; the F0
+# audit (2026-08-26) established nothing consumes the in-prompt id — served
+# IDs ride the payload from retrieval — so the id was stripped: fewer
+# character-facing tokens, no UUID fragments to leak into spoken prose.
+_MEMORY_LINE = "- {content}"
 # Gated turns (mid-dialogue-gate.md, 2026-07-19): the [memories] block renders
 # the scene's loaded set in the caller's append-only order (a byte-stable
 # prefix — the structure prompt caching later attaches to), with this turn's
@@ -131,16 +137,10 @@ def _render_memories(
             key=lambda item: order_index.get(item.memory_id, len(order_index)),
         )
         fetched = [item for item in items if item.gate_fetched]
-    lines = [
-        _MEMORY_LINE.format(memory_id=item.memory_id, content=item.content)
-        for item in ordered
-    ]
+    lines = [_MEMORY_LINE.format(content=item.content) for item in ordered]
     if fetched:
         lines.append(_MEMORY_RECOLLECTION_SUBHEADER)
-        lines.extend(
-            _MEMORY_LINE.format(memory_id=item.memory_id, content=item.content)
-            for item in fetched
-        )
+        lines.extend(_MEMORY_LINE.format(content=item.content) for item in fetched)
     return _BLOCK_MEMORIES_HEADER + "\n" + "\n".join(lines)
 
 
@@ -272,103 +272,145 @@ class DialogueService:
         the REPL yields the chunks live (session.stream_utterance)."""
         t_total = time.perf_counter()
 
-        state = await db.fetch_dialogue_agent_state(self._pool, request.agent_id)
-        if state is None:
-            raise UnknownAgentError(f"unknown agent_id {request.agent_id}")
-        config = state.config
-
         # --- retrieval: the built read seam, run ONCE, passed through
         # unreinterpreted (scene state + gate loaded set + on_reconstruct).
-        retrieval = await self._retrieval.retrieve_dialogue_init(
-            DialogueInitRequest(
-                agent_id=request.agent_id,
-                query_text=request.utterance,
-                k=request.k,
-                as_of=request.as_of,
-                location_name=request.location_name,
-                entities=request.entities,
-                event_time=request.event_time,
-                identity_version=request.identity_version,
-                scene_started_at=request.scene_started_at,
-                loaded_memory_ids=request.loaded_memory_ids,
-                gate_fruitless_streak=request.gate_fruitless_streak,
-            ),
-            on_reconstruct=on_reconstruct,
-        )
-
-        # --- weights-on-speech (A1 re-shape, 2026-08-04): re-rank the served
-        # set with the resolved per-call weights; the re-ranked list feeds the
-        # prose prompt and is reported as dialogue_view. `items` stays the raw
-        # retrieval echo, so at all-1.0 weights dialogue_view == its (id,
-        # score) projection — the parity contract.
-        weights = resolve_dialogue_weights(
-            config, request.weight_overrides, self._settings
-        )
-
-        # --- compiled parameters (parameter-compiler.md, C3 2026-08-17):
-        # resolve the scene type (unknown -> the default bundle + a flag,
-        # log-and-continue by ruling), fetch the newest bundle per in-window
-        # live belief for exactly that type, and compose multiplier products
-        # over the resolved base — clamped back into [WEIGHT_MIN, WEIGHT_MAX].
-        # Zero bundles compose to the identity, so a bundle-free turn is
-        # byte-identical to the pre-C3 seam (the parity contract).
-        scene_type_resolved, scene_type_unknown = resolve_scene_type(
-            config, request.scene_type
-        )
-        if scene_type_unknown:
-            logger.warning(
-                "unknown scene_type %r for agent %s; serving the default bundle",
-                request.scene_type,
-                request.agent_id,
+        # Started FIRST as a task (F0 overlap, 2026-08-26): the agent-state,
+        # bundle, and identity fetches below run under the retrieval leg
+        # (dominated by the query embed), since none of them consumes
+        # retrieval output. Concurrent by design — anything that DOES consume
+        # retrieval output moves below the `await retrieval_task`.
+        retrieval_task = asyncio.create_task(
+            self._retrieval.retrieve_dialogue_init(
+                DialogueInitRequest(
+                    agent_id=request.agent_id,
+                    query_text=request.utterance,
+                    k=request.k,
+                    as_of=request.as_of,
+                    location_name=request.location_name,
+                    entities=request.entities,
+                    event_time=request.event_time,
+                    identity_version=request.identity_version,
+                    scene_started_at=request.scene_started_at,
+                    loaded_memory_ids=request.loaded_memory_ids,
+                    gate_fruitless_streak=request.gate_fruitless_streak,
+                ),
+                on_reconstruct=on_reconstruct,
             )
-        t_bundles = time.perf_counter()
-        bundles = await db.fetch_dialogue_bundles(
-            self._pool,
-            request.agent_id,
-            scene_type=scene_type_resolved,
-            window_k=int(agent_knob(config, "compiler_window_k", self._settings)),
         )
-        bundle_fetch_ms = _ms(time.perf_counter() - t_bundles)
-        effective_weights, bundle_products = compose_bundle_weights(weights, bundles)
-        ranked = rank_dialogue_view(retrieval.items, effective_weights)
-        ranked_items = [item for _score, item in ranked]
-        dialogue_view = [
-            ScoredRef(memory_id=item.memory_id, score=score) for score, item in ranked
-        ]
+        tasks: list[asyncio.Task] = [retrieval_task]
+        try:
+            state = await db.fetch_dialogue_agent_state(self._pool, request.agent_id)
+            if state is None:
+                raise UnknownAgentError(f"unknown agent_id {request.agent_id}")
+            config = state.config
 
-        # The append-only prompt order applies only when the gate actually
-        # evaluated (a gate-disabled agent with loaded IDs took the loader path
-        # — its prose prompt renders the weight-ranked order directly).
-        loaded_order = (
-            request.loaded_memory_ids
-            if retrieval.instrumentation.gate.evaluated
-            else None
-        )
-
-        # --- the identity block rides the RENDERED DOCUMENT (reflection.md,
-        # ruled 2026-08-15 — the raw-seed asymmetry closed at the C2 build):
-        # resolved exactly like reconstruction's (present -> fetch, unknown ->
-        # UnknownIdentityVersionError = 422 at both turn routes; absent ->
-        # lazy ensure). Retrieval above already validated a caller-passed
-        # version, so the fetch here can only miss on a store mutated
-        # mid-request — still the same loud contract error.
-        if request.identity_version is not None:
-            identity_document = await db.fetch_identity_document(
-                self._pool, request.agent_id, request.identity_version
+            # --- compiled parameters (parameter-compiler.md, C3 2026-08-17):
+            # resolve the scene type (unknown -> the default bundle + a flag,
+            # log-and-continue by ruling), fetch the newest bundle per in-window
+            # live belief for exactly that type, and compose multiplier products
+            # over the resolved base — clamped back into [WEIGHT_MIN, WEIGHT_MAX].
+            # Zero bundles compose to the identity, so a bundle-free turn is
+            # byte-identical to the pre-C3 seam (the parity contract).
+            scene_type_resolved, scene_type_unknown = resolve_scene_type(
+                config, request.scene_type
             )
-            if identity_document is None:
-                raise UnknownIdentityVersionError(
-                    f"unknown identity_version {request.identity_version!r} "
-                    f"for agent {request.agent_id}"
+            if scene_type_unknown:
+                logger.warning(
+                    "unknown scene_type %r for agent %s; serving the default bundle",
+                    request.scene_type,
+                    request.agent_id,
                 )
-        else:
-            (
-                _version,
-                identity_document,
-                _created,
-            ) = await identity.ensure_identity_document(
-                self._pool, request.agent_id, state.seed_identity
+
+            async def _timed_bundles() -> tuple[list, float]:
+                # bundle_fetch_ms keeps its meaning: this await's own duration.
+                t_bundles = time.perf_counter()
+                rows = await db.fetch_dialogue_bundles(
+                    self._pool,
+                    request.agent_id,
+                    scene_type=scene_type_resolved,
+                    window_k=int(
+                        agent_knob(config, "compiler_window_k", self._settings)
+                    ),
+                )
+                return rows, _ms(time.perf_counter() - t_bundles)
+
+            # --- the identity block rides the RENDERED DOCUMENT (reflection.md,
+            # ruled 2026-08-15 — the raw-seed asymmetry closed at the C2 build):
+            # resolved exactly like reconstruction's (present -> fetch, unknown ->
+            # UnknownIdentityVersionError = 422 at both turn routes; absent ->
+            # lazy ensure). Runs concurrently with retrieval's own resolution of
+            # the same version (F0 overlap); retrieval is awaited first, so a
+            # caller-passed unknown version still surfaces as retrieval's error,
+            # and this fetch can only miss on a store mutated mid-request — the
+            # same loud contract error, with the two resolutions now near-
+            # simultaneous instead of a retrieval leg apart.
+            async def _resolve_identity() -> str | None:
+                if request.identity_version is not None:
+                    document = await db.fetch_identity_document(
+                        self._pool, request.agent_id, request.identity_version
+                    )
+                    if document is None:
+                        raise UnknownIdentityVersionError(
+                            f"unknown identity_version "
+                            f"{request.identity_version!r} "
+                            f"for agent {request.agent_id}"
+                        )
+                    return document
+                (
+                    _version,
+                    document,
+                    _created,
+                ) = await identity.ensure_identity_document(
+                    self._pool, request.agent_id, state.seed_identity
+                )
+                return document
+
+            bundles_task = asyncio.create_task(_timed_bundles())
+            tasks.append(bundles_task)
+            identity_task = asyncio.create_task(_resolve_identity())
+            tasks.append(identity_task)
+
+            retrieval = await retrieval_task
+
+            # --- weights-on-speech (A1 re-shape, 2026-08-04): re-rank the served
+            # set with the resolved per-call weights; the re-ranked list feeds the
+            # prose prompt and is reported as dialogue_view. `items` stays the raw
+            # retrieval echo, so at all-1.0 weights dialogue_view == its (id,
+            # score) projection — the parity contract.
+            weights = resolve_dialogue_weights(
+                config, request.weight_overrides, self._settings
             )
+
+            bundles, bundle_fetch_ms = await bundles_task
+            effective_weights, bundle_products = compose_bundle_weights(
+                weights, bundles
+            )
+            ranked = rank_dialogue_view(retrieval.items, effective_weights)
+            ranked_items = [item for _score, item in ranked]
+            dialogue_view = [
+                ScoredRef(memory_id=item.memory_id, score=score)
+                for score, item in ranked
+            ]
+
+            # The append-only prompt order applies only when the gate actually
+            # evaluated (a gate-disabled agent with loaded IDs took the loader path
+            # — its prose prompt renders the weight-ranked order directly).
+            loaded_order = (
+                request.loaded_memory_ids
+                if retrieval.instrumentation.gate.evaluated
+                else None
+            )
+
+            identity_document = await identity_task
+        except BaseException:
+            # A failed leg must not leak its siblings: cancel, then drain so
+            # every task's exception is retrieved and every pool connection
+            # returns before the original error propagates to the route.
+            for task in tasks:
+                task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+            raise
+
         prose_prompt = assemble_prose_prompt(
             identity_document,
             ranked_items,

@@ -30,14 +30,18 @@ choosing — confirm with Jack, then record the choice in `decisions.md`.
 One row per NPC.
 - `agent_id` UUID PK, server default.
 - `name` text.
-- `seed_identity` text — the seed prose; revised by reflection later.
+- `seed_identity` text — the seed prose. *(As built by C2, 2026-08-15: the seed stays
+  immutable; reflection joins the RENDERED identity document instead — `reflection.md`. The
+  original "revised by reflection later" here predated that ruling; corrected at the F0
+  audit, 2026-08-26.)*
 - `reputation` numeric — runtime scalar; starts at the scale's neutral point.
 - `rigidity` numeric, CHECK between 0.5 and 2.0 — dissonance scalar (pushover → zealot).
 - `reputation_sensitivity` numeric.
 - `diagnosticity_goal` text — anchor for importance scoring; the Haiku importance prompt consumes
   prose. *(Ruled 2026-07-13: text.)*
-- `config` jsonb — remaining integrator knobs (decay constants, drift threshold, habituation
-  cap/decay, etc.) until any of them earns a typed column.
+- `config` jsonb — remaining integrator knobs (decay constants, drift threshold,
+  reconstruction theta, etc.; the habituation example cut with the 2026-08-04 scope ruling)
+  until any of them earns a typed column.
 
 ### memories
 One row per observation. **`observation_text` is immutable after insert.**
@@ -92,7 +96,9 @@ The version chain under a stable `memory_id`. The **head** is the row with `inva
 - `memory_id` FK → memories.
 - `content` text NOT NULL.
 - `write_cause` text CHECK in (`original`, `reconstruction`, `rationalization`,
-  `update_with_resentment`, `authorial_correction`).
+  `update_with_resentment`, `authorial_correction`). *(Migration 006 widened the CHECK with a
+  sixth value, `enrichment` — the deferred-write completion; annotated at the F0 audit,
+  2026-08-26.)*
 - `created_at` / `valid_at` / `invalid_at`.
 - Partial unique index: at most one live head per memory —
   `UNIQUE (memory_id) WHERE invalid_at IS NULL`. (Confirmed compatible with the authorial
@@ -102,7 +108,8 @@ The version chain under a stable `memory_id`. The **head** is the row with `inva
 
 ### corrections
 The diegetic correction record — one row per in-world confrontation that superseded a chain head.
-Schema now; the dissonance mechanism that writes these lands post-August (the diegetic half of the
+Schema now; the dissonance mechanism that writes these landed with C4, 2026-08-17
+(`dissonance.md` — "lands post-August" as originally written here; the diegetic half of the
 Set A test pair, `test-suite.md`, asserts a correction record is present).
 - `correction_id` UUID PK, server default.
 - `memory_id` FK → memories — the target of the diegetic correction.
@@ -175,7 +182,10 @@ The entity/topic index: gist matching + entity-gate tripwire.
   004 — the hybrid lexical channel's partial FTS GIN over live fact heads — built 2026-07-20
   with the research-adoption slate, annotated in `read-path.md`; migration 005 — the
   `memories.escalation_failed` soft-degrade flag — built 2026-07-22, annotated in
-  `write-path.md`.)*
+  `write-path.md`; migration 006 — deferred-write columns + `memory_enrichment_runs` — built
+  2026-08-12, `deferred-writes.md`; migration 007 — `reflection_runs` — built 2026-08-15,
+  `reflection.md`; migration 008 — `compiled_bundles` + `compiler_runs` — built 2026-08-17,
+  `parameter-compiler.md`.)*
 - Docker: `pgvector/pgvector` for Postgres 16; connection string from `.env`.
 
 ## Done when

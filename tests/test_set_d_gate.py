@@ -332,7 +332,9 @@ def test_weights_shape_the_prose_view(scene):
 
         class RecordingProseProvider:
             """FakeProseProvider that keeps the last system prompt so the
-            [memories] render order is assertable (IDs only, never prose)."""
+            [memories] render order is assertable (fixture-authored line
+            text only, never model output — the in-prompt id left at F0,
+            2026-08-26)."""
 
             def __init__(self):
                 self._inner = FakeProseProvider()
@@ -365,20 +367,21 @@ def test_weights_shape_the_prose_view(scene):
             base.update(over)
             return DialogueTurnRequest(**base)
 
-        def prompt_memory_ids(prompt: str) -> list[str]:
-            return re.findall(r"^- \(([0-9a-f-]{36})\)", prompt, flags=re.MULTILINE)
+        def prompt_memory_lines(prompt: str) -> list[str]:
+            return re.findall(r"^- (.+)$", prompt, flags=re.MULTILINE)
 
         prose, r = await drain_turn(service.run_dialogue_turn(turn()))
         assert prose and r.content == prose  # the seam streamed
         served = {i.memory_id for i in r.items}
         assert served == {v.memory_id for v in r.dialogue_view}
+        content_by_id = {i.memory_id: i.content for i in r.items}
         # parity at default weights: dialogue_view == the (id, score)
         # projection of the served ranking, order AND scores.
         assert [v.memory_id for v in r.dialogue_view] == [i.memory_id for i in r.items]
         assert [v.score for v in r.dialogue_view] == [i.score for i in r.items]
         # ...and the prompt rendered the served (== weight-ranked) order.
-        assert prompt_memory_ids(recording.last_system_prompt) == [
-            str(v.memory_id) for v in r.dialogue_view
+        assert prompt_memory_lines(recording.last_system_prompt) == [
+            content_by_id[v.memory_id] for v in r.dialogue_view
         ]
 
         # a weight override re-scores the SAME served set; the re-rank is
@@ -399,8 +402,8 @@ def test_weights_shape_the_prose_view(scene):
             item.memory_id for _s, item in expected
         ]
         assert [v.score for v in rw.dialogue_view] == [s for s, _i in expected]
-        assert prompt_memory_ids(recording.last_system_prompt) == [
-            str(v.memory_id) for v in rw.dialogue_view
+        assert prompt_memory_lines(recording.last_system_prompt) == [
+            content_by_id[v.memory_id] for v in rw.dialogue_view
         ]
         # `items` stays the raw retrieval echo under an override: same served
         # ranking both turns (the read path is untouched by weights).

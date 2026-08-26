@@ -182,6 +182,10 @@ when seed is NULL) → `[reputation]` (snapshot + scale bounds) → `[memories]`
 `- (memory_id) content` line each) → `[output]` (the JSON contract + the turn's vocabulary; a
 no-vocabulary turn instructs `directive: null`); user message = the raw utterance. Identical inputs
 assemble byte-identical prompts (`assemble_system_prompt`, assertable without a model call).
+*(As built today: `[reputation]` and the JSON `[output]` contract left with the A1 re-shape,
+2026-08-04 — the prose call speaks plain prose; and the memory line's in-prompt `(memory_id)`
+was stripped at F0, 2026-08-26, once the audit established nothing consumes it there — served
+IDs ride the payload. The line is now `- content`; byte-stability unchanged.)*
 
 ## Action directive
 

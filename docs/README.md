@@ -22,7 +22,7 @@ were reachable only by already knowing they existed. Add new files to the right 
 
 These are the living record. They have different jobs and different rules.
 
-- **`status.md`** — *live state only.* Current phase, open questions, the four queues. Small on
+- **`status.md`** — *live state only.* Current phase, open questions, the roadmap. Small on
   purpose: `CLAUDE.md` auto-loads it into every session, so anything that is not current state
   costs tokens forever. Update at the end of every session.
 - **`session-log.md`** — *append-only narrative.* One entry per session: what landed, what was
@@ -114,7 +114,7 @@ do not report them as stale.
 
 Two words appear constantly and are defined nowhere else:
 
-- **walker** — one of the nine `tests\verify_*.py` scripts. Each walks a single layer's
+- **walker** — one of the fifteen `tests\verify_*.py` scripts. Each walks a single layer's
   done-when criteria end to end against a scratch database and prints
   `ALL CHECKS PASSED (N assertions)`. Run by hand and at floor verification; they are the
   *evidence* behind a row in `floors.md`.

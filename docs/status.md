@@ -1,32 +1,29 @@
 # longmem-npc — Status
 
-**Last updated:** 2026-08-24
-**Phase:** **Road to completion — Phases A–D DONE. Phase E (demo) PAUSED after the E3 first
-attempt (recorded + QA'd 2026-08-24, master NOT cut). RE-SEQUENCED 2026-08-24 (the dated
-entry): next is **F0** (whole-project audit/test/improve — latency, believability wording,
-polish), then F1–F3; the demo endgame (redesign → re-record → publish) follows Phase F.**
-**E3 first attempt 2026-08-24:** all four segments recorded through the new attach-mode rig
-and every beat PASSED live QA (the per-segment receipts in the dated E3 entry; one nuance
-carried to the captions — constancy binds the SERVED retelling, the streamed wrapper varies
-by design). The cut was NOT made: footage QA found the Branwen nameplate MIRRORED in every
-Unity frame plus lesser blemishes (the register: the beat script's E3 record) — **noted,
-deliberately NOT fixed by ruling**: the presentation redesign owns them; the re-record runs
-on a fresh provision (`--fresh` sanctioned). **The
-2026-08-22 pinned state is SPENT** — a provision serves beat 1 exactly once (the correction
-moves the fact chain and evicts the June caches). The E3 rig is provision-independent and
-ready (driver `startAsOf`, committed scene-1 start state, OBS + ffmpeg, close card + run
-sheet + raw takes under `C:\Users\jacks\Videos\longmem-demo\`); full record: the dated E3
-entry + `demo-beat-script.md`'s E3 record.
-**E2 landed 2026-08-19** (demo-scoped, no floors row): beat script + loader + Ledger live
-feed + C# prewarm parity + the Branwen retarget; rehearsal executed 2026-08-22. The verbatim
-block moved to `session-log.md`'s archive at the E3 wrap-up (size tripwire); full record in
-`decisions.md`'s E2 entries.
-**E1 landed 2026-08-19** (docs + data, no floor by ruling): `identity-authoring.md` +
-Branwen, the drovers memory certified as the drift target — the roadmap bullet below; the
-five authoring lessons in `decisions.md`'s E1 entry.
-D1 (optimization, 2026-08-19, no new code): perceived-first-word **p50 938 ms**, believability
-no regression (gist_precision 0.823), **model slate LOCKED** (Haiku latency-bound; Opus 4.8
-batch roles in `.env.example`), workers OFF per-agent, prompt caching DEFERRED — the D1 entry.
+**Last updated:** 2026-08-26
+**Phase:** **Road to completion — Phases A–D DONE; Phase E PAUSED (E3 first attempt
+recorded + QA'd, master not cut). F0 DONE 2026-08-26 (independent floor-verify pass).
+Next: F1 (the full README build), then F2–F3; the demo endgame follows Phase F.**
+**F0 landed 2026-08-26** (no new floors row — the floors.md Re-verification entry + the
+dated F0 decisions.md entry carry the evidence): registers reconciled to MEASURED reality
+(suite **193 full / 178 subset**; fifteen walkers named everywhere; floors.md's stranded
+rows 28–32 back inside the table; 16 doc-auditor findings fixed), the init 404/422 gap
+test, the turn-path overlap + the `LONGMEM_DB_POOL_MAX_SIZE` knob, and the gated wording
+pair — the dialogue-prompt UUID strip (**dialogue input −51%; all-in $0.084/100 turns**)
++ the write-prompt voice clause (gate: NO regression — gist 0.8309, recall 0.8448,
+fabrication 0.0159). Latency: perceived p50 826–917 ms across the day's provider windows;
+the D1 attribution CLOSED (pre-prose ≈ 90% embed; the overlap cut the rest to ~20 ms);
+the ceiling recorded (embed swap ≈ 770–870 ms; caching inert on Haiku; slate stands).
+Surfaced-not-built forks: the F0 entry.
+**E3 first attempt 2026-08-24:** recorded + QA'd, master NOT cut (mirrored-nameplate flaw
+— the presentation redesign owns it); **the 2026-08-22 pinned state is SPENT** (a
+provision serves beat 1 exactly once; `--fresh` sanctioned); the rig is
+provision-independent and ready. Full record: the dated E3 entry +
+`demo-beat-script.md`'s E3 record; the verbatim header block moved to `session-log.md`'s
+archive at the F0 wrap-up (size tripwire).
+E2/E1/D1 (all 2026-08-19): the demo choreography + corpus + the optimization/slate-lock pass
+— header blocks moved verbatim to `session-log.md`'s archive at the F0 wrap-up (size
+tripwire); the roadmap bullets below and the dated entries carry the records.
 The system is BUILT end to end on the final A1 seam — backend, C# client + console harness,
 Unity adapter + gray-box scene, The Ledger, eval-harness stages 1–4, deferred writes,
 reflection, the parameter compiler, the dissonance path, the agent-state read + async observes,
@@ -77,11 +74,11 @@ request); (2) offline gold re-labeling if
 calibrated judged-prose numbers are wanted on screen (kappa 0.37, unquotable — non-blocking; the
 on-screen numbers are judge-free).
 
-**Recently closed** (pointers only): the E3 forks + the roadmap re-sequencing — ruled
-2026-08-24 (the two dated entries); the E2 rehearsal blockers — cleared 2026-08-22; the
-E2/E1/D1 fork batches — ruled at plan approvals 2026-08-19 (the dated entries); the C7/C6
-forks — 2026-08-18. Full history lives in `decisions.md`'s index and the `session-log.md`
-archive.
+**Recently closed** (pointers only): the F0 spec forks — ruled 2026-08-26 at the plan batch
+(the dated F0 entry; README ruled wholly to F1); the E3 forks + the roadmap re-sequencing —
+ruled 2026-08-24 (the two dated entries); the E2 rehearsal blockers — cleared 2026-08-22;
+the E2/E1/D1 fork batches — 2026-08-19; the C7/C6 forks — 2026-08-18. Full history lives in
+`decisions.md`'s index and the `session-log.md` archive.
 
 ## The roadmap (re-planned 2026-08-04; ordering delegated to Claude on efficiency grounds)
 
@@ -118,12 +115,12 @@ the E2 wrap-up (size tripwire); full records in `floors.md` + `decisions.md`.
   scene flaw; the header block above). PAUSED — the demo endgame (below) now follows Phase F;
   the recording rig and cue flow are ready and provision-independent.
 
-### Phase F — Release (~4 sessions; F0 added by the 2026-08-24 re-sequencing)
+### Phase F — Release (F0 DONE; ~3 sessions remain)
 
-- **F0. Whole-project audit/test/improve pass** (NEW, ruled 2026-08-24) — the latency numbers
-  the best they can be (inherits the deferred prompt-caching lever from C7/D1), the wording
-  at its most believable, everything polished to Jack's liking. Scope settles at its own
-  session spec.
+- **F0. Whole-project audit/test/improve pass.** ✅ DONE 2026-08-26 (spec-at-plan → build →
+  independent floor-verify **pass**; no new floors row — the Re-verification entry). Header
+  block above = the summary; the dated F0 `decisions.md` entry = the full record (rulings,
+  measurements, the ceiling, forks, incident lessons).
 - **F1. Full README build** — incl. the destructive-compression counter-example and the honest
   "what this is not" paragraph (no auth, no rate limiting; loopback-bound by default). Ships
   WITHOUT the video link (the video publishes last; the link lands in the publish step).

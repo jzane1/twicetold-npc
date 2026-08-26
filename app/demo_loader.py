@@ -83,7 +83,7 @@ async def load_demo(
     """Provision the agent, replay the corpus, then (unless disabled) merge
     the worker flags — separable so the suite drives it in-process on an
     injected scratch Settings (the run_scenarios shape)."""
-    pool = build_pool(settings.database_uri)
+    pool = build_pool(settings.database_uri, max_size=settings.db_pool_max_size)
     await pool.open()
     try:
         agent_id: UUID = await db.insert_agent(

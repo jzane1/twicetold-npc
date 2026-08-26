@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 from datetime import timedelta
+from uuid import uuid4
 
 from conftest import NOW, V1_CONFIG, by_id, run_structural
 
@@ -188,6 +189,36 @@ def test_ids_and_scores_ride_the_wire(scene):
         # Byte-identity governs the served items; instrumentation carries
         # wall-clock timings and legitimately differs per call.
         assert body["items"] == second.json()["items"]
+
+    run_structural(scene, scenario)
+
+
+def test_init_route_error_contract(scene):
+    """Init's mapped error statuses ride the wire like every other route's:
+    unknown agent -> 404, caller-passed unknown identity_version -> 422 (the
+    broken-contract rule in the route docstring). Closes the route-contract
+    Known gap recorded in docs\\test-suite.md."""
+
+    async def scenario(ctx):
+        import httpx
+
+        import app.api as api_module
+
+        agent = await ctx.make_agent("b-errors", V1_CONFIG)
+        await _seed_store(ctx, agent)
+        api_module.app.state.retrieval = ctx.retrieval()
+        transport = httpx.ASGITransport(app=api_module.app)
+        async with httpx.AsyncClient(
+            transport=transport, base_url="http://suite"
+        ) as client:
+            ghost = json.loads(request(uuid4()).model_dump_json())
+            not_found = await client.post("/v1/dialogue/init", json=ghost)
+            bad_version = json.loads(
+                request(agent, identity_version="f" * 64).model_dump_json()
+            )
+            unprocessable = await client.post("/v1/dialogue/init", json=bad_version)
+        assert not_found.status_code == 404
+        assert unprocessable.status_code == 422
 
     run_structural(scene, scenario)
 

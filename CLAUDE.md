@@ -10,7 +10,7 @@ client package. This file is rules. Design knowledge lives in docs/ — point, d
 - docs/README.md — the index: what every file in docs\ is for, and the reading order.
 - docs/architecture.md — design truth. Read the relevant sections before touching any layer.
 - docs/decisions.md — append-only decision register with rationale. Never edit old entries.
-- docs/migration-01.md — the FOUNDATIONAL schema (001). Migrations 002–007 live in
+- docs/migration-01.md — the FOUNDATIONAL schema (001). Migrations 002–008 live in
   db\migrations\ and are not restated there. docs/test-suite.md — test discipline.
 - docs/floors.md — the verified-floors table (evidence per layer). Not auto-loaded; read it
   when you need to know what a floor actually proved.

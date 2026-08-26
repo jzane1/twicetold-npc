@@ -1,27 +1,30 @@
 # longmem-npc — Test suite spec
 
-**BUILT 2026-07-20 — 189 pytest scenarios today** in `tests\test_*.py` (Sets A–D + degradation +
+**BUILT 2026-07-20 — 193 pytest scenarios today** in `tests\test_*.py` (Sets A–D + degradation +
 hygiene + eval metrics + eval runner + judge + ablation + deferred writes + reflection + the
-parameter compiler + dissonance + agent state + purge; the
+parameter compiler + dissonance + agent state + purge + the E2 demo loader/Ledger feed; the
 Set A diegetic pair LANDED with the dissonance mechanism, 2026-08-17; Set P purge landed with C6,
-2026-08-18). Count as of 2026-08-18:
+2026-08-18). Count as of 2026-08-26:
 Set A 8,
-Set B 7, Set C 7, Set D 20, degradation 12, hygiene 2, Set G eval metrics 8, **Set H eval
+Set B 8, Set C 7, Set D 20, degradation 12, hygiene 2, Set G eval metrics 8, **Set H eval
 runner 9** (stage 2, 2026-08-05), **Set I judge 16** (stage 3, 2026-08-07; +2 with the
 2026-08-12 workaround session; the reflection role's load-rule amendment rides the existing
 config scenarios, 2026-08-15), **Set J ablation 6** (stage 4, 2026-08-12 — its section is
 `eval-harness.md`'s stage-4 block), **Set K deferred writes 13** (Phase C1, 2026-08-12),
 **Set L reflection 20** (Phase C2, 2026-08-15), **Set M parameter compiler 21** (Phase C3,
 2026-08-17), **Set N dissonance 23** (Phase C4, 2026-08-17), **Set O agent state 10** (Phase
-C5, 2026-08-17), **Set P purge 7** (Phase C6, 2026-08-18) — grown from the 38 built on
+C5, 2026-08-17), **Set P purge 7** (Phase C6, 2026-08-18), **demo loader 2 + Ledger feed 1**
+(E2, 2026-08-19) — grown from the 38 built on
 2026-07-20 by the
 route-contract scenarios that arrived with each later route, by the gap-closing and guard
-scenarios from the full-repo audit, and by the eval harness stages 1–4. **Fourteen carry the
-`nlp` marker** (Sets L, M, N, O, and P add none), so the turn-end subset runs **175**. *(Counts
+scenarios from the full-repo audit, and by the eval harness stages 1–4. **Fifteen carry the
+`nlp` marker** (Sets L, M, N, O, and P add none; the E2 demo loader adds one), so the turn-end
+subset runs **178**. *(Counts
 corrected
 2026-08-12 with the Set K landing — the 2026-08-07 header had drifted again by the stage-4 and
 workaround-session scenarios; updated 2026-08-17 with the Set M, N, and O landings; Set P with
-C6, 2026-08-18.)* Build rulings 2026-07-20
+C6, 2026-08-18; the E2 pair folded in and Set B +1 — the init error-contract closure — at F0,
+2026-08-26.)* Build rulings 2026-07-20
 (dated `decisions.md` entry): the suite-gate Stop hook runs the `-m "not nlp"` subset (the 7
 `nlp`-marked scenarios call the write pass at the service level and pay the lazy
 spaCy+fastcoref load; the full suite runs on demand + at floor verification); Postgres
@@ -37,7 +40,8 @@ session — it is a first-class deliverable, not an afterthought.
 **Structural-only.** Assert on memory IDs, row types (`write_cause`, `read_mode`, typology), chain
 shape, cache state, timestamps, and byte-identity of returned text — **never on generated prose.**
 A model's wording is not a test surface. Judged evals (drift-toward-identity, Bartlett-style
-distortion operators) belong to the eval story and the paper ablations, not this suite.
+distortion operators) belong to the eval story, not this suite (the "paper ablations" this
+line once named left with the research track, cut 2026-08-04).
 
 Corollary that makes this possible: read endpoints that run retrieval return memory IDs and scores
 alongside prose. That contract is load-bearing; if an endpoint stops returning IDs, the suite is
@@ -437,11 +441,15 @@ wherever their fixtures do: mostly `tests\test_set_d_gate.py` (via `httpx.ASGITr
 init in `test_set_b_decay.py`, correction in `test_set_a_correction.py`, the NER-502 row in
 `test_degradation.py`, and the walkers' own route sections.
 
-**Known gap:** `POST /v1/dialogue/init`'s 404 / 422 mappings are the one pair asserted nowhere —
-its HTTP coverage is the byte-identity read pair and the walker's pass-through check. Listed here
-rather than quietly implied by "every route", because that is what this section is for.
+**Known gap — CLOSED 2026-08-26 (F0):** `POST /v1/dialogue/init`'s 404 / 422 mappings were the
+one pair asserted nowhere — its HTTP coverage was the byte-identity read pair and the walker's
+pass-through check. `test_init_route_error_contract` (`tests\test_set_b_decay.py`, beside the
+byte-identity pair) now asserts both: unknown agent 404, caller-passed unknown
+`identity_version` 422. The gap had been listed here rather than quietly implied by "every
+route", because that is what this section is for.
 
-- `POST /v1/dialogue/init` · `POST /v1/dialogue/turn` (route JSON == the drained seam result;
+- `POST /v1/dialogue/init` (404/422 asserted since F0) · `POST /v1/dialogue/turn` (route JSON ==
+  the drained seam result;
   404/422) · `POST /v1/dialogue/turn/stream` (200 `text/event-stream`; chunk events concatenate
   **byte-identically** to the result's content; `reconstructing` fires once before any chunk on a
   gated turn with a blocking retelling; a post-first-chunk failure arrives as an `error` EVENT,

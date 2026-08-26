@@ -140,7 +140,8 @@ without a named entity. Affect via a cheap lexicon pass → `affect_valence` / `
 §4.1.
 
 An **LLM-escalation pass** exists for hard cases, **biased loose** (over-call — a wasted call is
-cheap, a lost gist breaks the product). Five triggers, any one fires (ruled 2026-07-13):
+cheap, a lost gist breaks the product). Five triggers as ruled 2026-07-13 — a sixth,
+`thin_gist`, joined 2026-07-23 (annotated below and in architecture §4.1) — any one fires:
 importance above threshold; an identity/category hit co-occurring with |valence| above threshold;
 a novel entity; an unresolved pronoun/noun-chunk co-occurring with an identity/category hit; low
 NLP confidence on an already-flagged span (confidence only ever adds calls).
