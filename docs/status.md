@@ -72,13 +72,12 @@ dissonance-multiplier defaults** — D1 found no objective metric to tune them a
 principled ordering was kept unchanged (an eyeball run of the defend/update beat is available on
 request); (2) offline gold re-labeling if
 calibrated judged-prose numbers are wanted on screen (kappa 0.37, unquotable — non-blocking; the
-on-screen numbers are judge-free).
+on-screen numbers are judge-free). Plus two F0 micro-calls (non-blocking, the F0 entry): drop
+the orphaned `longmem_eval_14188` scratch DB; the `min_size` sibling knob.
 
 **Recently closed** (pointers only): the F0 spec forks — ruled 2026-08-26 at the plan batch
-(the dated F0 entry; README ruled wholly to F1); the E3 forks + the roadmap re-sequencing —
-ruled 2026-08-24 (the two dated entries); the E2 rehearsal blockers — cleared 2026-08-22;
-the E2/E1/D1 fork batches — 2026-08-19; the C7/C6 forks — 2026-08-18. Full history lives in
-`decisions.md`'s index and the `session-log.md` archive.
+(the dated F0 entry; README ruled wholly to F1); the E3 forks + the re-sequencing —
+2026-08-24; earlier batches — `decisions.md`'s index and the `session-log.md` archive.
 
 ## The roadmap (re-planned 2026-08-04; ordering delegated to Claude on efficiency grounds)
 
