@@ -4555,16 +4555,21 @@ renamed exception string covered), real-mode `load_settings` boots on the `TWICE
 with the coupled-role constraint intact. Grep gate: `git grep -i longmem` returns exactly the
 allowlist.
 
-**Still pending (operator-gated, handed to Jack — the commit-2 half):** the `.env`
-key/value rename; the Docker volume recreation (destructive — orphans `longmem-pgdata`, wipes
-the disposable dev product DB) + fresh migrate + `demo_loader --fresh`; the DLL rebuild + copy
-to `unity\Assets\Plugins\` (also clears the DLL's old embedded path — deferred to AFTER the
-folder rename so it happens once); the hero-PNG re-capture (`docs\media\ledger-memory-chain.png`
-bakes the name into pixels and is the README hero shot + on-camera in the demo); the GitHub
-repo rename + `git remote set-url`; the local folder rename with the Claude project-state copy;
-and the **independent floor-verifier pass** (blocked until the swap exists, since it checks the
-`PRODUCT_DB`↔`.env` lockstep + migrate-fresh-apply on the new product DB). No floors row and no
-re-verification entry yet — the count stays 32 until that pass returns.
+**Operator swap LANDED + verified 2026-09-02** (Jack ran `.env` + GitHub; Claude drove the
+non-spend infra): the `.env` key/value rename (Jack, two ordered byte replaces mirroring the
+`.env.example` sweep); the GitHub repo rename + `git remote set-url` (Jack); the Docker volume
+recreation (`docker compose down`/`up` — old `longmem-pgdata` orphaned intact, fresh
+`twicetold-pgdata` initialized with the new user/DB); migrations fresh-applied to `twicetold`
+(001–008) + a no-op idempotency re-run; the **`PRODUCT_DB`↔`.env` lockstep proven** —
+`PRODUCT_DB == dbname == "twicetold"`, and `provision_scratch(base, "twicetold")` now raises
+(the guard protects the real product DB); `.env` parses in real mode with both keys; the
+178-subset green on the recreated container. **Still pending (commit-2, after the folder
+rename):** the local folder rename + Claude project-state copy (Jack's, session's-last-act);
+then, in the renamed folder, the `demo_loader --fresh` rebuild (real spend) + hero-PNG
+re-capture (`docs\media\ledger-memory-chain.png`) + the DLL rebuild/copy to
+`unity\Assets\Plugins\` (clears the old embedded path in one build) + the **independent
+floor-verifier pass**. No floors row and no re-verification entry yet — the count stays 32
+until that pass returns.
 
 ## Consumer-context scan rulings — the pre-release market pass — 2026-09-01
 

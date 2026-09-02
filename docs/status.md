@@ -11,11 +11,14 @@ the provider + purge build → F1 → F2–F3; the demo endgame follows Phase F.
 fresh+serial on `twicetold_test`, C# harness **53 checks** green, real-mode `load_settings`
 boots on the `TWICETOLD_` keys; `git grep -i longmem` returns only the ruled allowlist. The
 dated `decisions.md` entry carries the pick, the collision check, the four scope rulings, the
-allowlist, and the `PRODUCT_DB`↔`.env` lockstep note. **Pending Jack (operator-gated, the
-commit-2 half):** the `.env` rename (snippet provided) + Docker volume recreation + demo-DB
-rebuild; the DLL rebuild + copy (post-folder-rename, once); the hero-PNG re-capture; the
-GitHub rename + `git remote set-url`; the local folder rename + Claude project-state copy;
-then the independent floor-verifier pass (blocked until the swap exists). Count stays 32.
+allowlist, and the `PRODUCT_DB`↔`.env` lockstep note. **Operator swap LANDED + verified
+2026-09-02:** `.env` renamed (Jack), GitHub repo renamed + remote re-pointed (Jack), Docker
+volume recreated (old `longmem-pgdata` orphaned, fresh `twicetold-pgdata`), migrations
+fresh-applied to `twicetold` + no-op idempotency, the `PRODUCT_DB`↔`.env` lockstep proven
+(guard now refuses the real product DB), 178-subset green on the recreated container.
+**Still pending:** the local folder rename + Claude project-state copy (Jack, next); then in
+the renamed folder — the demo-DB `--fresh` rebuild (real spend) + hero-PNG re-capture + the
+DLL rebuild/copy + the independent floor-verifier pass (commit-2). Count stays 32.
 **Consumer-context scan landed 2026-09-01** (research-only; no floors row): five streams —
 OSS-memory reception, game-dev/platform sentiment, novelty stress test + name check,
 release-hygiene norms, a cold consumer agent (verdict: adopt-for-a-spike; its one BLOCKED
