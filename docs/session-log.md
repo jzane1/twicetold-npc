@@ -2194,13 +2194,21 @@ session.
   by choice. The Claude project-state copy is therefore moot (the memory-dir key is unchanged).
   Also deliberately NOT done: a shared walker-scratch constant (the 15 literals were swapped in
   place — the constant-refactor stays the carried task).
-- **Carried (a future session, this same folder), not dropped:** the `demo_loader --fresh`
-  rebuild (real spend) + hero-PNG re-capture + the DLL rebuild/copy (exception-string refresh;
-  the embedded path stays valid now the folder is fixed) + the **independent floor-verifier
-  pass** (UnityMCP was unreachable this session — its Unity criteria report blocked unless the
-  bridge is up).
-- **Next:** the carried finalization above closes the rename; then the provider-path +
-  per-agent-purge build, then F1.
+- **Finalization LANDED (same session):** the **DLL rebuilt + copied** to
+  `unity\Assets\Plugins\` and verified (carries `"twicetold-npc API error"` utf-16-le, old
+  string gone; the committed HEAD had still shipped the old binary); the **independent
+  floor-verifier pass** returned **pass** on the code + infra re-verification (grep gate within
+  the allowlist, suite 193, four walkers across eras, the lockstep + guard, migrate idempotency,
+  the DLL string) — the dated floors.md re-verification entry carries it; **no new floors row,
+  count 32**. It also confirmed 5 `LONGMEM_` env refs + 1 `longmem_demo` sit in dated/BUILT
+  spec sections (consciously kept — history, not current contract; the living docs are clean).
+- **Folded onward, not dropped:** the **hero-PNG re-capture → F1** (Jack's ruling 2026-09-02 —
+  F1 rebuilds the README image with real spend already scoped, so `demo_loader --fresh` is not
+  paid twice; the PNG keeps the old name in-pixels until then, covered by README's continuity
+  note) — which is why the demo rebuild was NOT run; the **Unity Editor compile/import re-check
+  → F3** (UnityMCP unreachable all session; carried with the Unity MCP pin).
+- **Next:** the provider-path + per-agent-purge build, then F1 (which absorbs the hero PNG).
+  The rename is complete bar those two folded items.
 
 ---
 

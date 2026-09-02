@@ -177,3 +177,32 @@ component **non-embed pre-prose 27.3/27.7 → 20.5/18.4 ms**, the UUID strip's *
 input 40.9–42.4k → 20.6k tokens/100 turns** (all-in **$0.109–0.112 → $0.0841**/100 turns),
 final run p50 917 / p95 1227. Not a new layer — **the count stays 32**.
 
+**2026-09-02 — the `longmem-npc` → `twicetold-npc` rename, independent re-verification.
+VERDICT: pass (code + infra); Unity criterion BLOCKED, carried.** No layer landed — a
+whole-repo rename (env prefix `LONGMEM_`→`TWICETOLD_`, DBs/container/volume, the C# namespace
+`NpcMemory` deliberately unchanged), so the count stays 32. The floor-verifier re-ran in a
+fresh context, independently of the build session: the **grep gate** — `git grep -in longmem`
+returns 398 hits across 76 files, every one inside the ruled allowlist (immutable migration
+001 comment; the three append-only register bodies with twicetold-npc H1s; all `docs\research\*`
++ `external-audit-*` + retired `split-brain-streaming.md`; spec docs' dated/BUILT/SETTLE-AT-BUILD
+sections; third-party `LongMemEval`/`LongMemory`/`langmem`/`longmem.dev`; frozen
+`data\eval\gold\*.json`; README's continuity note; and the deliberately-kept local folder path
+`C:\Users\jacks\Projects\longmem-npc`), with **zero** `longmem`/`LONGMEM_` in any code/config
+file (`app\`, `tests\`, `.env.example`, `data\eval\arms`, `db\migrate.py`, migrations 002–008,
+the C# and Unity sources) and the living-contract docs (`architecture.md`, `CLAUDE.md`,
+`SETUP.md`) clean; **full suite 193 passed**; **four walkers** across eras on fresh
+`twicetold_test` (write 53, agent-state 26, purge 21, reflection 60 on its own scratch); the
+**`PRODUCT_DB`↔`.env` lockstep** — `PRODUCT_DB == dbname == "twicetold"` and
+`provision_scratch(base,"twicetold")` raises (the guard protects the real product DB), with a
+real-mode `load_settings()` boot on the swapped `.env`; **migrate idempotency** — no-arg
+`migrate.py` → "Up to date: 8 applied, 0 pending"; and the **committed Unity DLL** (rebuilt +
+copied this session) carries `"twicetold-npc API error"` (utf-16-le) and NOT the old string.
+Invariants re-checked intact (no new in-place UPDATE/DELETE, read payloads still carry IDs +
+scores, nothing configurable newly hardcoded — `PRODUCT_DB` is a guarded product-DB name, the
+connection stays `.env`-configurable). **Unity Editor compile/import: BLOCKED** — UnityMCP was
+unreachable all session (the 2026-07-29 session-ordering root cause), so the Editor could not
+run; the DLL is a drop-in binary whose only source delta is one string literal and the two
+adapter `.cs` files changed one display string each, so breakage risk is near-zero but genuinely
+unverified. Carried to F3 (which already owns the Unity MCP pin + committed-DLL staleness check),
+to run once the bridge is up.
+

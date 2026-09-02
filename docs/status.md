@@ -3,21 +3,17 @@
 **Last updated:** 2026-09-02
 **Phase:** **Road to completion — Phases A–D DONE; Phase E PAUSED (E3 first attempt
 recorded + QA'd, master not cut). F0 DONE 2026-08-26; the consumer-context scan DONE
-2026-09-01. The rename (longmem-npc → twicetold-npc) DONE 2026-09-02 bar a carried
-finalization; the local folder rename is dropped. Next: the rename finalization → the
-provider + purge build → F1 → F2–F3; the demo endgame follows Phase F.**
-**The rename → `twicetold-npc` (2026-09-02):** the in-repo sweep (243 replacements / 55 files)
-and the operator swap both LANDED + verified — full suite **193**, all **15 walkers** on
-`twicetold_test`, **C# harness 53**, real-mode `load_settings` on the `TWICETOLD_` keys; then
-`.env` + GitHub renamed (Jack), Docker recreated to `twicetold-pg`/`twicetold-pgdata` (old
-volume orphaned), migrations fresh-applied to `twicetold` + no-op, the `PRODUCT_DB`↔`.env`
-lockstep proven, 178-subset green (commits `90f4c23`, `ec64ad8`). `git grep -i longmem`
-returns only the ruled allowlist. The **local folder rename is DROPPED** (Windows lock +
-Jack's ruling — local-only/invisible, so the folder and this session's memory-dir key stay
-`longmem-npc`). **Carried (a future session, same folder):** the demo `--fresh` rebuild (real
-spend) + hero-PNG re-capture + the DLL rebuild (exception-string refresh) + the independent
-floor-verifier pass. Count 32. Full record: the dated `decisions.md` rename entry + the
-`session-log.md` entry.
+2026-09-01. The rename (longmem-npc → twicetold-npc) is DONE + independently re-verified
+2026-09-02 (bar the F1-folded hero PNG + an F3 Unity re-check); the local folder rename is
+dropped. Next: the provider + purge build → F1 → F2–F3; the demo endgame follows Phase F.**
+**The rename → `twicetold-npc` DONE + re-verified 2026-09-02:** in-repo sweep + operator swap
+(`.env` + GitHub by Jack; Docker recreated to `twicetold-pg`/`twicetold-pgdata`) + DLL
+rebuild/copy + the **independent floor-verifier pass** all landed — suite **193**, **15
+walkers**, **C# 53**, the `PRODUCT_DB`↔`.env` lockstep + guard, `git grep -i longmem` = the
+ruled allowlist only; **no new floors row, count 32**. The **local folder rename is DROPPED**
+(Windows lock + ruling — the folder and this memory-dir key stay `longmem-npc`). **Folded
+onward:** hero PNG → F1, Unity Editor re-check → F3. Full record: the dated `decisions.md`,
+`floors.md`, and `session-log.md` entries.
 **Consumer-context scan landed 2026-09-01** (research-only; no floors row): novelty claim
 SURVIVES, license chain CLEAN for the flip, README staleness is active trust damage; the
 cold consumer's one BLOCKED step (the shipped-game deployment story) is F1's top addition.
@@ -121,11 +117,11 @@ the E2 wrap-up (size tripwire); full records in `floors.md` + `decisions.md`.
   measurements, the ceiling, forks, incident lessons).
 - **The consumer-context scan.** ✅ DONE 2026-09-01 (research-only; the header block above;
   report: `docs\research\consumer-context-scan-2026-08-31.md`).
-- **The naming session** (ruled 2026-09-01). ✅ DONE 2026-09-02 bar a carried finalization —
-  name **twicetold-npc**, in-repo sweep + operator swap landed + verified, local folder rename
-  dropped (the header block above; the dated `decisions.md` rename entry). Carried to a future
-  session (same folder): the demo `--fresh` rebuild + hero-PNG re-capture + DLL rebuild + the
-  independent floor-verifier pass.
+- **The naming session** (ruled 2026-09-01). ✅ DONE + independently re-verified 2026-09-02 —
+  name **twicetold-npc**; in-repo sweep + operator swap + DLL rebuild + the floor-verifier pass
+  all landed; local folder rename dropped (the header block above; the dated `decisions.md`
+  rename entry + the floors.md re-verification entry). Folded onward: the hero PNG → F1, the
+  Unity Editor re-check → F3.
 - **The provider-path + per-agent-purge build** (NEW, ruled 2026-09-01): an
   OpenAI-compatible base-URL provider path for the model + embedding roles, shipped WITH
   the documented small-model quality warning (~1–2 sessions; floor re-verify), plus
@@ -134,7 +130,9 @@ the E2 wrap-up (size tripwire); full records in `floors.md` + `decisions.md`.
 - **F1. Full README build** — incl. the destructive-compression counter-example and the honest
   "what this is not" paragraph (no auth, no rate limiting; loopback-bound by default). Ships
   WITHOUT the video link (the video publishes last; the link lands in the publish step).
-  Inherits the scan's F1 input pack (report Part 3 + the NOTICE f-coref line).
+  Inherits the scan's F1 input pack (report Part 3 + the NOTICE f-coref line) AND the hero-PNG
+  re-capture (`docs\media\ledger-memory-chain.png` still shows the old name in-pixels — folded
+  here 2026-09-02 rather than spent on twice, since F1 rebuilds the README image anyway).
 - **F2. Packaging** — the ruled end product: the Unity Package Manager package + the one-command
   backend spin-up (compose: Postgres/pgvector + API + migrations). Inherits the scan's
   compose + UPM conformance lists (report Part 2).

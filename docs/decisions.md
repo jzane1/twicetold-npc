@@ -4575,12 +4575,26 @@ choice. Consequences: the Claude project-state copy is moot (the memory-dir key
 DLL rebuild will re-embed the `...\longmem-npc\...` PDB path, which is now correct-for-the-folder
 rather than stale — the DLL rebuild's only remaining job is the exception-string refresh.
 
-**Carried to a future session (this same folder), NOT dropped:** the `demo_loader --fresh`
-rebuild (real spend) + hero-PNG re-capture (`docs\media\ledger-memory-chain.png`) + the DLL
-rebuild/copy to `unity\Assets\Plugins\` (exception-string refresh; un-stales the committed DLL)
-+ the **independent floor-verifier pass** (the plan's Phase 6 — UnityMCP was unreachable this
-session, so its Unity criteria will report blocked unless the bridge is up). No floors row and
-no re-verification entry yet — the count stays 32 until that pass returns.
+**Finalization LANDED 2026-09-02** (same session, after the folder-drop ruling): the **DLL
+rebuilt + copied** to `unity\Assets\Plugins\` and verified (carries `"twicetold-npc API error"`
+utf-16-le, old string gone; the committed HEAD had still shipped the old binary); the
+**independent floor-verifier pass** returned **pass** on the code + infra re-verification (grep
+gate within the allowlist, suite 193, four walkers across eras, the `PRODUCT_DB`↔`.env` lockstep
++ guard, migrate idempotency, the DLL string) — the dated floors.md re-verification entry carries
+the evidence; **no new floors row, count stays 32**. Two items intentionally NOT done here: the
+**hero-PNG re-capture is folded into F1** (Jack's ruling 2026-09-02 — F1 rebuilds the README
+image with real spend already in scope, so the `demo_loader --fresh` spend is not paid twice;
+`docs\media\ledger-memory-chain.png` keeps the old name in-pixels until then, covered by README's
+continuity note), which is why the demo rebuild was NOT run; and the **Unity Editor
+compile/import check is BLOCKED** (UnityMCP unreachable all session — the 2026-07-29
+session-ordering root cause) and carried to F3 (which already owns the Unity MCP pin + DLL
+staleness check). One documentation note the floor-verifier surfaced and this ruling confirms as
+*consciously kept, not stale*: five `LONGMEM_` env-var references + one `longmem_demo` sit inside
+dated/BUILT/`[SETTLE-AT-BUILD]`/done-when sections of `cli-harness.md`, `read-path.md`,
+`write-path.md`, and `demo-beat-script.md` — each verified to be a record of what was ruled/built
+on a date, not a current-contract line (the living env-var truth in `architecture.md` /
+`CLAUDE.md` / `.env.example` is clean), so the history-plus-contract rule keeps them under the old
+name. **The rename is complete** bar the F1-folded PNG and the F3 Unity Editor re-check.
 
 ## Consumer-context scan rulings — the pre-release market pass — 2026-09-01
 
