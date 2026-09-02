@@ -132,7 +132,7 @@ while worked, so a second process (API + REPL against one DB) can re-claim it mi
 completion guard makes the loser a rolled-back no-op. **Worst case is duplicate model spend,
 never duplicate rows**, and the run log makes it measurable. The client `event_id` dedup stays
 deferred (the standing write-path `[SETTLE-AT-BUILD]`). The worker holds a pool connection only
-inside db calls, never across a model call; the pool (`max_size` = `LONGMEM_DB_POOL_MAX_SIZE`,
+inside db calls, never across a model call; the pool (`max_size` = `TWICETOLD_DB_POOL_MAX_SIZE`,
 default 8 — knobbed at F0, 2026-08-26) is shared with request handlers.
 
 ## Knobs (all in `SERVICE_DEFAULTS`, floats, `agent_knob` contract)
@@ -175,5 +175,5 @@ walker** `tests\verify_deferred_writes.py` (51 criteria: migration shape, kill-s
 the deferred observe shape, the full completion/retry/terminal/facts-only/repair/orphan ladder,
 anchor-set membership, worker lifecycle at both construction sites). The write-path walker
 staying byte-identical at **53/53** is the deferred-OFF parity evidence. The walker runs on the
-fixed-name `longmem_test` scratch DB like the other seven (the shared-DB mechanism stays a
+fixed-name `twicetold_test` scratch DB like the other seven (the shared-DB mechanism stays a
 carried item awaiting its own ruling).

@@ -1,4 +1,4 @@
-# longmem-npc — Verified floors
+# twicetold-npc — Verified floors
 
 Split out of `status.md` on 2026-07-28 (full-repo audit). The table lived inside the
 auto-loaded living file, where it cost ~8.7k tokens of every session's context and had

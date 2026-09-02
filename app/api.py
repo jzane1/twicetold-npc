@@ -145,7 +145,7 @@ async def _lifespan(app: FastAPI):
         await pool.close()
 
 
-app = FastAPI(title="longmem-npc API", version="1", lifespan=_lifespan)
+app = FastAPI(title="twicetold-npc API", version="1", lifespan=_lifespan)
 
 
 @app.post("/v1/dialogue/init", response_model=RetrievalResult)
@@ -371,7 +371,7 @@ async def reflect(agent_id: UUID, body: ReflectRequest) -> ReflectResult:
     ladder: 404 unknown agent · 409 below the episode floor · 422 malformed
     request (pydantic; naive timestamp) · 502 reflect-call failure /
     malformed output / all-ungrounded — nothing written on any of these.
-    ConfigError (real mode without LONGMEM_MODEL_REFLECTION) propagates
+    ConfigError (real mode without TWICETOLD_MODEL_REFLECTION) propagates
     loud at first use, the judge shape. Pass-through by ruling: the
     response is exactly the seam result's serialization — sampled and
     cited ids ride as grounding evidence, unscored by nature (the sampling

@@ -1,4 +1,4 @@
-# longmem-npc — Architecture
+# twicetold-npc — Architecture
 
 This file is the current design truth. Edit it when a design decision changes. The *why* behind each
 decision lives in `decisions.md` (append-only). Current state, build order, and task queues live in
@@ -91,9 +91,9 @@ judge-preferred 46–7, and 41–9 with thinking off, but perceived first word i
 axis: 943 ms p50 for haiku vs 2626 / 2086 ms — both sonnet variants sit far over the 1 s bar.
 The dated entry in `decisions.md` carries the numbers and caveats). Every model role is an
 integrator knob with its own env var — nothing is hardcoded. **Six vars exist today** and real
-mode requires all six: `LONGMEM_MODEL_` + `IMPORTANCE`, `RENDER`, `TYPOLOGY`, `ESCALATION`,
+mode requires all six: `TWICETOLD_MODEL_` + `IMPORTANCE`, `RENDER`, `TYPOLOGY`, `ESCALATION`,
 `DIALOGUE`, `RECONSTRUCTION`. *(The `BEHAVIOR` role — seven vars, 2026-07-21 to 2026-08-04 —
-left with the A1 re-shape.)* A seventh var, `LONGMEM_MODEL_JUDGE` (Opus-4.8-class by the
+left with the A1 re-shape.)* A seventh var, `TWICETOLD_MODEL_JUDGE` (Opus-4.8-class by the
 2026-08-07 B2 ruling), is **eval-runner-only**: loaded in both modes, required by neither —
 the server never carries a judge; the eval runner validates it itself on judged runs
 (eval-harness.md stage 3).
@@ -102,10 +102,10 @@ One honest limit on "each upgrades independently" *(corrected 2026-07-28 — the
 previously over-claimed)*: v1 serves importance + render + typology from **one** write call, so
 those three vars must name the same model (`load_settings` raises rather than silently picking one
 — a documented v1 limitation, not a design position). Reflection's var arrives
-with reflection *(shape ruled 2026-08-15 at the C2 dossier: `LONGMEM_MODEL_REFLECTION`,
+with reflection *(shape ruled 2026-08-15 at the C2 dossier: `TWICETOLD_MODEL_REFLECTION`,
 judge-shaped — loaded both modes, required by neither, loud at the first real reflect call;
 `reflection.md` fork 6)*. The compiler's var landed with C3 *(2026-08-17:
-`LONGMEM_MODEL_COMPILER`, the THIRD judge-shaped var — the same contract, loud at the
+`TWICETOLD_MODEL_COMPILER`, the THIRD judge-shaped var — the same contract, loud at the
 worker's first real compile; C3 has no endpoint, so that call is always the worker's —
 `parameter-compiler.md`)*. The retrieval gate is **non-LLM** — there is no gate model and no gate env var.
 

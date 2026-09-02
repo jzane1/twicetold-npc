@@ -282,7 +282,7 @@ async def repl(agent_id: UUID, debug: bool) -> None:
     # fires just before the retelling call blocks the turn).
     runner.on_reconstruct = lambda: print("(reconstructing…)", flush=True)
     nlp_warm = False
-    print(f"longmem-npc CLI — agent {agent_id}  (:help for commands)")
+    print(f"twicetold-npc CLI — agent {agent_id}  (:help for commands)")
     try:
         while True:
             try:
@@ -476,7 +476,7 @@ async def repl(agent_id: UUID, debug: bool) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="longmem-npc interactive console harness"
+        description="twicetold-npc interactive console harness"
     )
     parser.add_argument("--agent", required=True, type=UUID, help="agent UUID")
     parser.add_argument(

@@ -119,9 +119,9 @@ def _tame_datasets_fingerprint() -> None:
         from datasets.fingerprint import Hasher
 
         datasets.disable_caching()
-        if not getattr(Hasher, "_longmem_tamed", False):
-            Hasher.hash = staticmethod(lambda _obj: "longmem-nofingerprint")
-            Hasher._longmem_tamed = True
+        if not getattr(Hasher, "_twicetold_tamed", False):
+            Hasher.hash = staticmethod(lambda _obj: "twicetold-nofingerprint")
+            Hasher._twicetold_tamed = True
     except Exception:  # noqa: BLE001 — optimization only; never break the pass
         pass
 

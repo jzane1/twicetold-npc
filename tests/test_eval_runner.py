@@ -227,7 +227,7 @@ def test_product_db_refusal_and_shim_identity():
 def test_provision_drop_roundtrip(suite_env):
     """provision creates + fully migrates; drop removes. pid-scoped name so
     an overlapping run can never collide (the conftest convention)."""
-    name = f"longmem_evaltest_{os.getpid()}"
+    name = f"twicetold_evaltest_{os.getpid()}"
     base = suite_env.database_uri
     try:
         uri = provision_scratch(base, name)

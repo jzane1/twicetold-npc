@@ -2,9 +2,9 @@
 authorial-correction endpoint v1 (docs\\authorial-correction.md).
 
 Runs the correction done-when list against the SCRATCH database (default:
-the .env DATABASE_URI with its path swapped to /longmem_test); the product
+the .env DATABASE_URI with its path swapped to /twicetold_test); the product
 DB is never touched. The schema-frozen criterion (`db\\migrate.py` no-arg a
-clean no-op on `longmem`) runs outside this walker.
+clean no-op on `twicetold`) runs outside this walker.
 
 Structural-only (tests\\CLAUDE.md): assertions ride IDs, write_cause,
 read_mode, chain stamps, cache presence, and byte-identity of OPERATOR text
@@ -117,7 +117,7 @@ def check(condition: bool, criterion: str, detail: str = "") -> None:
 def scratch_uri_from_env() -> str:
     from app.config import load_env
 
-    return scratch_uri(load_env()["DATABASE_URI"], "longmem_test")
+    return scratch_uri(load_env()["DATABASE_URI"], "twicetold_test")
 
 
 def fake_providers() -> Providers:

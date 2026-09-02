@@ -36,7 +36,7 @@ This doc points, it does not re-derive.
 5. **RRR is a guard**: at/above threshold the reflection stores but the identity
    consolidation is blocked and flagged. RRR is self-repetition among the agent's own
    reflections — NOT the cut cross-memory conflict/staleness detection.
-6. **`LONGMEM_MODEL_REFLECTION` is judge-shaped**: loaded both modes, required by
+6. **`TWICETOLD_MODEL_REFLECTION` is judge-shaped**: loaded both modes, required by
    neither, loud at the first real reflect call.
 
 ## The spec rulings (2026-08-15, second sitting)
@@ -185,7 +185,7 @@ response as grounding evidence, unscored by nature.
   reading `settings.model_reflection`. **Standalone factory** `build_reflection_provider`
   (the judge shape): NOT a field on the frozen `Providers` bundle; the service builds it
   lazily at first use and raises `ConfigError` in real mode without the var. Pricing:
-  `LONGMEM_PRICE_REFLECTION_IN/OUT` join `PRICE_ENV_KEYS`. Full add-a-role checklist at
+  `TWICETOLD_PRICE_REFLECTION_IN/OUT` join `PRICE_ENV_KEYS`. Full add-a-role checklist at
   build (`ENV_MODEL_REFLECTION`, the `load_env` allowlist, the `Settings` field,
   `.env.example` role + price blocks, conftest fakes, the CLAUDE.md/architecture §3 role
   text — already annotated with the ruled shape).
@@ -297,7 +297,7 @@ same implementation, same loud norm guard).
 | some conclusions ungrounded | stored valid subset; `dropped_ungrounded` counts | same; count on the run row |
 | model concludes nothing (empty list) | 200, zero rows, honest | `completed` run row, zero written |
 | consolidation call fails | SOFT: `consolidation_failed`, step-7 writes stand | same, flagged on the run row |
-| `LONGMEM_MODEL_REFLECTION` missing (real) | `ConfigError`, loud, nothing written | log loud once; worker keeps running, run row `failed` |
+| `TWICETOLD_MODEL_REFLECTION` missing (real) | `ConfigError`, loud, nothing written | log loud once; worker keeps running, run row `failed` |
 
 Every rung is a Set L scenario or walker criterion.
 
@@ -441,7 +441,7 @@ and the walker's criterion count.
 9. **Migration 007 is clean.** `migrate.py` applies it idempotently; the three pins are
    bumped; the census counts thirteen tables.
 10. **The role is judge-shaped in code.** Real mode loads without
-    `LONGMEM_MODEL_REFLECTION`; the first real reflect without it raises `ConfigError`
+    `TWICETOLD_MODEL_REFLECTION`; the first real reflect without it raises `ConfigError`
     naming the var; fake mode runs on `FakeReflectionProvider` end to end.
 11. **The record closes.** Set L green in the subset run; the ninth walker passes N/N;
     the dialogue-seam and reconstruction walkers re-run green; the independent

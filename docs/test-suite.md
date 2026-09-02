@@ -1,4 +1,4 @@
-# longmem-npc — Test suite spec
+# twicetold-npc — Test suite spec
 
 **BUILT 2026-07-20 — 193 pytest scenarios today** in `tests\test_*.py` (Sets A–D + degradation +
 hygiene + eval metrics + eval runner + judge + ablation + deferred writes + reflection + the
@@ -29,7 +29,7 @@ C6, 2026-08-18; the E2 pair folded in and Set B +1 — the init error-contract c
 `nlp`-marked scenarios call the write pass at the service level and pay the lazy
 spaCy+fastcoref load; the full suite runs on demand + at floor verification); Postgres
 unreachable ⇒ loud clean skip, exit green; **CI-ready now** (offline, keyless, deterministic,
-self-managed scratch `longmem_suite`) with the CI workflow itself sequenced later — "runs in
+self-managed scratch `twicetold_suite`) with the CI workflow itself sequenced later — "runs in
 CI" below reads as that readiness until the workflow lands.
 
 Scenario suite in `tests\`: fixture + runner, runs in CI. The suite gets its own scoped build
@@ -202,9 +202,9 @@ Sixteen scenarios in `tests\test_set_i_judge.py` (15 unmarked + 1 `nlp`) — the
 MECHANICS with the deterministic fake judge, never judged signal (which is real-mode-only and
 quotable only past the agreement bar):
 
-- **The ruling as a regression test:** real mode loads WITHOUT `LONGMEM_MODEL_JUDGE` (never in
+- **The ruling as a regression test:** real mode loads WITHOUT `TWICETOLD_MODEL_JUDGE` (never in
   the required-roles list); both modes load it when present; judge prices and the
-  `LONGMEM_JUDGE_MAX_TOKENS` knob parse with loud `ConfigError`s.
+  `TWICETOLD_JUDGE_MAX_TOKENS` knob parse with loud `ConfigError`s.
 - **The thinking knob:** value validation (`""`/`"disabled"` only), the exact request-kwargs
   shapes (`""` ⇒ `{}` — the pre-B2 call byte-for-byte), and the process-env override allowlist
   for all three new keys.
@@ -306,7 +306,7 @@ freezing the request (the `as_of` precedent):
   below-floor skip writes no row, idempotent start/stop.
 - **Pressure math:** exact masses incl. the NULL-importance neutral fallback and
   absorbed-rows-still-mark-the-last-event; the zero-norm guard is loud, never a clamp.
-- **Role shape:** real mode loads WITHOUT `LONGMEM_MODEL_REFLECTION` (the Set I load-rule
+- **Role shape:** real mode loads WITHOUT `TWICETOLD_MODEL_REFLECTION` (the Set I load-rule
   amendment asserts `load_settings`); the first real reflect raises `ConfigError` naming the
   var, nothing written. **Route contracts:** 200/404/409/422/502 via the ASGI-transport
   pattern.
@@ -341,7 +341,7 @@ consume side through the dialogue seam with `as_of` pinned:
   own bundles (no default fallback); newest-bundle-per-pair wins; multi-belief products
   compose exactly; the consume-side re-clamp defense.
 - **Lifecycle + role:** idempotent start/stop, kill-switch skip, the batch cap + the
-  deterministic prefix; real mode loads WITHOUT `LONGMEM_MODEL_COMPILER`, the worker's first
+  deterministic prefix; real mode loads WITHOUT `TWICETOLD_MODEL_COMPILER`, the worker's first
   real compile lands a `failed` run row naming the var (logged once, worker alive), fake mode
   builds the deterministic fake; the migration-008 pins (columns, CHECK teeth, knob
   defaults).

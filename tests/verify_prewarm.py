@@ -22,7 +22,7 @@ Prerequisite (PowerShell):
 Run:
     python tests\\verify_prewarm.py [--database-uri <scratch-uri>]
 
-The product `longmem` DB is never touched.
+The product `twicetold` DB is never touched.
 """
 
 from __future__ import annotations
@@ -95,7 +95,7 @@ def check(condition: bool, criterion: str, detail: str = "") -> None:
 def scratch_uri_from_env() -> str:
     from app.config import load_env
 
-    return scratch_uri(load_env()["DATABASE_URI"], "longmem_test")
+    return scratch_uri(load_env()["DATABASE_URI"], "twicetold_test")
 
 
 def fake_providers(**overrides) -> Providers:

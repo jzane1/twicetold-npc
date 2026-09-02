@@ -2,12 +2,12 @@
 (docs\\reconstruction.md).
 
 Runs the reconstruction done-when list against the SCRATCH database (default:
-the .env DATABASE_URI with its database name swapped to `longmem_test`), with
+the .env DATABASE_URI with its database name swapped to `twicetold_test`), with
 deterministic fake providers — offline, keyless, and structural-only per
 tests\\CLAUDE.md: assertions touch IDs, row shapes (write_cause, read_mode),
 chain shape, cache presence/absence + byte-identity of stored/served text,
 flags, and counters, never generated prose. The schema-frozen criterion
-(`db\\migrate.py` no-arg a clean no-op on `longmem`) runs outside this walker.
+(`db\\migrate.py` no-arg a clean no-op on `twicetold`) runs outside this walker.
 
 The prior walkers keep the v1 serving contract under a per-agent
 `reconstruction_theta = 0` pin; the swapped behavior verified here is this
@@ -129,7 +129,7 @@ def check(condition: bool, criterion: str, detail: str = "") -> None:
 def scratch_uri_from_env() -> str:
     from app.config import load_env
 
-    return scratch_uri(load_env()["DATABASE_URI"], "longmem_test")
+    return scratch_uri(load_env()["DATABASE_URI"], "twicetold_test")
 
 
 def fake_providers(**overrides) -> Providers:

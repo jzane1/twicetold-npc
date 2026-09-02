@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace NpcMemory
 {
-    /// <summary>An HTTP error from the longmem-npc service, surfaced loudly —
+    /// <summary>An HTTP error from the twicetold-npc service, surfaced loudly —
     /// never swallowed, never silently retried (the service's fail-loud
     /// precedent). StatusCode 0 means a transport/contract failure.</summary>
     public sealed class NpcMemoryApiException : Exception
@@ -17,14 +17,14 @@ namespace NpcMemory
         public int StatusCode { get; }
 
         public NpcMemoryApiException(int statusCode, string detail)
-            : base($"longmem-npc API error {statusCode}: {detail}")
+            : base($"twicetold-npc API error {statusCode}: {detail}")
         {
             StatusCode = statusCode;
         }
     }
 
     /// <summary>
-    /// The ONE flat client over the longmem-npc HTTP API (unity-client.md,
+    /// The ONE flat client over the twicetold-npc HTTP API (unity-client.md,
     /// ruled 2026-07-27: engine-agnostic, zero UnityEngine types, no
     /// abstraction ceremony). Stateless — scene state lives in NpcSession.
     /// Verbs mirror the routes 1:1 and are pass-through both ways: requests

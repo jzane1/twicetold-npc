@@ -712,7 +712,7 @@ class DialogueTurnInstrumentation(BaseModel):
     Feeds architecture §11's latency histogram — the gate term landed with
     the gate build (2026-07-19, `retrieval.gate.gate_ms`; the reservation is
     closed) — and the per-100-turn cost table. Token counts are unconditional;
-    `cost_usd` is populated only when LONGMEM_PRICE_* env vars are set
+    `cost_usd` is populated only when TWICETOLD_PRICE_* env vars are set
     (build ruling 2026-07-15 — no hardcoded model pricing), covering the
     dialogue call plus the priced share of the query embedding.
     """

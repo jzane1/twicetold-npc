@@ -17,7 +17,7 @@ Process-level: one gate per process, carried on the Providers bundle (the
 existing injection vehicle) so every seam and worker reaches it as
 `providers.gate`. It caps MODEL calls only — the local spaCy/fastcoref NLP
 passes stay on the default pool (CPU-bound, already bounded there, and not what
-`LONGMEM_MAX_CONCURRENT_MODEL_CALLS` names).
+`TWICETOLD_MAX_CONCURRENT_MODEL_CALLS` names).
 """
 
 from __future__ import annotations

@@ -2,9 +2,9 @@
 fact-level correction target v1 (docs\\fact-level-correction.md).
 
 Runs the fact-correction done-when list against the SCRATCH database
-(default: the .env DATABASE_URI with its path swapped to /longmem_test); the
+(default: the .env DATABASE_URI with its path swapped to /twicetold_test); the
 product DB is never touched. The migrate criterion (`db\\migrate.py` no-arg
--> "001 + 002 applied, 0 pending" on `longmem`) runs outside this walker.
+-> "001 + 002 applied, 0 pending" on `twicetold`) runs outside this walker.
 
 Structural-only (tests\\CLAUDE.md): assertions ride IDs, write_cause, chain
 stamps, index existence, distances-as-structure, and byte-identity of
@@ -109,7 +109,7 @@ def check(condition: bool, criterion: str, detail: str = "") -> None:
 def scratch_uri_from_env() -> str:
     from app.config import load_env
 
-    return scratch_uri(load_env()["DATABASE_URI"], "longmem_test")
+    return scratch_uri(load_env()["DATABASE_URI"], "twicetold_test")
 
 
 def fake_providers(embedding=None) -> Providers:

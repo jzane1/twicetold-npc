@@ -3,7 +3,7 @@ processing (Phase C1; deferred-writes.md, ruled 2026-08-12; migration 006).
 
 Runs the deferred-write done-when criteria against the SCRATCH database
 (default: the .env DATABASE_URI with its database name swapped to
-`longmem_test`), with deterministic fake providers — offline, keyless, and
+`twicetold_test`), with deterministic fake providers — offline, keyless, and
 structural-only per tests\\CLAUDE.md. The worker is exercised through
 `drain()` (the deterministic entry, no timers). The write-path walker
 staying byte-identical at its pre-C1 criteria is the deferred-OFF parity
@@ -21,7 +21,7 @@ Run:
     python tests\\verify_deferred_writes.py [--database-uri <scratch-uri>]
 
 The scratch database is created and dropped around this walker by the build
-task; the product `longmem` DB is never touched.
+task; the product `twicetold` DB is never touched.
 """
 
 from __future__ import annotations
@@ -92,7 +92,7 @@ def check(condition: bool, criterion: str, detail: str = "") -> None:
 def scratch_uri_from_env() -> str:
     from app.config import load_env
 
-    return scratch_uri(load_env()["DATABASE_URI"], "longmem_test")
+    return scratch_uri(load_env()["DATABASE_URI"], "twicetold_test")
 
 
 def fake_providers(**overrides) -> Providers:

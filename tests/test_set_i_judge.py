@@ -76,16 +76,16 @@ ARMS_DIR = REPO_ROOT / "data" / "eval" / "arms"
 UNREACHABLE_URI = "postgresql://u:p@192.0.2.1:5432/postgres"
 
 SIX_ROLES = {
-    "LONGMEM_MODEL_IMPORTANCE": "model-w",
-    "LONGMEM_MODEL_RENDER": "model-w",
-    "LONGMEM_MODEL_TYPOLOGY": "model-w",
-    "LONGMEM_MODEL_ESCALATION": "model-e",
-    "LONGMEM_MODEL_DIALOGUE": "model-d",
-    "LONGMEM_MODEL_RECONSTRUCTION": "model-r",
+    "TWICETOLD_MODEL_IMPORTANCE": "model-w",
+    "TWICETOLD_MODEL_RENDER": "model-w",
+    "TWICETOLD_MODEL_TYPOLOGY": "model-w",
+    "TWICETOLD_MODEL_ESCALATION": "model-e",
+    "TWICETOLD_MODEL_DIALOGUE": "model-d",
+    "TWICETOLD_MODEL_RECONSTRUCTION": "model-r",
 }
 REAL_ENV = {
     "DATABASE_URI": UNREACHABLE_URI,
-    "LONGMEM_PROVIDER_MODE": "real",
+    "TWICETOLD_PROVIDER_MODE": "real",
     "ANTHROPIC_API_KEY": "k1",
     "OPENAI_API_KEY": "k2",
     **SIX_ROLES,
@@ -116,7 +116,7 @@ def test_config_judge_regression():
     fake = load_settings(
         {
             "DATABASE_URI": UNREACHABLE_URI,
-            "LONGMEM_PROVIDER_MODE": "fake",
+            "TWICETOLD_PROVIDER_MODE": "fake",
             ENV_MODEL_JUDGE: "model-j",
             ENV_MODEL_REFLECTION: "model-f",
         }
@@ -127,10 +127,10 @@ def test_config_judge_regression():
     priced = load_settings(
         {
             **REAL_ENV,
-            "LONGMEM_PRICE_JUDGE_IN": "5.00",
-            "LONGMEM_PRICE_JUDGE_OUT": "25.00",
-            "LONGMEM_PRICE_REFLECTION_IN": "1.00",
-            "LONGMEM_PRICE_REFLECTION_OUT": "5.00",
+            "TWICETOLD_PRICE_JUDGE_IN": "5.00",
+            "TWICETOLD_PRICE_JUDGE_OUT": "25.00",
+            "TWICETOLD_PRICE_REFLECTION_IN": "1.00",
+            "TWICETOLD_PRICE_REFLECTION_OUT": "5.00",
         }
     )
     assert priced.prices["judge_in"] == 5.0
@@ -545,17 +545,17 @@ def test_overlay_loading(tmp_path):
     """The env-dict merge resolves model/prices/thinking through
     load_settings; mode/database/key/judge overrides are refused loudly; the
     committed arm files parse (canary)."""
-    base_env = {"DATABASE_URI": UNREACHABLE_URI, "LONGMEM_PROVIDER_MODE": "fake"}
+    base_env = {"DATABASE_URI": UNREACHABLE_URI, "TWICETOLD_PROVIDER_MODE": "fake"}
     arm_file = tmp_path / "arm.json"
     arm_file.write_text(
         json.dumps(
             {
                 "name": "test-arm",
                 "env": {
-                    "LONGMEM_MODEL_DIALOGUE": "model-x",
-                    "LONGMEM_DIALOGUE_THINKING": "disabled",
-                    "LONGMEM_PRICE_DIALOGUE_IN": "2.00",
-                    "LONGMEM_PRICE_DIALOGUE_OUT": "10.00",
+                    "TWICETOLD_MODEL_DIALOGUE": "model-x",
+                    "TWICETOLD_DIALOGUE_THINKING": "disabled",
+                    "TWICETOLD_PRICE_DIALOGUE_IN": "2.00",
+                    "TWICETOLD_PRICE_DIALOGUE_OUT": "10.00",
                 },
             }
         ),
@@ -567,9 +567,9 @@ def test_overlay_loading(tmp_path):
     assert arm["settings"].prices["dialogue_in"] == 2.0
     # Fake mode ignores role values by design — the overlay block itself is
     # the arm's provenance there.
-    assert arm["overlay"]["LONGMEM_MODEL_DIALOGUE"] == "model-x"
+    assert arm["overlay"]["TWICETOLD_MODEL_DIALOGUE"] == "model-x"
 
-    for bad_key in ("DATABASE_URI", "LONGMEM_PROVIDER_MODE", "LONGMEM_MODEL_JUDGE"):
+    for bad_key in ("DATABASE_URI", "TWICETOLD_PROVIDER_MODE", "TWICETOLD_MODEL_JUDGE"):
         bad_file = tmp_path / "bad.json"
         bad_file.write_text(
             json.dumps({"name": "bad", "env": {bad_key: "x"}}), encoding="utf-8"
@@ -791,7 +791,7 @@ def test_compare_plumbing_end_to_end(scene):
     arm_a = {"name": "arm-a", "overlay": {}, "settings": scene.settings}
     arm_b = {
         "name": "arm-b",
-        "overlay": {"LONGMEM_DIALOGUE_THINKING": "disabled"},
+        "overlay": {"TWICETOLD_DIALOGUE_THINKING": "disabled"},
         "settings": replace(scene.settings, dialogue_thinking="disabled"),
     }
     report = asyncio.run(

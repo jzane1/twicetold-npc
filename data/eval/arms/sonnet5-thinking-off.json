@@ -2,9 +2,9 @@
   "name": "sonnet5-thinking-off",
   "note": "The queued B2 thinking-off variant (deferred 2026-07-29; knob built 2026-08-07): sonnet-5 with thinking={\"type\": \"disabled\"} on the prose call. Same pricing caveat as the sonnet5 arm.",
   "env": {
-    "LONGMEM_MODEL_DIALOGUE": "claude-sonnet-5",
-    "LONGMEM_DIALOGUE_THINKING": "disabled",
-    "LONGMEM_PRICE_DIALOGUE_IN": "2.00",
-    "LONGMEM_PRICE_DIALOGUE_OUT": "10.00"
+    "TWICETOLD_MODEL_DIALOGUE": "claude-sonnet-5",
+    "TWICETOLD_DIALOGUE_THINKING": "disabled",
+    "TWICETOLD_PRICE_DIALOGUE_IN": "2.00",
+    "TWICETOLD_PRICE_DIALOGUE_OUT": "10.00"
   }
 }

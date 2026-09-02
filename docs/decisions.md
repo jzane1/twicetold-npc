@@ -1,4 +1,4 @@
-# longmem-npc — Decision register
+# twicetold-npc — Decision register
 
 Append-only log of settled design decisions. Reference decisions by their **bolded names**. Do not
 reopen without cause. If a newer decision conflicts with an older one, the newer wins and the older
@@ -98,6 +98,7 @@ its surrounding spaces both become hyphens, so `Name — 2026-07-28` anchors as 
 - [Roadmap re-sequenced — F0 audit pass added; the demo endgame moves after Phase F; Phase G re-pointed — 2026-08-24](#roadmap-re-sequenced--f0-audit-pass-added-the-demo-endgame-moves-after-phase-f-phase-g-re-pointed--2026-08-24)
 - [F0 spec rulings + build record — the audit/test/improve pass landed — 2026-08-26](#f0-spec-rulings--build-record--the-audittestimprove-pass-landed--2026-08-26)
 - [Consumer-context scan rulings — the pre-release market pass — 2026-09-01](#consumer-context-scan-rulings--the-pre-release-market-pass--2026-09-01)
+- [The rename — longmem-npc → twicetold-npc — 2026-09-02](#the-rename--longmem-npc--twicetold-npc--2026-09-02)
 
 ## Primary decisions
 
@@ -4499,6 +4500,71 @@ Jack's call to drop).
 independent floor-verifier **pass** is recorded as a dated entry under floors.md's
 "Re-verification passes" (cli-harness, read-path, write-path, and gate floors re-opened and
 re-closed inside it).
+
+## The rename — longmem-npc → twicetold-npc — 2026-09-02
+
+**Context.** The consumer-context scan's Fork 3 (ruled 2026-09-01) called for a rename before
+the F3 flip. This session picked the name, planned the whole-repo sweep, and landed the
+in-repo half.
+
+**The pick: `twicetold-npc`** (from "a twice-told tale" — Hawthorne's phrase; the retelling
+thesis in one word). Collision check run at execution start (2026-09-02): PyPI 404, npm 404,
+OpenUPM zero results, no GitHub repository of the name (a dormant zero-repo GitHub *user*
+`twicetold` exists — no conflict), web search surfaces only the K-pop group TWICE and the
+dictionary term. Exact-match clean in the category. Rejected at the plan batch: `retold-npc`
+(Retell AI voice-agent stem clash), `bartlett-npc` (surname, mechanism invisible), and —
+pre-vetted out before the batch — Memloom (taken: a memory engine for AI agents) and Waystone
+(doubles the borrowed-novel exposure the demo corpus already carries).
+
+**Scope ruled (four forks, all taken at the plan batch):** (1) the env prefix renames
+`LONGMEM_` → `TWICETOLD_` (29 distinct keys — pre-release is the only cheap moment for an
+integrator-facing surface); (2) full DB/infra rename (product `twicetold`, scratch
+`twicetold_test`, demo `twicetold_demo`, the `twicetold_suite_`/`twicetold_eval_` pid
+prefixes, container `twicetold-pg`, volume `twicetold-pgdata`); (3) the local working folder
+renames too; (4) the GitHub repo renames (auto-redirects; no tracked file embeds the URL).
+**The C# namespace `NpcMemory` stays** (ruled constant; it never carried the old name).
+
+**The do-not-touch allowlist** (also the final grep-gate baseline): the immutable applied
+migration `001_foundation.sql:1` header comment (one line, permanent); the three append-only
+register **bodies** (`decisions`/`session-log`/`floors` — their H1 title lines DID rename); all
+`docs\research\*` dated bodies (incl. this file's Fork-3 analysis and the 46 `_findings\*`
+boilerplate) + both `external-audit-*` + the retired `split-brain-streaming.md`; spec docs'
+**dated** sections (`## Done when`, `[SETTLE-AT-BUILD]`, `> BUILT` banners) — the history half
+of history-plus-contract; every third-party string (`LongMemEval` 57+, `LongMemory`, `langmem`,
+`longmem.dev` — a blanket case-insensitive replace was FORBIDDEN, every edit per-file); the
+frozen `data\eval\gold\*.json` run artifacts; the committed DLL's binary PDB path (clears at
+the Phase-4 rebuild). README carries a deliberate one-line continuity note ("Renamed from
+longmem-npc") that keeps the old name on purpose.
+
+**The lockstep risk, recorded:** `app\scratch_db.py`'s `PRODUCT_DB` must equal the real
+`.env` `POSTGRES_DB`/`DATABASE_URI` dbname, and there is no runtime cross-check — a half-done
+rename silently disarms the product-DB refusal guard. `PRODUCT_DB` is now `"twicetold"`; until
+the operator `.env`/Docker swap lands, the running dev product DB is still `longmem` (so the
+name-guard temporarily protects a not-yet-existing name). This is safe in the interim because
+NOTHING in the suite/walker/eval/demo paths targets the bare product DB by name (they target
+the `twicetold_*` scratches), and `scratch_uri`'s resolved-name proof still blocks accidents.
+The floor-verifier re-checks the pairing after the swap.
+
+**Landed and self-verified this session (the in-repo half):** 243 mechanical replacements
+across 55 files via a scoped byte-level sweep (allowlist simply excluded), ruff clean, **full
+suite 193 passed**, **all 15 walkers pass** fresh + serial elder-first on `twicetold_test`
+(verify_concurrency's one batch-run timing blip on B2 was a load artifact — clean at 11
+assertions in isolation; verify_deferred_writes' "51/51 criteria passed" is the known
+non-"ALL CHECKS PASSED" banner), **C# interop harness 53 checks green** (recompiled client,
+renamed exception string covered), real-mode `load_settings` boots on the `TWICETOLD_` keys
+with the coupled-role constraint intact. Grep gate: `git grep -i longmem` returns exactly the
+allowlist.
+
+**Still pending (operator-gated, handed to Jack — the commit-2 half):** the `.env`
+key/value rename; the Docker volume recreation (destructive — orphans `longmem-pgdata`, wipes
+the disposable dev product DB) + fresh migrate + `demo_loader --fresh`; the DLL rebuild + copy
+to `unity\Assets\Plugins\` (also clears the DLL's old embedded path — deferred to AFTER the
+folder rename so it happens once); the hero-PNG re-capture (`docs\media\ledger-memory-chain.png`
+bakes the name into pixels and is the README hero shot + on-camera in the demo); the GitHub
+repo rename + `git remote set-url`; the local folder rename with the Claude project-state copy;
+and the **independent floor-verifier pass** (blocked until the swap exists, since it checks the
+`PRODUCT_DB`↔`.env` lockstep + migrate-fresh-apply on the new product DB). No floors row and no
+re-verification entry yet — the count stays 32 until that pass returns.
 
 ## Consumer-context scan rulings — the pre-release market pass — 2026-09-01
 

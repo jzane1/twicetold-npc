@@ -1,4 +1,4 @@
-# longmem-npc — setup
+# twicetold-npc — setup
 
 From a fresh clone to a running system. **Windows 11 / PowerShell**; every command below is
 PowerShell with backslash paths (a project rule, not a preference — see `CLAUDE.md`).
@@ -55,7 +55,7 @@ failures:
 
 - **One `KEY=VALUE` per line.** No inline comments after a value, no wrapped lines. A
   consolidated multi-line price note once crashed `load_settings` on every run that read prices.
-- **`DATABASE_URI` must name the product database** (`longmem`). Scratch databases are created
+- **`DATABASE_URI` must name the product database** (`twicetold`). Scratch databases are created
   and dropped by the fixtures; never point this at one.
 
 Verify without printing anything:
@@ -64,7 +64,7 @@ Verify without printing anything:
 python -c "from app.config import load_settings; load_settings(); print('config ok')"
 ```
 
-`.env` is gitignored and must stay that way. `LONGMEM_PROVIDER_MODE=fake` (the template default)
+`.env` is gitignored and must stay that way. `TWICETOLD_PROVIDER_MODE=fake` (the template default)
 runs offline and keyless — everything below works without an API key.
 
 ---
@@ -73,7 +73,7 @@ runs offline and keyless — everything below works without an API key.
 
 ```powershell
 docker compose up -d
-docker ps --filter name=longmem-pg --format "{{.Names}} {{.Status}}"
+docker ps --filter name=twicetold-pg --format "{{.Names}} {{.Status}}"
 ```
 
 Wait for `(healthy)`. Compose reads the same `.env`, so `POSTGRES_USER` / `POSTGRES_PASSWORD` /
@@ -153,8 +153,8 @@ Postgres unreachable ⇒ every scenario skips loudly and the run exits green, by
 **The walkers** (fifteen structural done-when scripts) need a scratch DB you create yourself:
 
 ```powershell
-$scratch = "postgresql://longmem:change-me@localhost:5432/longmem_test"
-docker exec longmem-pg psql -U longmem -d postgres -c "CREATE DATABASE longmem_test"
+$scratch = "postgresql://twicetold:change-me@localhost:5432/twicetold_test"
+docker exec twicetold-pg psql -U twicetold -d postgres -c "CREATE DATABASE twicetold_test"
 python db\migrate.py --database-uri $scratch
 python tests\verify_write_path.py --database-uri $scratch
 # ... verify_prewarm (C7-B, 2026-08-18), verify_concurrency (C7-A, 2026-08-18),
@@ -163,7 +163,7 @@ python tests\verify_write_path.py --database-uri $scratch
 #     verify_reflection (C2, 2026-08-15), verify_deferred_writes (C1, 2026-08-12),
 #     verify_read_path, verify_cli_harness, verify_gate, verify_reconstruction,
 #     verify_authorial_correction, verify_fact_correction
-docker exec longmem-pg psql -U longmem -d postgres -c "DROP DATABASE longmem_test WITH (FORCE)"
+docker exec twicetold-pg psql -U twicetold -d postgres -c "DROP DATABASE twicetold_test WITH (FORCE)"
 ```
 
 Run them serially on a FRESH scratch, elder walkers before `verify_dissonance` (the four

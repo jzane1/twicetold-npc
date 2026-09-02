@@ -3,7 +3,7 @@
 
 Runs the reflection done-when criteria against the SCRATCH database
 (default: the .env DATABASE_URI with its database name swapped to
-`longmem_test`), with deterministic fake providers — offline, keyless, and
+`twicetold_test`), with deterministic fake providers — offline, keyless, and
 structural-only per tests\\CLAUDE.md. The service is exercised through
 `ReflectionService.reflect` and the worker through `sweep()` (the
 deterministic no-timer entries); the pipeline's time basis is the request's
@@ -23,7 +23,7 @@ Run:
     python tests\\verify_reflection.py [--database-uri <scratch-uri>]
 
 The scratch database is created and dropped around this walker by the build
-task; the product `longmem` DB is never touched.
+task; the product `twicetold` DB is never touched.
 """
 
 from __future__ import annotations
@@ -116,7 +116,7 @@ def check(condition: bool, criterion: str, detail: str = "") -> None:
 def scratch_uri_from_env() -> str:
     from app.config import load_env
 
-    return scratch_uri(load_env()["DATABASE_URI"], "longmem_test")
+    return scratch_uri(load_env()["DATABASE_URI"], "twicetold_test")
 
 
 def fake_providers(**overrides) -> Providers:
@@ -955,25 +955,25 @@ async def run(uri: str) -> None:
         )
         real_env = {
             "DATABASE_URI": "postgresql://u:p@192.0.2.1:5432/postgres",
-            "LONGMEM_PROVIDER_MODE": "real",
+            "TWICETOLD_PROVIDER_MODE": "real",
             "ANTHROPIC_API_KEY": "k1",
             "OPENAI_API_KEY": "k2",
-            "LONGMEM_MODEL_IMPORTANCE": "m",
-            "LONGMEM_MODEL_RENDER": "m",
-            "LONGMEM_MODEL_TYPOLOGY": "m",
-            "LONGMEM_MODEL_ESCALATION": "m",
-            "LONGMEM_MODEL_DIALOGUE": "m",
-            "LONGMEM_MODEL_RECONSTRUCTION": "m",
+            "TWICETOLD_MODEL_IMPORTANCE": "m",
+            "TWICETOLD_MODEL_RENDER": "m",
+            "TWICETOLD_MODEL_TYPOLOGY": "m",
+            "TWICETOLD_MODEL_ESCALATION": "m",
+            "TWICETOLD_MODEL_DIALOGUE": "m",
+            "TWICETOLD_MODEL_RECONSTRUCTION": "m",
         }
         loaded = load_settings(dict(real_env))
         check(
             loaded.provider_mode == "real" and loaded.model_reflection == "",
-            "F2 real mode LOADS without LONGMEM_MODEL_REFLECTION "
+            "F2 real mode LOADS without TWICETOLD_MODEL_REFLECTION "
             "(loaded-never-required, the judge shape)",
         )
         check(
             load_settings(
-                {**real_env, "LONGMEM_MODEL_REFLECTION": "model-f"}
+                {**real_env, "TWICETOLD_MODEL_REFLECTION": "model-f"}
             ).model_reflection
             == "model-f",
             "F3 the var loads in real mode when present",
@@ -987,7 +987,7 @@ async def run(uri: str) -> None:
             fail("F5 the loud first-use error", "no ConfigError raised")
         except ConfigError as exc:
             check(
-                "LONGMEM_MODEL_REFLECTION" in str(exc),
+                "TWICETOLD_MODEL_REFLECTION" in str(exc),
                 "F5 a real reflect without the var raises ConfigError NAMING it",
             )
         cfg_agent = await make_agent(pool, "walker-r-config", AGENT_CONFIG)

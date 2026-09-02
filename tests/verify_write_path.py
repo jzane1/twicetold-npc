@@ -2,7 +2,7 @@
 
 Runs every write-path done-when criterion against the SCRATCH database
 (default: the .env DATABASE_URI with its database name swapped to
-`longmem_test`), with deterministic fake providers — offline, keyless, and
+`twicetold_test`), with deterministic fake providers — offline, keyless, and
 structural-only per tests\\CLAUDE.md: assertions touch IDs, row shapes,
 flags, offsets, and byte-identity, never generated prose.
 
@@ -12,7 +12,7 @@ Run:
     python tests\\verify_write_path.py [--database-uri <scratch-uri>]
 
 The scratch database is created and dropped around this walker by the build
-task; the product `longmem` DB is never touched.
+task; the product `twicetold` DB is never touched.
 """
 
 from __future__ import annotations
@@ -78,7 +78,7 @@ def check(condition: bool, criterion: str, detail: str = "") -> None:
 def scratch_uri_from_env() -> str:
     from app.config import load_env
 
-    return scratch_uri(load_env()["DATABASE_URI"], "longmem_test")
+    return scratch_uri(load_env()["DATABASE_URI"], "twicetold_test")
 
 
 def observe_event(**overrides) -> ObserveEvent:

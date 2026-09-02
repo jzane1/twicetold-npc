@@ -10,7 +10,7 @@ worker (`sweep()` is also the REPL's `:compile` and the walkers'
 deterministic entry). No SQL lives here (repo hygiene; the reads/writes are
 app\\db.py's parameter-compiler section). The model provider is built
 lazily at first use via build_compiler_provider (the judge shape: never a
-Providers-bundle field; a real-mode compile without LONGMEM_MODEL_COMPILER
+Providers-bundle field; a real-mode compile without TWICETOLD_MODEL_COMPILER
 raises ConfigError loudly, the server having started fine without it).
 Tests inject Failing/Malformed fakes through the keyword-only
 `compiler_provider` seam (the C2 build precedent).
@@ -385,7 +385,7 @@ class CompilerWorker:
                     agent_id, config, budget=batch - attempts
                 )
             except ConfigError as exc:
-                # Real mode without LONGMEM_MODEL_COMPILER: log loud ONCE,
+                # Real mode without TWICETOLD_MODEL_COMPILER: log loud ONCE,
                 # keep running, record the failed pass (the reflection
                 # worker's ladder rung — no call was made, so the batch
                 # budget is untouched).

@@ -150,7 +150,7 @@ def check(condition: bool, criterion: str, detail: str = "") -> None:
 def scratch_uri_from_env() -> str:
     from app.config import load_env
 
-    return scratch_uri(load_env()["DATABASE_URI"], "longmem_test")
+    return scratch_uri(load_env()["DATABASE_URI"], "twicetold_test")
 
 
 class RecordingProseProvider:
@@ -339,7 +339,7 @@ async def main(database_uri: str) -> None:
         and ins.degraded is False,
         "instrumentation non-null: retrieval + prose timings + tokens",
     )
-    check(ins.cost_usd is None, "cost_usd null when no LONGMEM_PRICE_* configured")
+    check(ins.cost_usd is None, "cost_usd null when no TWICETOLD_PRICE_* configured")
     try:
         await run_turn(dialogue.run_dialogue_turn(request(uuid4())))
         fail("unknown agent", "no exception raised")

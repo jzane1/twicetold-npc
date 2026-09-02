@@ -9,7 +9,7 @@ route, the REPL, and the worker. No SQL lives here (repo hygiene; the
 reads/writes are app\\db.py's reflection section). The model provider is
 built lazily at first use via build_reflection_provider (the judge shape:
 never a Providers-bundle field; a real-mode call without
-LONGMEM_MODEL_REFLECTION raises ConfigError loudly, the server having
+TWICETOLD_MODEL_REFLECTION raises ConfigError loudly, the server having
 started fine without it). Tests inject Failing/Malformed fakes through the
 keyword-only `reflection_provider` seam (build ruling 2026-08-15).
 
@@ -612,7 +612,7 @@ class ReflectionWorker:
                     _failed_run(agent_id, str(exc), pressure, exc),
                 )
             except ConfigError as exc:
-                # Real mode without LONGMEM_MODEL_REFLECTION: log loud ONCE,
+                # Real mode without TWICETOLD_MODEL_REFLECTION: log loud ONCE,
                 # keep running, record the failed attempt (the spec's ladder).
                 attempts += 1
                 if not self._config_error_logged:

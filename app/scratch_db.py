@@ -12,7 +12,7 @@ Why not `urlsplit(uri)._replace(path=f"/{name}")` on its own (the shape every
 caller used before 2026-07-28): **libpq honors a `dbname` query parameter over
 the URI path.** A `DATABASE_URI` of the form
 
-    postgresql://user:pw@host:5432/postgres?dbname=longmem
+    postgresql://user:pw@host:5432/postgres?dbname=twicetold
 
 survives a path-only swap with its `dbname` intact, so the "scratch" URI still
 resolves to the product database. So: strip every `dbname` key from the query
@@ -47,7 +47,7 @@ from psycopg.conninfo import conninfo_to_dict
 
 from app.config import REPO_ROOT
 
-PRODUCT_DB = "longmem"
+PRODUCT_DB = "twicetold"
 
 
 class ScratchUriError(RuntimeError):

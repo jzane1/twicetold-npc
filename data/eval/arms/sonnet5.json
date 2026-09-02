@@ -2,8 +2,8 @@
   "name": "sonnet5",
   "note": "Sonnet-5 intro API pricing (2.00/10.00 per Mtok) runs through 2026-08-31; list is 3.00/15.00. Set whichever rate is actually billed — a stale rate silently produces a wrong Pareto USD column (Jack's call, flagged 2026-07-29).",
   "env": {
-    "LONGMEM_MODEL_DIALOGUE": "claude-sonnet-5",
-    "LONGMEM_PRICE_DIALOGUE_IN": "2.00",
-    "LONGMEM_PRICE_DIALOGUE_OUT": "10.00"
+    "TWICETOLD_MODEL_DIALOGUE": "claude-sonnet-5",
+    "TWICETOLD_PRICE_DIALOGUE_IN": "2.00",
+    "TWICETOLD_PRICE_DIALOGUE_OUT": "10.00"
   }
 }

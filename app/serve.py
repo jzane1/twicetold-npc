@@ -16,7 +16,7 @@ import uvicorn
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="longmem-npc ingestion API server")
+    parser = argparse.ArgumentParser(description="twicetold-npc ingestion API server")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--log-level", default="info")

@@ -3,7 +3,7 @@
 no guard, NO migration by ruling — purge only deletes from the 001-008 tables).
 
 Runs the C6 backend done-when criteria against the SCRATCH database (default:
-the .env DATABASE_URI with its database name swapped to `longmem_test`), with
+the .env DATABASE_URI with its database name swapped to `twicetold_test`), with
 deterministic fake providers — offline, keyless, structural-only per
 tests\\CLAUDE.md. The seam is `db.purge_memory` / `IngestService.purge_memory`
 (behind DELETE /v1/memories/{memory_id}, the SOLE sanctioned content DELETE in
@@ -29,7 +29,7 @@ Prerequisite (PowerShell):
 Run:
     python tests\\verify_purge.py [--database-uri <scratch-uri>]
 
-The product `longmem` DB is never touched.
+The product `twicetold` DB is never touched.
 """
 
 from __future__ import annotations
@@ -109,7 +109,7 @@ def check(condition: bool, criterion: str, detail: str = "") -> None:
 def scratch_uri_from_env() -> str:
     from app.config import load_env
 
-    return scratch_uri(load_env()["DATABASE_URI"], "longmem_test")
+    return scratch_uri(load_env()["DATABASE_URI"], "twicetold_test")
 
 
 def fake_providers() -> Providers:
@@ -394,7 +394,7 @@ def main() -> None:
         "--database-uri",
         default=None,
         help="scratch Postgres URI (default: .env DATABASE_URI with the "
-        "database swapped to longmem_test)",
+        "database swapped to twicetold_test)",
     )
     args = parser.parse_args()
     uri = args.database_uri or scratch_uri_from_env()

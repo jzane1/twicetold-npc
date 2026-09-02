@@ -4,7 +4,7 @@ dated 2026-08-17; NO migration — the corrections table and both verb enum
 values have sat in the schema since 001, ruled this target's scope fact).
 
 Runs the C4 done-when criteria against the SCRATCH database (default: the
-.env DATABASE_URI with its database name swapped to `longmem_test`), with
+.env DATABASE_URI with its database name swapped to `twicetold_test`), with
 deterministic fake providers — offline, keyless, and structural-only per
 tests\\CLAUDE.md. The event is exercised through `DissonanceService.confront`
 (the seam behind POST /v1/events/diegetic-correction and the REPL's
@@ -30,7 +30,7 @@ Prerequisite (PowerShell):
 Run:
     python tests\\verify_dissonance.py [--database-uri <scratch-uri>]
 
-The product `longmem` DB is never touched.
+The product `twicetold` DB is never touched.
 """
 
 from __future__ import annotations
@@ -122,7 +122,7 @@ def check(condition: bool, criterion: str, detail: str = "") -> None:
 def scratch_uri_from_env() -> str:
     from app.config import load_env
 
-    return scratch_uri(load_env()["DATABASE_URI"], "longmem_test")
+    return scratch_uri(load_env()["DATABASE_URI"], "twicetold_test")
 
 
 def fake_providers(**overrides) -> Providers:

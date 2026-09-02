@@ -362,7 +362,7 @@ def test_config_error_failed_run_and_load_shape(scene):
         runs = await db.fetch_compiler_runs(ctx.pool, agent)
         assert len(runs) == 1
         assert runs[0]["outcome"] == "failed"
-        assert "LONGMEM_MODEL_COMPILER" in runs[0]["error"]
+        assert "TWICETOLD_MODEL_COMPILER" in runs[0]["error"]
         assert worker._config_error_logged is True
         assert await worker.sweep() == 0  # still alive; a second failed row
         assert len(await db.fetch_compiler_runs(ctx.pool, agent)) == 2
@@ -370,25 +370,25 @@ def test_config_error_failed_run_and_load_shape(scene):
 
         base_env = {
             "DATABASE_URI": "postgresql://host/db",
-            "LONGMEM_PROVIDER_MODE": "real",
-            "LONGMEM_MODEL_IMPORTANCE": "m-write",
-            "LONGMEM_MODEL_RENDER": "m-write",
-            "LONGMEM_MODEL_TYPOLOGY": "m-write",
-            "LONGMEM_MODEL_ESCALATION": "m-esc",
-            "LONGMEM_MODEL_DIALOGUE": "m-dia",
-            "LONGMEM_MODEL_RECONSTRUCTION": "m-rec",
+            "TWICETOLD_PROVIDER_MODE": "real",
+            "TWICETOLD_MODEL_IMPORTANCE": "m-write",
+            "TWICETOLD_MODEL_RENDER": "m-write",
+            "TWICETOLD_MODEL_TYPOLOGY": "m-write",
+            "TWICETOLD_MODEL_ESCALATION": "m-esc",
+            "TWICETOLD_MODEL_DIALOGUE": "m-dia",
+            "TWICETOLD_MODEL_RECONSTRUCTION": "m-rec",
             "ANTHROPIC_API_KEY": "k",
             "OPENAI_API_KEY": "k",
         }
         loaded = load_settings(dict(base_env))
         assert loaded.model_compiler == ""  # real mode loads WITHOUT the var
-        loaded = load_settings({**base_env, "LONGMEM_MODEL_COMPILER": "m-comp"})
+        loaded = load_settings({**base_env, "TWICETOLD_MODEL_COMPILER": "m-comp"})
         assert loaded.model_compiler == "m-comp"
 
         assert isinstance(build_compiler_provider(ctx.settings), FakeCompilerProvider)
         with pytest.raises(ConfigError) as excinfo:
             build_compiler_provider(replace(loaded, model_compiler=""))
-        assert "LONGMEM_MODEL_COMPILER" in str(excinfo.value)
+        assert "TWICETOLD_MODEL_COMPILER" in str(excinfo.value)
 
     run_structural(scene, scenario)
 

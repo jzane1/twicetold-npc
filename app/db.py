@@ -78,7 +78,7 @@ def build_pool(
 ) -> AsyncConnectionPool:
     """Pool is opened by the caller (await pool.open()) so startup is explicit.
 
-    `max_size` is settings.db_pool_max_size (LONGMEM_DB_POOL_MAX_SIZE) at the
+    `max_size` is settings.db_pool_max_size (TWICETOLD_DB_POOL_MAX_SIZE) at the
     app/runner construction sites — raise it together with the concurrency cap
     (the config.py comment pair). The keyword default keeps the walkers' bare
     build_pool(uri) calls at today's shape; min_size stays 1, not knobbed."""

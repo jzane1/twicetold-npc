@@ -1196,7 +1196,7 @@ class RealEscalationProvider:
 
 
 def _dialogue_thinking_kwargs(value: str) -> dict:
-    """The LONGMEM_DIALOGUE_THINKING knob's request shape (B2 ruling
+    """The TWICETOLD_DIALOGUE_THINKING knob's request shape (B2 ruling
     2026-08-07): "" -> {} — the pre-B2 request byte-for-byte; "disabled" ->
     the thinking-off arm (sonnet-5 accepts {"type": "disabled"}). Values are
     validated at load_settings; nothing else can reach here."""
@@ -1320,7 +1320,7 @@ class RealJudgeProvider:
     rejects temperature/top_p/top_k outright, so the spec's original
     "temperature 0" is unimplementable (dated correction in eval-harness.md);
     the rubric's JSON-only contract carries determinism instead. max_tokens is
-    the LONGMEM_JUDGE_MAX_TOKENS knob — adaptive thinking spends against it."""
+    the TWICETOLD_JUDGE_MAX_TOKENS knob — adaptive thinking spends against it."""
 
     def __init__(self, settings: Settings):
         import anthropic

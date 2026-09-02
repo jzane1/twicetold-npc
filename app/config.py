@@ -8,11 +8,11 @@ Model roles (architecture §3): every role has its own env var. The v1 write
 call serves render + importance + typology in ONE Haiku call, so at startup
 in real mode the three role vars must name the same model — divergence is a
 loud config error, never a silent pick (ruled with the write-path plan,
-2026-07-13). The dialogue role (LONGMEM_MODEL_DIALOGUE, cli-harness build
+2026-07-13). The dialogue role (TWICETOLD_MODEL_DIALOGUE, cli-harness build
 2026-07-15) streams PURE PROSE — the dialogue turn's only model call since
 the A1 re-shape (2026-08-04; the split-brain `behavior` role was removed by
 ruling, real mode 7 -> 6 vars). The reconstruction role
-(LONGMEM_MODEL_RECONSTRUCTION, reconstruction build 2026-07-17) is the
+(TWICETOLD_MODEL_RECONSTRUCTION, reconstruction build 2026-07-17) is the
 Haiku-class batched retelling call (reconstruction.md).
 
 Service-level defaults below are integrator-overridable per agent via
@@ -39,72 +39,72 @@ EMBEDDING_MODEL = "text-embedding-3-small"
 EMBEDDING_DIM = 1536
 
 # Env var names — one per model role (architecture §3).
-ENV_MODEL_IMPORTANCE = "LONGMEM_MODEL_IMPORTANCE"
-ENV_MODEL_RENDER = "LONGMEM_MODEL_RENDER"
-ENV_MODEL_TYPOLOGY = "LONGMEM_MODEL_TYPOLOGY"
-ENV_MODEL_ESCALATION = "LONGMEM_MODEL_ESCALATION"
-ENV_MODEL_DIALOGUE = "LONGMEM_MODEL_DIALOGUE"
-ENV_MODEL_RECONSTRUCTION = "LONGMEM_MODEL_RECONSTRUCTION"
-ENV_PROVIDER_MODE = "LONGMEM_PROVIDER_MODE"
+ENV_MODEL_IMPORTANCE = "TWICETOLD_MODEL_IMPORTANCE"
+ENV_MODEL_RENDER = "TWICETOLD_MODEL_RENDER"
+ENV_MODEL_TYPOLOGY = "TWICETOLD_MODEL_TYPOLOGY"
+ENV_MODEL_ESCALATION = "TWICETOLD_MODEL_ESCALATION"
+ENV_MODEL_DIALOGUE = "TWICETOLD_MODEL_DIALOGUE"
+ENV_MODEL_RECONSTRUCTION = "TWICETOLD_MODEL_RECONSTRUCTION"
+ENV_PROVIDER_MODE = "TWICETOLD_PROVIDER_MODE"
 # Eval-runner-only judge role (eval-harness.md stage 3, ruled 2026-07-29):
 # loaded in BOTH modes, required by NEITHER — the server/REPL never needs a
 # judge; the eval runner validates it itself when a judged run starts.
-ENV_MODEL_JUDGE = "LONGMEM_MODEL_JUDGE"
+ENV_MODEL_JUDGE = "TWICETOLD_MODEL_JUDGE"
 # Reflection role (reflection.md; the C2 dossier ruling 2026-08-15): the
 # judge shape exactly — loaded in BOTH modes, required by NEITHER, loud at
 # the first real reflect call (build_reflection_provider raises ConfigError).
 # The server starts fine without it; only a real-mode reflect needs it.
-ENV_MODEL_REFLECTION = "LONGMEM_MODEL_REFLECTION"
+ENV_MODEL_REFLECTION = "TWICETOLD_MODEL_REFLECTION"
 # Compiler role (parameter-compiler.md; the C3 rulings 2026-08-17): the
 # THIRD judge-shaped var — loaded in BOTH modes, required by NEITHER, loud
 # at the first real compile call (build_compiler_provider raises
 # ConfigError). C3 has no endpoint verb, so that first call is always the
 # worker's; the server starts fine without the var.
-ENV_MODEL_COMPILER = "LONGMEM_MODEL_COMPILER"
+ENV_MODEL_COMPILER = "TWICETOLD_MODEL_COMPILER"
 # Dialogue thinking knob (B2 ruling 2026-08-07): "" (unset) omits the thinking
 # parameter from the real prose call entirely — today's request byte-for-byte;
 # "disabled" sends thinking={"type": "disabled"} (the sonnet-5 thinking-off
 # compare arm). Set per-arm via compare overlays, not globally.
-ENV_DIALOGUE_THINKING = "LONGMEM_DIALOGUE_THINKING"
+ENV_DIALOGUE_THINKING = "TWICETOLD_DIALOGUE_THINKING"
 # Bounded max_tokens for judge calls (adaptive thinking spends against it).
-ENV_JUDGE_MAX_TOKENS = "LONGMEM_JUDGE_MAX_TOKENS"
+ENV_JUDGE_MAX_TOKENS = "TWICETOLD_JUDGE_MAX_TOKENS"
 JUDGE_MAX_TOKENS_DEFAULT = 2048
 # Concurrency cap (C7 / audit R8, 2026-08-18): the max provider (model) calls
 # in flight at once across the whole process — the single ceiling the
 # ModelCallGate enforces (app\concurrency.py). Process-level like the worker
 # poll intervals (an agent cannot own a thread pool), so it is a Settings field
 # with its own env var, not a per-agent SERVICE_DEFAULTS knob. Default aligns
-# with the DB pool max_size (LONGMEM_DB_POOL_MAX_SIZE below) so the cap never
+# with the DB pool max_size (TWICETOLD_DB_POOL_MAX_SIZE below) so the cap never
 # starves on a connection; raise both together. Integrator-tunable — nothing
 # hardcoded.
-ENV_MAX_CONCURRENT_MODEL_CALLS = "LONGMEM_MAX_CONCURRENT_MODEL_CALLS"
+ENV_MAX_CONCURRENT_MODEL_CALLS = "TWICETOLD_MAX_CONCURRENT_MODEL_CALLS"
 MAX_CONCURRENT_MODEL_CALLS_DEFAULT = 8
 # DB pool ceiling (F0, 2026-08-26): db.build_pool's max_size, the other half
 # of the "raise both together" pair — the same process-level shape, closing
 # the last hardcoded capacity number (the nothing-hardcoded invariant).
 # min_size stays 1 in build_pool: not knobbed, surfaced at F0.
-ENV_DB_POOL_MAX_SIZE = "LONGMEM_DB_POOL_MAX_SIZE"
+ENV_DB_POOL_MAX_SIZE = "TWICETOLD_DB_POOL_MAX_SIZE"
 DB_POOL_MAX_SIZE_DEFAULT = 8
 
 # Optional per-Mtok USD prices (CLI-harness build ruling, 2026-07-15): cost
 # fields carry token counts unconditionally; USD appears only when these are
 # set. No model pricing is ever hardcoded. Maps env var -> Settings.prices key.
 PRICE_ENV_KEYS: dict[str, str] = {
-    "LONGMEM_PRICE_DIALOGUE_IN": "dialogue_in",
-    "LONGMEM_PRICE_DIALOGUE_OUT": "dialogue_out",
-    "LONGMEM_PRICE_WRITE_IN": "write_in",
-    "LONGMEM_PRICE_WRITE_OUT": "write_out",
-    "LONGMEM_PRICE_ESCALATION_IN": "escalation_in",
-    "LONGMEM_PRICE_ESCALATION_OUT": "escalation_out",
-    "LONGMEM_PRICE_RECONSTRUCTION_IN": "reconstruction_in",
-    "LONGMEM_PRICE_RECONSTRUCTION_OUT": "reconstruction_out",
-    "LONGMEM_PRICE_EMBEDDING": "embedding",
-    "LONGMEM_PRICE_JUDGE_IN": "judge_in",
-    "LONGMEM_PRICE_JUDGE_OUT": "judge_out",
-    "LONGMEM_PRICE_REFLECTION_IN": "reflection_in",
-    "LONGMEM_PRICE_REFLECTION_OUT": "reflection_out",
-    "LONGMEM_PRICE_COMPILER_IN": "compiler_in",
-    "LONGMEM_PRICE_COMPILER_OUT": "compiler_out",
+    "TWICETOLD_PRICE_DIALOGUE_IN": "dialogue_in",
+    "TWICETOLD_PRICE_DIALOGUE_OUT": "dialogue_out",
+    "TWICETOLD_PRICE_WRITE_IN": "write_in",
+    "TWICETOLD_PRICE_WRITE_OUT": "write_out",
+    "TWICETOLD_PRICE_ESCALATION_IN": "escalation_in",
+    "TWICETOLD_PRICE_ESCALATION_OUT": "escalation_out",
+    "TWICETOLD_PRICE_RECONSTRUCTION_IN": "reconstruction_in",
+    "TWICETOLD_PRICE_RECONSTRUCTION_OUT": "reconstruction_out",
+    "TWICETOLD_PRICE_EMBEDDING": "embedding",
+    "TWICETOLD_PRICE_JUDGE_IN": "judge_in",
+    "TWICETOLD_PRICE_JUDGE_OUT": "judge_out",
+    "TWICETOLD_PRICE_REFLECTION_IN": "reflection_in",
+    "TWICETOLD_PRICE_REFLECTION_OUT": "reflection_out",
+    "TWICETOLD_PRICE_COMPILER_IN": "compiler_in",
+    "TWICETOLD_PRICE_COMPILER_OUT": "compiler_out",
 }
 
 # Service-level defaults, each overridable per agent via the same key in

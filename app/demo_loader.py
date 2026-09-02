@@ -2,7 +2,7 @@
 
     PowerShell:  python -m app.demo_loader --fresh
 
-Loads the demo corpus into a STABLE demo database (default `longmem_demo`)
+Loads the demo corpus into a STABLE demo database (default `twicetold_demo`)
 so the recording rig — `python -m app.serve` pointed at it, the Unity scene,
 The Ledger — drives one persistent agent. This is deliberately not an eval
 verb: the eval runner's databases are pid-scoped and dropped; the demo DB
@@ -43,7 +43,7 @@ from app.schemas import IngestResult
 from app.scratch_db import provision_scratch
 from app.session import SessionRunner
 
-DEMO_DB_DEFAULT = "longmem_demo"
+DEMO_DB_DEFAULT = "twicetold_demo"
 DEMO_CORPUS = (
     Path(__file__).resolve().parent.parent
     / "data"

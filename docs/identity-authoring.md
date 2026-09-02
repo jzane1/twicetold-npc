@@ -1,6 +1,6 @@
 # Authoring an NPC: identity, memories, and the authoring-time checks
 
-Written 2026-08-19 (Phase E1). This is the integrator-facing guide to authoring a longmem-npc
+Written 2026-08-19 (Phase E1). This is the integrator-facing guide to authoring a twicetold-npc
 agent: the identity fields, the memory prose, the config knobs an author owns, and the two
 validation commands that catch a bad authoring decision before it reaches a live game or a
 recording. It was proven by authoring the demo NPC (Branwen of the Waystone Inn) with it;
@@ -158,9 +158,9 @@ The loader is strict (`extra="forbid"`); any authoring typo fails at load with f
 **Dry-run the mechanics first (free, fake mode):**
 
 ```powershell
-$env:LONGMEM_PROVIDER_MODE = "fake"
+$env:TWICETOLD_PROVIDER_MODE = "fake"
 python -m app.eval_runner drift-validate --corpus data\eval\corpora\demo-waystone.jsonl --age-days 60 --plumbing
-Remove-Item Env:\LONGMEM_PROVIDER_MODE
+Remove-Item Env:\TWICETOLD_PROVIDER_MODE
 ```
 
 The report is labeled `plumbing_only`; ignore its distances.
@@ -168,9 +168,9 @@ The report is labeled `plumbing_only`; ignore its distances.
 **Then validate on real embeddings** (the tool refuses real signal in fake mode; exit 2):
 
 ```powershell
-$env:LONGMEM_PROVIDER_MODE = "real"
+$env:TWICETOLD_PROVIDER_MODE = "real"
 python -m app.eval_runner drift-validate --corpus data\eval\corpora\demo-waystone.jsonl --age-days 60 --out data\eval\runs\demo-drift-60d.json
-Remove-Item Env:\LONGMEM_PROVIDER_MODE
+Remove-Item Env:\TWICETOLD_PROVIDER_MODE
 ```
 
 Exit 0 means every retelling stayed under the drift budget; exit 1 means at least one was

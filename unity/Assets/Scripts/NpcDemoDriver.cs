@@ -233,7 +233,7 @@ namespace NpcMemory.Unity
         {
             // The dev-tool overlay IS the intended aesthetic (ruled 2026-07-22).
             GUILayout.BeginArea(new Rect(12, 12, 560, 340), GUI.skin.box);
-            GUILayout.Label($"longmem-npc · {_status}");
+            GUILayout.Label($"twicetold-npc · {_status}");
             var pending = npc != null ? npc.PendingObserves : 0;
             GUILayout.Label($"{_gateLine}   pending observes: {pending}");
             GUILayout.Space(6);

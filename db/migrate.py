@@ -1,4 +1,4 @@
-"""migrate.py — minimal forward-only migration runner for longmem-npc.
+"""migrate.py — minimal forward-only migration runner for twicetold-npc.
 
 Applies each ``db\\migrations\\NNN_*.sql`` not yet recorded in the
 ``schema_migrations`` ledger, in filename order. Each migration's DDL and its
@@ -54,7 +54,7 @@ def load_database_uri() -> str:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="longmem-npc migration runner")
+    parser = argparse.ArgumentParser(description="twicetold-npc migration runner")
     parser.add_argument(
         "--database-uri",
         default=None,

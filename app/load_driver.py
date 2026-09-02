@@ -11,10 +11,10 @@ number below is read off the seams' instrumentation payloads.
                      [--database-uri <uri>] [--json out.json]
 
 Runs offline and keyless on the deterministic fake providers by default
-(LONGMEM_PROVIDER_MODE=fake); the real providers back a keyed smoke moment
+(TWICETOLD_PROVIDER_MODE=fake); the real providers back a keyed smoke moment
 ahead of demo choreography. Without --agent it creates a fresh driver agent
 in the target database — point --database-uri at a scratch DB for clean
-runs (verification uses longmem_test); the product DB stays untouched unless
+runs (verification uses twicetold_test); the product DB stays untouched unless
 you aim at it deliberately.
 
 Script format (--script): a JSON list of sessions; each session is a list of
@@ -28,7 +28,7 @@ Emits the §11 aggregates: the latency histogram (p50/p95 — gate check
 series padded with loader-turn zeros would lie), retrieval SQL, query embed,
 first word (prose TTFT at the seam — the headline, 2026-07-21), dialogue
 total, turn total) and the itemized per-100-turn cost table (tokens per
-model role, unconditionally; USD only for roles priced via LONGMEM_PRICE_* —
+model role, unconditionally; USD only for roles priced via TWICETOLD_PRICE_* —
 build ruling 2026-07-15; the gate is non-LLM, no cost row), plus the
 per-100-turn gate block (fires per signal, efficacy fractions, fruitless
 fetches, damper activations — instrumentation-only by fork 4, the reserved
@@ -453,7 +453,7 @@ def _print_report(report: dict) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="longmem-npc synthetic load driver")
+    parser = argparse.ArgumentParser(description="twicetold-npc synthetic load driver")
     parser.add_argument("--sessions", type=int, default=5)
     parser.add_argument("--turns", type=int, default=10, help="turns per session")
     parser.add_argument("--script", type=Path, help="JSON script (see module doc)")

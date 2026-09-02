@@ -51,7 +51,7 @@ queued 2026-07-29 deferral) open the next session once labels exist.
 
 ## The ruled shape
 
-1. **Judge model role from v1** (ruled 2026-07-20): `LONGMEM_MODEL_JUDGE` + judged categories
+1. **Judge model role from v1** (ruled 2026-07-20): `TWICETOLD_MODEL_JUDGE` + judged categories
    beside the structural scenarios; judged signal is only meaningful in real provider mode, and
    the reports make that mechanical (`plumbing_only` labels under fake mode).
 2. **Judge role is eval-runner-only** (ruled 2026-07-29 at plan approval): the server/REPL
@@ -90,7 +90,7 @@ queued 2026-07-29 deferral) open the next session once labels exist.
 8. **No new migration** (ruled 2026-07-29, the explicit per-target scope fact): scenarios, gold
    sets, and corpora are repo files under `data\eval\`; run artifacts are JSON files; nothing
    eval-related persists in Postgres. Runs use disposable pid-scoped scratch DBs and never
-   connect to the product `longmem`.
+   connect to the product `twicetold`.
 9. **Harness shape** (queue item 3): Insert/Query over the existing `SessionRunner` loop;
    accuracy-vs-latency Pareto reporting; plus the early-runnable real-embedding
    **drift-validation verb** (audit addition iv) so the demo-corpus validation is a command,
@@ -191,7 +191,7 @@ Footer updated: the binding promise is now the binding.
   verbatim). `app\scratch_db.py` promotes `tests\scratch_uri.py` (re-export
   shim keeps conftest + all seven walkers byte-untouched) and adds `provision_scratch` /
   `drop_scratch` (CREATE + `db\migrate.py` subprocess + drop; hard refusal when the resolved
-  dbname is the product `longmem`). `app\eval_scenarios.py` = pydantic scenario schema + JSONL
+  dbname is the product `twicetold`). `app\eval_scenarios.py` = pydantic scenario schema + JSONL
   loader (events: observe / utterance / scene / correct / pin / as_of / context; `memory_ref`
   = ordinal index into the scenario's observes, resolved via `IngestResult.memory_id`).
   `app\eval_runner.py` (`python -m app.eval_runner`) verbs: `run` (scratch DB → agent →
@@ -204,7 +204,7 @@ Footer updated: the binding promise is now the binding.
   shape). Scenario fixtures are authored realistic prose (the 79%-vs-0% escalation
   construct-validity lesson).
 - **Stage 3 — judge layer. BUILT 2026-08-07** (banner above; built to this paragraph with the
-  one dated correction below). Config: `ENV_MODEL_JUDGE`, `LONGMEM_PRICE_JUDGE_IN/OUT`
+  one dated correction below). Config: `ENV_MODEL_JUDGE`, `TWICETOLD_PRICE_JUDGE_IN/OUT`
   (`judge_in`/`judge_out`), `Settings.model_judge` loaded in both modes but absent from the
   real-mode required list (the ruling as a regression test). Providers: `FakeJudgeProvider`
   (deterministic hash verdicts, plumbing only), `RealJudgeProvider` (adaptive thinking, no
@@ -299,9 +299,9 @@ resolved role names + the thinking knob, without which two compare arms are indi
 after the fact); faithfulness judges only memories whose `live_write_cause` is
 `reconstruction` (anything else is counted `skipped_not_reconstructed`, never silently judged)
 and sees **all** merged-span gist facts — no lemma-measurability filter (that filter is a
-lexical-metric artifact; the judge does semantic support); `LONGMEM_JUDGE_MAX_TOKENS` is a
+lexical-metric artifact; the judge does semantic support); `TWICETOLD_JUDGE_MAX_TOKENS` is a
 Settings/env knob (default 2048), not an `agent_knob` — service-scoped eval config, not
-per-agent policy; the `LONGMEM_DIALOGUE_THINKING` knob (`""` omits the thinking parameter —
+per-agent policy; the `TWICETOLD_DIALOGUE_THINKING` knob (`""` omits the thinking parameter —
 the pre-B2 request byte-for-byte; `"disabled"` sends thinking off) lands in the real prose
 provider now by ruling, so the queued thinking-off variant is expressible as a pure env
 overlay; a compare arm is a JSON file (`{"name", "env"}`) whose overlay may carry the six role

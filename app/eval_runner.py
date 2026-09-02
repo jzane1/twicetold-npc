@@ -817,7 +817,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
             return 2
     base_uri = args.database_uri or settings.database_uri
     scenarios = load_scenario_files(args.scenarios)
-    name = args.database_name or pid_scoped_name("longmem_eval")
+    name = args.database_name or pid_scoped_name("twicetold_eval")
     uri = provision_scratch(base_uri, name)
     try:
         report = asyncio.run(
@@ -1073,7 +1073,7 @@ def _cmd_drift_validate(args: argparse.Namespace) -> int:
     for scenario in corpus:
         assert_corpus_shape(scenario)
     base_uri = args.database_uri or settings.database_uri
-    name = args.database_name or pid_scoped_name("longmem_eval")
+    name = args.database_name or pid_scoped_name("twicetold_eval")
     uri = provision_scratch(base_uri, name)
     try:
         report = asyncio.run(
@@ -1415,8 +1415,8 @@ def _cmd_ablation(args: argparse.Namespace) -> int:
     for scenario in corpus:
         assert_corpus_shape(scenario)
     base_uri = args.database_uri or settings.database_uri
-    name_on = pid_scoped_name("longmem_eval_abl_on")
-    name_off = pid_scoped_name("longmem_eval_abl_off")
+    name_on = pid_scoped_name("twicetold_eval_abl_on")
+    name_off = pid_scoped_name("twicetold_eval_abl_off")
     uri_on = provision_scratch(base_uri, name_on)
     uri_off = provision_scratch(base_uri, name_off)
     try:
@@ -1782,8 +1782,8 @@ def _cmd_compare(args: argparse.Namespace) -> int:
         return 2
     scenarios = load_scenario_files(args.scenarios)
     base_uri = args.database_uri or settings.database_uri
-    name_a = pid_scoped_name("longmem_eval_a")
-    name_b = pid_scoped_name("longmem_eval_b")
+    name_a = pid_scoped_name("twicetold_eval_a")
+    name_b = pid_scoped_name("twicetold_eval_b")
     uri_a = provision_scratch(base_uri, name_a)
     uri_b = provision_scratch(base_uri, name_b)
     arm_a["settings"] = replace(arm_a["settings"], database_uri=uri_a)
@@ -2186,7 +2186,7 @@ def _cmd_agreement(args: argparse.Namespace) -> int:
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="python -m app.eval_runner",
-        description="longmem-npc eval runner (eval-harness.md stages 2-3)",
+        description="twicetold-npc eval runner (eval-harness.md stages 2-3)",
     )
     verbs = parser.add_subparsers(dest="verb", required=True)
 
@@ -2207,7 +2207,7 @@ def main() -> None:
     )
     run_parser.add_argument(
         "--database-name",
-        help="scratch database name (default: longmem_eval_<pid>)",
+        help="scratch database name (default: twicetold_eval_<pid>)",
     )
     run_parser.add_argument("--database-uri", help="override .env DATABASE_URI")
     run_parser.add_argument(
@@ -2259,7 +2259,7 @@ def main() -> None:
     drift_parser.add_argument("--out", type=Path, help="also write the report JSON")
     drift_parser.add_argument(
         "--database-name",
-        help="scratch database name (default: longmem_eval_<pid>)",
+        help="scratch database name (default: twicetold_eval_<pid>)",
     )
     drift_parser.add_argument("--database-uri", help="override .env DATABASE_URI")
     drift_parser.add_argument(

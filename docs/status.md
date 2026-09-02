@@ -1,10 +1,21 @@
-# longmem-npc — Status
+# twicetold-npc — Status
 
-**Last updated:** 2026-09-01
+**Last updated:** 2026-09-02
 **Phase:** **Road to completion — Phases A–D DONE; Phase E PAUSED (E3 first attempt
 recorded + QA'd, master not cut). F0 DONE 2026-08-26; the consumer-context scan DONE
-2026-09-01 (research-only; four forks ruled). Next: the naming session → the provider +
-purge build → F1 → F2–F3; the demo endgame follows Phase F.**
+2026-09-01. The naming session (longmem-npc → twicetold-npc) IN PROGRESS 2026-09-02 —
+in-repo half landed + self-verified; operator swap pending Jack. Next: finish the rename →
+the provider + purge build → F1 → F2–F3; the demo endgame follows Phase F.**
+**The rename → `twicetold-npc` (2026-09-02):** the in-repo half is LANDED and self-verified
+— 243 replacements across 55 files, full suite **193 passed**, all **15 walkers** green
+fresh+serial on `twicetold_test`, C# harness **53 checks** green, real-mode `load_settings`
+boots on the `TWICETOLD_` keys; `git grep -i longmem` returns only the ruled allowlist. The
+dated `decisions.md` entry carries the pick, the collision check, the four scope rulings, the
+allowlist, and the `PRODUCT_DB`↔`.env` lockstep note. **Pending Jack (operator-gated, the
+commit-2 half):** the `.env` rename (snippet provided) + Docker volume recreation + demo-DB
+rebuild; the DLL rebuild + copy (post-folder-rename, once); the hero-PNG re-capture; the
+GitHub rename + `git remote set-url`; the local folder rename + Claude project-state copy;
+then the independent floor-verifier pass (blocked until the swap exists). Count stays 32.
 **Consumer-context scan landed 2026-09-01** (research-only; no floors row): five streams —
 OSS-memory reception, game-dev/platform sentiment, novelty stress test + name check,
 release-hygiene norms, a cold consumer agent (verdict: adopt-for-a-spike; its one BLOCKED
@@ -119,9 +130,11 @@ the E2 wrap-up (size tripwire); full records in `floors.md` + `decisions.md`.
   measurements, the ceiling, forks, incident lessons).
 - **The consumer-context scan.** ✅ DONE 2026-09-01 (research-only; the header block above;
   report: `docs\research\consumer-context-scan-2026-08-31.md`).
-- **The naming session** (NEW, ruled 2026-09-01 — rename before the flip): candidate +
-  collision check + repo rename (GitHub redirects) + docs sweep. Sits before F1 so the
-  README is written once under the final name (the evidence: report Fork 3).
+- **The naming session** (ruled 2026-09-01 — rename before the flip). IN PROGRESS 2026-09-02:
+  name = **twicetold-npc**; the in-repo sweep (code + docs + tests + env prefix + DB names)
+  is landed and self-verified (the header block above + the dated `decisions.md` entry). The
+  operator swap (`.env`, Docker volume, demo rebuild, DLL rebuild, hero PNG, GitHub rename,
+  folder rename, independent floor-verify) is the remaining checklist, handed to Jack.
 - **The provider-path + per-agent-purge build** (NEW, ruled 2026-09-01): an
   OpenAI-compatible base-URL provider path for the model + embedding roles, shipped WITH
   the documented small-model quality warning (~1–2 sessions; floor re-verify), plus
@@ -185,7 +198,7 @@ not vendored).
 
 **Carried, not fixed** (deliberately unscheduled, awaiting its own ruling):
 
-- **The walkers (fifteen since C7-B) share a fixed-name scratch DB** (`longmem_test`) they
+- **The walkers (fifteen since C7-B) share a fixed-name scratch DB** (`twicetold_test`) they
   neither create, migrate, nor drop; some assertions are DB-global counts, so sweeps run
   fresh + serial, elder walkers first. The right fix (the suite's pid-scoped mechanism + a
   `tests\run-walkers.ps1` runner) wants its own scoped task. THREE documented bites — the

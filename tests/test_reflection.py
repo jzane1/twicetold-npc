@@ -884,7 +884,7 @@ def test_reflect_route_contracts(scene):
 
 
 def test_real_mode_config_error_at_first_use(scene):
-    """Done-when 10: real mode LOADS without LONGMEM_MODEL_REFLECTION (the
+    """Done-when 10: real mode LOADS without TWICETOLD_MODEL_REFLECTION (the
     Set I amendment asserts load_settings); the first real reflect without
     it raises ConfigError NAMING the var, with nothing written. Fake mode
     runs end to end on FakeReflectionProvider (every other scenario)."""
@@ -898,7 +898,7 @@ def test_real_mode_config_error_at_first_use(scene):
         from app.reflection import ReflectionService
 
         service = ReflectionService(ctx.pool, ctx.providers(), real_settings)
-        with pytest.raises(ConfigError, match="LONGMEM_MODEL_REFLECTION"):
+        with pytest.raises(ConfigError, match="TWICETOLD_MODEL_REFLECTION"):
             await service.reflect(agent, _request())
         assert await _reflection_rows(ctx, agent) == []
 

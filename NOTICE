@@ -1,4 +1,4 @@
-longmem-npc
+twicetold-npc
 Copyright 2026 Jackson Zane
 
 This product is licensed under the Apache License, Version 2.0 (see LICENSE).
@@ -52,7 +52,7 @@ RUNTIME DEPENDENCIES (installed via requirements.txt, not vendored)
   ruff ....................................... MIT
 
 NOTE ON psycopg (LGPL-3.0-only). This is the one copyleft dependency and the
-only one worth a paragraph. longmem-npc does not vendor, modify, or
+only one worth a paragraph. twicetold-npc does not vendor, modify, or
 redistribute psycopg: it is declared in requirements.txt and installed from
 PyPI by the operator, and this project links against it as a separate work.
 Apache-2.0 for this repository's own source is unaffected. An integrator who

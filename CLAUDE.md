@@ -1,4 +1,4 @@
-# longmem-npc — operating rules for Claude Code
+# twicetold-npc — operating rules for Claude Code
 
 Long-term-memory service for game NPCs: FastAPI + Postgres/pgvector backend + Unity-embeddable
 client package. This file is rules. Design knowledge lives in docs/ — point, don't duplicate.
@@ -37,7 +37,7 @@ client package. This file is rules. Design knowledge lives in docs/ — point, d
   is recorded in `schema_migrations`, the ledger attests to those exact bytes and `migrate.py`
   has no checksum to catch a rewrite. Corrections go in a new numbered migration or in the docs
   that reference it. A stale path inside an applied migration's comment stays stale on purpose.
-- Model roles are env vars, never hardcoded. **Six exist today** (`LONGMEM_MODEL_` + IMPORTANCE,
+- Model roles are env vars, never hardcoded. **Six exist today** (`TWICETOLD_MODEL_` + IMPORTANCE,
   RENDER, TYPOLOGY, ESCALATION, DIALOGUE, RECONSTRUCTION), all six required in real mode. One
   documented limit: v1's single write call serves importance+render+typology, so those three vars
   must name the SAME model (`load_settings` errors if they diverge — never a silent pick).
@@ -45,10 +45,10 @@ client package. This file is rules. Design knowledge lives in docs/ — point, d
   reuses the RECONSTRUCTION role (C4, ruled 2026-08-17 — no new var; the defend-vs-update
   decision itself is mechanical, no model call). (`dialogue` streams pure prose — the dialogue turn's only model call; the `behavior`
   role was removed by the A1 re-shape, 2026-08-04. Three more vars are judge-shaped — loaded in
-  both modes, required by NEITHER, loud at first real use: `LONGMEM_MODEL_JUDGE`,
-  eval-runner-only (B2, 2026-08-07); `LONGMEM_MODEL_REFLECTION`, the reflect verb's role
+  both modes, required by NEITHER, loud at first real use: `TWICETOLD_MODEL_JUDGE`,
+  eval-runner-only (B2, 2026-08-07); `TWICETOLD_MODEL_REFLECTION`, the reflect verb's role
   (C2, built 2026-08-15 — `build_reflection_provider` raises `ConfigError` at the first real
-  reflect without it; the server starts fine); and `LONGMEM_MODEL_COMPILER`, the compiler
+  reflect without it; the server starts fine); and `TWICETOLD_MODEL_COMPILER`, the compiler
   worker's role (C3, built 2026-08-17 — the same shape; C3 has no endpoint, so the first real
   compile is always the worker's, which lands a `failed` run row and logs loud once).)
 - Python formatting: ruff, enforced mechanically by a PostToolUse hook. Don't hand-format.

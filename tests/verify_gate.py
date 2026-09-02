@@ -2,9 +2,9 @@
 target v1 (docs\\mid-dialogue-gate.md).
 
 Runs the gate done-when list against the SCRATCH database (default: the
-.env DATABASE_URI with its path swapped to /longmem_test); the product DB is
+.env DATABASE_URI with its path swapped to /twicetold_test); the product DB is
 never touched. The migrate criterion (`db\\migrate.py` no-arg -> "001 + 002
-+ 003 applied, 0 pending" on `longmem`) runs outside this walker.
++ 003 applied, 0 pending" on `twicetold`) runs outside this walker.
 
 Structural-only (tests\\CLAUDE.md): assertions ride IDs, signals-fired
 constants, rung names, counts, index existence, chain stamps, and
@@ -143,7 +143,7 @@ def check(condition: bool, criterion: str, detail: str = "") -> None:
 def scratch_uri_from_env() -> str:
     from app.config import load_env
 
-    return scratch_uri(load_env()["DATABASE_URI"], "longmem_test")
+    return scratch_uri(load_env()["DATABASE_URI"], "twicetold_test")
 
 
 def fake_providers(embedding=None) -> Providers:

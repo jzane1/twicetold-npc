@@ -2,8 +2,8 @@
   "name": "haiku",
   "note": "The shipping dialogue role (ruled 2026-07-29). Prices are the list rates at that ruling: 1.00/5.00 USD per Mtok — refresh before quoting.",
   "env": {
-    "LONGMEM_MODEL_DIALOGUE": "claude-haiku-4-5-20251001",
-    "LONGMEM_PRICE_DIALOGUE_IN": "1.00",
-    "LONGMEM_PRICE_DIALOGUE_OUT": "5.00"
+    "TWICETOLD_MODEL_DIALOGUE": "claude-haiku-4-5-20251001",
+    "TWICETOLD_PRICE_DIALOGUE_IN": "1.00",
+    "TWICETOLD_PRICE_DIALOGUE_OUT": "5.00"
   }
 }

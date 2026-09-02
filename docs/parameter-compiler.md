@@ -1,7 +1,7 @@
 # parameter-compiler.md — reflection → parameter compiler (Phase C3)
 
 **BUILT 2026-08-17, spec-to-floor in one session** — migration 008, `app\compiler.py`, the
-consume splice at the dialogue seam, the judge-shaped `LONGMEM_MODEL_COMPILER` role, suite
+consume splice at the dialogue seam, the judge-shaped `TWICETOLD_MODEL_COMPILER` role, suite
 Set M (21 scenarios, all unmarked), the tenth walker (48 assertions), the C# mirror + four
 interop beats (28 → 32). The seven C3 rulings are the dated 2026-08-17 entry in
 `decisions.md`; the plan-mode fork batches settled them before a line was written. Ships
@@ -36,10 +36,10 @@ eviction.
    route**: C3 has no endpoint verb at all (the C1 worker precedent).
 4. **The staleness guard is all-mechanical** (the confabulated-rule-library caution the C2
    spec obligated): the K-window + liveness-by-join + hard clamps. See below.
-5. **`LONGMEM_MODEL_COMPILER` takes the judge shape** — the THIRD such var: loaded both
+5. **`TWICETOLD_MODEL_COMPILER` takes the judge shape** — the THIRD such var: loaded both
    modes, required by neither, standalone lazy `build_compiler_provider`, loud `ConfigError`
    at the first real compile (always inside the worker); prices
-   `LONGMEM_PRICE_COMPILER_IN/OUT` join `PRICE_ENV_KEYS`.
+   `TWICETOLD_PRICE_COMPILER_IN/OUT` join `PRICE_ENV_KEYS`.
 6. **Multiplier clamp = [0.25, 4.0]**, frozen into migration 008's CHECK (applied migrations
    are immutable, so the bounds were ruled before the file was written): one belief moves one
    axis by at most ×4 either way and can never zero it — zeroing stays the caller's explicit

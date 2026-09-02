@@ -1,4 +1,4 @@
-# longmem-npc — Session log
+# twicetold-npc — Session log
 
 Split out of `status.md` on 2026-07-28 (full-repo audit). Entries are moved **verbatim**.
 
@@ -2165,6 +2165,36 @@ session.
   verified).
 - **Next:** the naming session (Jack picks; collision-check + rename + docs sweep), then
   the provider-path + per-agent-purge build, then F1 with the scan's input pack.
+
+## **The naming session — longmem-npc → twicetold-npc — 2026-09-02 (in-repo half landed; operator swap pending).**
+
+- **Landed:** the whole in-repo rename. Name **twicetold-npc** ruled at the plan batch (from
+  "a twice-told tale"); collision check at execution start came back clean (PyPI/npm/OpenUPM
+  none; no GitHub repo; only K-pop TWICE + the dictionary term). Four scope forks ruled and
+  executed: the env prefix `LONGMEM_`→`TWICETOLD_` (29 keys), full DB/infra rename, the local
+  folder (queued), and the GitHub repo (queued). A scoped byte-level sweep made **243
+  replacements across 55 files** (the do-not-touch allowlist — immutable migration, append-only
+  register bodies, dated research/spec sections, third-party `LongMemEval`/etc., frozen gold
+  artifacts — simply excluded; every third-party string protected per-file, no blanket
+  replace). Verification battery all green: ruff clean, **full suite 193 passed**, **15/15
+  walkers** fresh+serial elder-first on `twicetold_test`, **C# harness 53 checks** (recompiled
+  client), real-mode `load_settings` boots on the renamed keys, grep gate returns only the
+  allowlist. The dated `decisions.md` entry carries the full record incl. the
+  `PRODUCT_DB`↔`.env` lockstep note.
+- **Blocked / pending Jack (operator-gated — the commit-2 half):** `.env` key+value rename
+  (snippet provided, never displayed); Docker volume recreation (destructive: orphans
+  `longmem-pgdata`, wipes the disposable dev product DB) + fresh migrate + `demo_loader
+  --fresh`; the DLL rebuild + copy to `unity\Assets\Plugins\` (deferred to AFTER the folder
+  rename so the embedded path clears in one rebuild); the hero-PNG re-capture
+  (`ledger-memory-chain.png` bakes the name into pixels); the GitHub repo rename + `git
+  remote set-url`; the local folder rename + Claude project-state copy; the independent
+  floor-verifier pass (blocked until the swap exists — it checks the lockstep +
+  migrate-fresh-apply on the new product DB).
+- **Abandoned:** nothing. Deliberately NOT done: introducing a shared walker-scratch constant
+  (the 15 literals were swapped in place — the constant-refactor stays the carried task); a
+  second DLL rebuild (one, after the folder rename).
+- **Next:** Jack runs the operator swap, then the independent floor-verify closes the rename;
+  then the provider-path + per-agent-purge build.
 
 ---
 

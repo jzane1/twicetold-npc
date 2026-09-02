@@ -1,4 +1,8 @@
-# longmem-npc
+# twicetold-npc
+
+> Renamed from longmem-npc (September 2026): the old name collided with an established
+> research-project prefix. Same repo, same history; the full README rebuild lands with the
+> v1 release.
 
 Self-hostable long-term-memory service for game NPCs: FastAPI + PostgreSQL/pgvector backend plus a
 Unity-embeddable client package. Characters get psychologically plausible memory: an immutable
@@ -171,7 +175,7 @@ python db\migrate.py
 python -m app.serve
 ```
 
-It runs offline and keyless by default (`LONGMEM_PROVIDER_MODE=fake`): no API key needed to
+It runs offline and keyless by default (`TWICETOLD_PROVIDER_MODE=fake`): no API key needed to
 explore. Then open `http://127.0.0.1:8000/ledger`, or drive a character from the REPL with
 `python -m app.cli --agent <uuid> --debug`. Two honest caveats: the install is heavy (spaCy
 model wheels plus transformers), and the first observe in a process pays a multi-minute lazy

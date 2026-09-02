@@ -22,7 +22,7 @@ namespace NpcMemory.Unity
     public sealed class NpcMemoryNpc : MonoBehaviour
     {
         [Header("Backend")]
-        [Tooltip("The served longmem-npc API (python -m app.serve).")]
+        [Tooltip("The served twicetold-npc API (python -m app.serve).")]
         public string baseUrl = "http://127.0.0.1:8000";
 
         [Tooltip("Provision a fresh agent on Start; otherwise attach to agentIdOverride.")]

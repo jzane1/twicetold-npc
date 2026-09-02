@@ -7,17 +7,17 @@ correctly before they buy controlled drift. The drift beat is framed constancy-f
 holds, texture drifts, on a budget, on purpose). The old beat 3 (split-brain divergence) is
 dead (scrapped 2026-08-04); its slot is the game-authored action-observe beat.
 
-Everything here runs on the demo DB (`longmem_demo`), real providers only (ruled 2026-07-22),
+Everything here runs on the demo DB (`twicetold_demo`), real providers only (ruled 2026-07-22),
 agent **Branwen of the Waystone Inn** (`data\eval\corpora\demo-waystone.jsonl`, authored and
 validated in E1 — `identity-authoring.md` §8). On-screen text obeys the em-dash ban
 (2026-08-13).
 
 ## The rig
 
-- Backend: `.env` pointing `DATABASE_URI` at `longmem_demo`, `LONGMEM_PROVIDER_MODE=real`,
+- Backend: `.env` pointing `DATABASE_URI` at `twicetold_demo`, `TWICETOLD_PROVIDER_MODE=real`,
   the six live roles per the D1 slate (Haiku latency-bound) **plus the two batch roles synced
   to Opus 4.8 — the demo agent's workers are ON, so the pending-Jack `.env` sync binds here**
-  (C3's first real compile is the worker's; a missing `LONGMEM_MODEL_COMPILER` lands a
+  (C3's first real compile is the worker's; a missing `TWICETOLD_MODEL_COMPILER` lands a
   `failed` run row on camera).
 - `python -m app.serve`, then The Ledger at `http://127.0.0.1:8000/ledger?agent=<agent-id>`
   with **poll ON** (the 2 s poll drives the index, the chain view, the identity pane, and the
@@ -157,7 +157,7 @@ driver + OBS.
 ## Rehearsal checklist (the E2 guard; re-run only if the state is ever re-provisioned)
 
 0. `.env`: batch roles synced to Opus 4.8 (Jack's pending action — binds now), real mode,
-   `DATABASE_URI` → `longmem_demo`.
+   `DATABASE_URI` → `twicetold_demo`.
 1. **Play-mode gate BEFORE any retarget/paste** (ordering: after the agent id is pasted,
    autoRun would replay scripted observes INTO the pinned demo agent): fake-mode serve on a
    scratch DB, `autoProvision` temporarily ON + `autoRun` ON → `[npc-demo] ALL PLAY-MODE

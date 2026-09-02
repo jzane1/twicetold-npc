@@ -1,4 +1,4 @@
-# longmem-npc backend runtime dependencies (global Python 3.14, on PATH).
+# twicetold-npc backend runtime dependencies (global Python 3.14, on PATH).
 # Install (PowerShell):  python -m pip install -r requirements.txt
 #
 # The Postgres MCP server runs from its own isolated uv-managed Python 3.13 tool

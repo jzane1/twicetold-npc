@@ -4,7 +4,7 @@ migration 008).
 
 Runs the compiler done-when criteria against the SCRATCH database
 (default: the .env DATABASE_URI with its database name swapped to
-`longmem_test`), with deterministic fake providers — offline, keyless, and
+`twicetold_test`), with deterministic fake providers — offline, keyless, and
 structural-only per tests\\CLAUDE.md. The service is exercised through the
 worker's `sweep()` (the deterministic no-timer entry — C3 has no endpoint
 verb by ruling) and the consume side through the dialogue seam; turns pin
@@ -29,7 +29,7 @@ Prerequisite (PowerShell):
 Run:
     python tests\\verify_compiler.py [--database-uri <scratch-uri>]
 
-The product `longmem` DB is never touched.
+The product `twicetold` DB is never touched.
 """
 
 from __future__ import annotations
@@ -124,7 +124,7 @@ def check(condition: bool, criterion: str, detail: str = "") -> None:
 def scratch_uri_from_env() -> str:
     from app.config import load_env
 
-    return scratch_uri(load_env()["DATABASE_URI"], "longmem_test")
+    return scratch_uri(load_env()["DATABASE_URI"], "twicetold_test")
 
 
 def fake_providers(**overrides) -> Providers:
@@ -835,13 +835,13 @@ async def run(uri: str) -> None:
         )
         real_env = {
             "DATABASE_URI": "postgresql://host/db",
-            "LONGMEM_PROVIDER_MODE": "real",
-            "LONGMEM_MODEL_IMPORTANCE": "m-write",
-            "LONGMEM_MODEL_RENDER": "m-write",
-            "LONGMEM_MODEL_TYPOLOGY": "m-write",
-            "LONGMEM_MODEL_ESCALATION": "m-esc",
-            "LONGMEM_MODEL_DIALOGUE": "m-dia",
-            "LONGMEM_MODEL_RECONSTRUCTION": "m-rec",
+            "TWICETOLD_PROVIDER_MODE": "real",
+            "TWICETOLD_MODEL_IMPORTANCE": "m-write",
+            "TWICETOLD_MODEL_RENDER": "m-write",
+            "TWICETOLD_MODEL_TYPOLOGY": "m-write",
+            "TWICETOLD_MODEL_ESCALATION": "m-esc",
+            "TWICETOLD_MODEL_DIALOGUE": "m-dia",
+            "TWICETOLD_MODEL_RECONSTRUCTION": "m-rec",
             "ANTHROPIC_API_KEY": "k",
             "OPENAI_API_KEY": "k",
         }
@@ -850,7 +850,7 @@ async def run(uri: str) -> None:
             loaded.model_compiler == "",
             "F3 real mode loads WITHOUT the var (judge-shaped, never required)",
         )
-        loaded = load_settings({**real_env, "LONGMEM_MODEL_COMPILER": "m-c"})
+        loaded = load_settings({**real_env, "TWICETOLD_MODEL_COMPILER": "m-c"})
         check(loaded.model_compiler == "m-c", "F3b ...and loads it when present")
         check(
             isinstance(build_compiler_provider(settings), FakeCompilerProvider),
@@ -861,7 +861,7 @@ async def run(uri: str) -> None:
             fail("F5 the loud first-use error", "no ConfigError raised")
         except ConfigError as exc:
             check(
-                "LONGMEM_MODEL_COMPILER" in str(exc),
+                "TWICETOLD_MODEL_COMPILER" in str(exc),
                 "F5 a real compile without the var raises ConfigError NAMING it",
             )
         agent_f = await make_agent(pool, "walker-c-config", dict(ENABLED))
@@ -875,7 +875,7 @@ async def run(uri: str) -> None:
             attempts == 0
             and len(runs) == 1
             and runs[0]["outcome"] == "failed"
-            and "LONGMEM_MODEL_COMPILER" in runs[0]["error"]
+            and "TWICETOLD_MODEL_COMPILER" in runs[0]["error"]
             and real_worker._config_error_logged is True
             and await bundle_rows(pool, agent_f) == [],
             "F6 the worker's first real compile fails loud: a failed run "

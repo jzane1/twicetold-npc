@@ -6,7 +6,7 @@ index comments naming this read as their consumer).
 
 Runs the C5 backend done-when criteria against the SCRATCH database
 (default: the .env DATABASE_URI with its database name swapped to
-`longmem_test`), with deterministic fake providers — offline, keyless, and
+`twicetold_test`), with deterministic fake providers — offline, keyless, and
 structural-only per tests\\CLAUDE.md. The seam is
 `RetrievalService.agent_state` (behind GET /v1/agents/{agent_id}/state, the
 FOURTH unscored-by-contract member), exercised service-side for the composed
@@ -31,7 +31,7 @@ Prerequisite (PowerShell):
 Run:
     python tests\\verify_agent_state.py [--database-uri <scratch-uri>]
 
-The product `longmem` DB is never touched.
+The product `twicetold` DB is never touched.
 """
 
 from __future__ import annotations
@@ -100,7 +100,7 @@ def check(condition: bool, criterion: str, detail: str = "") -> None:
 def scratch_uri_from_env() -> str:
     from app.config import load_env
 
-    return scratch_uri(load_env()["DATABASE_URI"], "longmem_test")
+    return scratch_uri(load_env()["DATABASE_URI"], "twicetold_test")
 
 
 def fake_providers() -> Providers:
@@ -630,7 +630,7 @@ def main() -> None:
         "--database-uri",
         default=None,
         help="scratch Postgres URI (default: .env DATABASE_URI with the "
-        "database swapped to longmem_test)",
+        "database swapped to twicetold_test)",
     )
     args = parser.parse_args()
     uri = args.database_uri or scratch_uri_from_env()

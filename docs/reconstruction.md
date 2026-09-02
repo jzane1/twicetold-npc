@@ -55,7 +55,7 @@ scene-frozen decay band** (the pre-demo drift driver); and identity-document plu
   and the persistence step each have a stated soft path (ladder below). Never-blank-a-dialogue.
 - **Instrument at the seam.** Reconstruction timing, token accounting, cache hit/miss and refusal
   counts ride the retrieval seam's existing instrumentation, feeding §11 and the CLI debug view.
-- **Provider real + deterministic fake.** `LONGMEM_MODEL_RECONSTRUCTION` behind the established
+- **Provider real + deterministic fake.** `TWICETOLD_MODEL_RECONSTRUCTION` behind the established
   provider triad, so the structural walker and Set C run offline, keyless.
 
 ## Scope boundary — do NOT build
@@ -142,7 +142,7 @@ existing version is a no-op) → return the version in the scene-boundary respon
 ## The reconstruction call
 
 **One structured call batches all k cache misses per retrieval** (pre-warm at dialogue init —
-settled, register: *Reconstruction serving*). Model role `LONGMEM_MODEL_RECONSTRUCTION`
+settled, register: *Reconstruction serving*). Model role `TWICETOLD_MODEL_RECONSTRUCTION`
 (Haiku-class — *re-confirmed 2026-07-28; the shipped config had drifted to sonnet-5 since
 2026-07-21 and was corrected. See `architecture.md` §7 for the measurement consequence*),
 following the provider triad exactly (`app\providers.py`): a Protocol, a real

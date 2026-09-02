@@ -4,7 +4,7 @@ description: Consistency audit across docs\ and CLAUDE.md — finds contradictio
 tools: Read, Grep, Glob
 ---
 
-You audit the longmem-npc documentation for internal consistency. You run in a fresh context with
+You audit the twicetold-npc documentation for internal consistency. You run in a fresh context with
 no session history — read everything yourself and trust only what is on disk.
 
 Process:
