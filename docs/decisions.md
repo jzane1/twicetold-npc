@@ -4563,13 +4563,24 @@ recreation (`docker compose down`/`up` — old `longmem-pgdata` orphaned intact,
 (001–008) + a no-op idempotency re-run; the **`PRODUCT_DB`↔`.env` lockstep proven** —
 `PRODUCT_DB == dbname == "twicetold"`, and `provision_scratch(base, "twicetold")` now raises
 (the guard protects the real product DB); `.env` parses in real mode with both keys; the
-178-subset green on the recreated container. **Still pending (commit-2, after the folder
-rename):** the local folder rename + Claude project-state copy (Jack's, session's-last-act);
-then, in the renamed folder, the `demo_loader --fresh` rebuild (real spend) + hero-PNG
-re-capture (`docs\media\ledger-memory-chain.png`) + the DLL rebuild/copy to
-`unity\Assets\Plugins\` (clears the old embedded path in one build) + the **independent
-floor-verifier pass**. No floors row and no re-verification entry yet — the count stays 32
-until that pass returns.
+178-subset green on the recreated container.
+
+**The local folder rename is DROPPED (ruled 2026-09-02).** Windows held a file lock on the
+folder ("something is using it") across repeated attempts, and Jack ruled not to spend further
+time/compute/effort on it: the working-directory path is local-only and invisible, no tracked
+file embeds it (hooks use `$env:CLAUDE_PROJECT_DIR`), and the name is already correct
+everywhere that ships. So `C:\Users\jacks\Projects\longmem-npc` stays as the folder name by
+choice. Consequences: the Claude project-state copy is moot (the memory-dir key
+`C--Users-jacks-Projects-longmem-npc` is unchanged — do NOT expect it to change); and a future
+DLL rebuild will re-embed the `...\longmem-npc\...` PDB path, which is now correct-for-the-folder
+rather than stale — the DLL rebuild's only remaining job is the exception-string refresh.
+
+**Carried to a future session (this same folder), NOT dropped:** the `demo_loader --fresh`
+rebuild (real spend) + hero-PNG re-capture (`docs\media\ledger-memory-chain.png`) + the DLL
+rebuild/copy to `unity\Assets\Plugins\` (exception-string refresh; un-stales the committed DLL)
++ the **independent floor-verifier pass** (the plan's Phase 6 — UnityMCP was unreachable this
+session, so its Unity criteria will report blocked unless the bridge is up). No floors row and
+no re-verification entry yet — the count stays 32 until that pass returns.
 
 ## Consumer-context scan rulings — the pre-release market pass — 2026-09-01
 

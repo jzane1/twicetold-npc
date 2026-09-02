@@ -3,41 +3,33 @@
 **Last updated:** 2026-09-02
 **Phase:** **Road to completion — Phases A–D DONE; Phase E PAUSED (E3 first attempt
 recorded + QA'd, master not cut). F0 DONE 2026-08-26; the consumer-context scan DONE
-2026-09-01. The naming session (longmem-npc → twicetold-npc) IN PROGRESS 2026-09-02 —
-in-repo half landed + self-verified; operator swap pending Jack. Next: finish the rename →
-the provider + purge build → F1 → F2–F3; the demo endgame follows Phase F.**
-**The rename → `twicetold-npc` (2026-09-02):** the in-repo half is LANDED and self-verified
-— 243 replacements across 55 files, full suite **193 passed**, all **15 walkers** green
-fresh+serial on `twicetold_test`, C# harness **53 checks** green, real-mode `load_settings`
-boots on the `TWICETOLD_` keys; `git grep -i longmem` returns only the ruled allowlist. The
-dated `decisions.md` entry carries the pick, the collision check, the four scope rulings, the
-allowlist, and the `PRODUCT_DB`↔`.env` lockstep note. **Operator swap LANDED + verified
-2026-09-02:** `.env` renamed (Jack), GitHub repo renamed + remote re-pointed (Jack), Docker
-volume recreated (old `longmem-pgdata` orphaned, fresh `twicetold-pgdata`), migrations
-fresh-applied to `twicetold` + no-op idempotency, the `PRODUCT_DB`↔`.env` lockstep proven
-(guard now refuses the real product DB), 178-subset green on the recreated container.
-**Still pending:** the local folder rename + Claude project-state copy (Jack, next); then in
-the renamed folder — the demo-DB `--fresh` rebuild (real spend) + hero-PNG re-capture + the
-DLL rebuild/copy + the independent floor-verifier pass (commit-2). Count stays 32.
-**Consumer-context scan landed 2026-09-01** (research-only; no floors row): five streams —
-OSS-memory reception, game-dev/platform sentiment, novelty stress test + name check,
-release-hygiene norms, a cold consumer agent (verdict: adopt-for-a-spike; its one BLOCKED
-step, the shipped-game deployment story, is F1's top addition). The novelty claim
-SURVIVES; the license chain is CLEAN for the flip; README staleness is active trust
-damage. Four rulings (the dated `decisions.md` entry): the OpenAI-compatible provider
-path builds PRE-release; the per-agent purge verb builds; the project RENAMES before the
-flip; the Ledger host guard lands in F3. Report + per-phase input packs:
+2026-09-01. The rename (longmem-npc → twicetold-npc) DONE 2026-09-02 bar a carried
+finalization; the local folder rename is dropped. Next: the rename finalization → the
+provider + purge build → F1 → F2–F3; the demo endgame follows Phase F.**
+**The rename → `twicetold-npc` (2026-09-02):** the in-repo sweep (243 replacements / 55 files)
+and the operator swap both LANDED + verified — full suite **193**, all **15 walkers** on
+`twicetold_test`, **C# harness 53**, real-mode `load_settings` on the `TWICETOLD_` keys; then
+`.env` + GitHub renamed (Jack), Docker recreated to `twicetold-pg`/`twicetold-pgdata` (old
+volume orphaned), migrations fresh-applied to `twicetold` + no-op, the `PRODUCT_DB`↔`.env`
+lockstep proven, 178-subset green (commits `90f4c23`, `ec64ad8`). `git grep -i longmem`
+returns only the ruled allowlist. The **local folder rename is DROPPED** (Windows lock +
+Jack's ruling — local-only/invisible, so the folder and this session's memory-dir key stay
+`longmem-npc`). **Carried (a future session, same folder):** the demo `--fresh` rebuild (real
+spend) + hero-PNG re-capture + the DLL rebuild (exception-string refresh) + the independent
+floor-verifier pass. Count 32. Full record: the dated `decisions.md` rename entry + the
+`session-log.md` entry.
+**Consumer-context scan landed 2026-09-01** (research-only; no floors row): novelty claim
+SURVIVES, license chain CLEAN for the flip, README staleness is active trust damage; the
+cold consumer's one BLOCKED step (the shipped-game deployment story) is F1's top addition.
+Four rulings (the dated `decisions.md` entry): provider path pre-release, per-agent purge,
+the rename, the Ledger F3 guard. Report + per-phase input packs:
 `docs\research\consumer-context-scan-2026-08-31.md`.
-**F0 landed 2026-08-26** — registers reconciled (suite **193/178**; floors rows 28–32
-restored), the overlap + pool knob, the gated prompt pair (**dialogue input −51%; all-in
-$0.084/100 turns**; NO regression); p50 826–917 ms; the D1 attribution CLOSED. The
-floors.md Re-verification entry + the dated F0 entry; the verbatim block is in the
-session-log archive (2026-09-01 tripwire move).
-**E3 first attempt 2026-08-24:** recorded + QA'd, master NOT cut (mirrored nameplate —
-the presentation redesign owns it); **the 2026-08-22 pinned state is SPENT** (`--fresh`
-sanctioned); the rig is ready. The dated E3 entry + `demo-beat-script.md`'s E3 record.
-E2/E1/D1 (all 2026-08-19): choreography + corpus + the slate-lock pass — archived at the
-F0 wrap-up; the roadmap bullets + dated entries carry the records.
+**Earlier this phase** (F0 2026-08-26; E1–E3 + D1 2026-08-19/24; the consumer scan above):
+the roadmap bullets below + the dated `decisions.md` entries + the `session-log.md` archive
+carry the full records. Headline state that stays live: **$0.084/100 turns all-in**, perceived
+p50 **826–917 ms**, believability no-regression, the model slate LOCKED, the demo rig ready
+(E3 master not cut — the presentation redesign owns the flaws; the pinned state is SPENT,
+`--fresh` sanctioned).
 The system is BUILT end to end on the final A1 seam — backend, C# client + harness, Unity
 adapter + gray-box scene, The Ledger, eval stages 1–4, deferred writes, reflection, the
 compiler, the dissonance path, agent-state + async observes, purge, the concurrency cap +
@@ -80,13 +72,13 @@ re-openable: re-verifying one is a step, never an argument against a design impr
 
 ## Open questions needing Jack's ruling
 
-**Pending Jack (from the D1 landing, non-blocking):** (1) **ratify or redirect the
-dissonance-multiplier defaults** — D1 found no objective metric to tune them against, so the
-principled ordering was kept unchanged (an eyeball run of the defend/update beat is available on
-request); (2) offline gold re-labeling if
-calibrated judged-prose numbers are wanted on screen (kappa 0.37, unquotable — non-blocking; the
-on-screen numbers are judge-free). Plus two F0 micro-calls (non-blocking, the F0 entry): drop
-the orphaned `longmem_eval_14188` scratch DB; the `min_size` sibling knob.
+**Pending Jack (non-blocking):** (1) **ratify or redirect the dissonance-multiplier defaults**
+— D1 found no objective metric to tune them against, so the principled ordering was kept
+unchanged (an eyeball run available on request); (2) offline gold re-labeling if calibrated
+judged-prose numbers are wanted on screen (kappa 0.37, unquotable; the on-screen numbers are
+judge-free); (3) the `min_size` DB-pool sibling knob (the F0 entry). *(The orphaned
+`longmem_eval_14188` scratch is now moot — it lived on the `longmem-pgdata` volume the
+2026-09-02 rename orphaned; it vanishes when that volume is pruned.)*
 
 **Recently closed** (pointers only): the four consumer-scan forks — ruled 2026-09-01 at one
 batch (provider path pre-release, per-agent purge, the rename, the Ledger guard — the dated
@@ -114,16 +106,12 @@ the E2 wrap-up (size tripwire); full records in `floors.md` + `decisions.md`.
 
 ### Phase E — Demo (E1–E2 DONE; the endgame re-sequenced AFTER Phase F, ruled 2026-08-24)
 
-- **E1. Identity authoring guide + demo corpus.** ✅ DONE 2026-08-19 (docs + data only; no
-  floors row by ruling) — the header pointer above; the E1 `decisions.md` entry has the
-  five authoring lessons.
-- **E2. Choreography + rehearsal.** ✅ DONE (built 2026-08-19, demo-scoped by ruling — no
-  floors row; rehearsal executed 2026-08-22). `demo-beat-script.md` + the loader + the
-  Ledger live feed + C# prewarm parity + the Branwen retarget; the verbatim bullet is in
-  the session-log archive (2026-09-01 tripwire move); full record: the E2 entries.
-- **E3. Record + edit** — Unity + Ledger split-screen in OBS; real providers only. FIRST
-  ATTEMPT 2026-08-24: recorded + QA'd, master not cut (the header block above). PAUSED —
-  the demo endgame follows Phase F; the rig is ready and provision-independent.
+- **E1 + E2** ✅ DONE 2026-08-19 (identity guide + corpus; choreography + loader + Ledger feed
+  + prewarm parity + the Branwen retarget; demo-scoped, no floors rows; rehearsal executed
+  2026-08-22) — full records in the E1/E2 `decisions.md` entries + the session-log archive.
+- **E3. Record + edit** (Unity + Ledger split-screen, real providers). FIRST ATTEMPT
+  2026-08-24: recorded + QA'd, master not cut (the header block above). PAUSED — the demo
+  endgame follows Phase F; the rig is ready and provision-independent.
 
 ### Phase F — Release (F0 + the scan DONE; ~5–6 sessions remain)
 
@@ -133,11 +121,11 @@ the E2 wrap-up (size tripwire); full records in `floors.md` + `decisions.md`.
   measurements, the ceiling, forks, incident lessons).
 - **The consumer-context scan.** ✅ DONE 2026-09-01 (research-only; the header block above;
   report: `docs\research\consumer-context-scan-2026-08-31.md`).
-- **The naming session** (ruled 2026-09-01 — rename before the flip). IN PROGRESS 2026-09-02:
-  name = **twicetold-npc**; the in-repo sweep (code + docs + tests + env prefix + DB names)
-  is landed and self-verified (the header block above + the dated `decisions.md` entry). The
-  operator swap (`.env`, Docker volume, demo rebuild, DLL rebuild, hero PNG, GitHub rename,
-  folder rename, independent floor-verify) is the remaining checklist, handed to Jack.
+- **The naming session** (ruled 2026-09-01). ✅ DONE 2026-09-02 bar a carried finalization —
+  name **twicetold-npc**, in-repo sweep + operator swap landed + verified, local folder rename
+  dropped (the header block above; the dated `decisions.md` rename entry). Carried to a future
+  session (same folder): the demo `--fresh` rebuild + hero-PNG re-capture + DLL rebuild + the
+  independent floor-verifier pass.
 - **The provider-path + per-agent-purge build** (NEW, ruled 2026-09-01): an
   OpenAI-compatible base-URL provider path for the model + embedding roles, shipped WITH
   the documented small-model quality warning (~1–2 sessions; floor re-verify), plus
@@ -158,11 +146,10 @@ the E2 wrap-up (size tripwire); full records in `floors.md` + `decisions.md`.
 
 ### The demo endgame (AFTER Phase F — re-sequenced 2026-08-24)
 
-1. **The presentation redesign** — Jack's rulings at its own session; the E3 flaw register
-   in `demo-beat-script.md` is its input, and the scan's showcase post-mortem pack (report
-   Part 4) is its second input.
-2. **The re-record** (the E3 second attempt) — fresh provision + re-pin (`--fresh`
-   sanctioned; a provision serves beat 1 exactly once), record + edit on the proven rig.
+1. **The presentation redesign** (its own session) — inputs: the E3 flaw register in
+   `demo-beat-script.md` + the scan's showcase post-mortem pack (report Part 4).
+2. **The re-record** (E3 second attempt) — fresh provision + re-pin (`--fresh` sanctioned),
+   record + edit on the proven rig.
 3. **The video publish** — plus the small README video-link touch.
 
 **The finish line: repo public + video published + package downloadable.**

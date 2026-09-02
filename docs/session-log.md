@@ -2166,7 +2166,7 @@ session.
 - **Next:** the naming session (Jack picks; collision-check + rename + docs sweep), then
   the provider-path + per-agent-purge build, then F1 with the scan's input pack.
 
-## **The naming session — longmem-npc → twicetold-npc — 2026-09-02 (in-repo half landed; operator swap pending).**
+## **The naming session — longmem-npc → twicetold-npc — 2026-09-02 (in-repo + operator swap landed + verified; local folder rename dropped; finalization carried).**
 
 - **Landed:** the whole in-repo rename. Name **twicetold-npc** ruled at the plan batch (from
   "a twice-told tale"); collision check at execution start came back clean (PyPI/npm/OpenUPM
@@ -2181,20 +2181,26 @@ session.
   client), real-mode `load_settings` boots on the renamed keys, grep gate returns only the
   allowlist. The dated `decisions.md` entry carries the full record incl. the
   `PRODUCT_DB`↔`.env` lockstep note.
-- **Blocked / pending Jack (operator-gated — the commit-2 half):** `.env` key+value rename
-  (snippet provided, never displayed); Docker volume recreation (destructive: orphans
-  `longmem-pgdata`, wipes the disposable dev product DB) + fresh migrate + `demo_loader
-  --fresh`; the DLL rebuild + copy to `unity\Assets\Plugins\` (deferred to AFTER the folder
-  rename so the embedded path clears in one rebuild); the hero-PNG re-capture
-  (`ledger-memory-chain.png` bakes the name into pixels); the GitHub repo rename + `git
-  remote set-url`; the local folder rename + Claude project-state copy; the independent
-  floor-verifier pass (blocked until the swap exists — it checks the lockstep +
-  migrate-fresh-apply on the new product DB).
-- **Abandoned:** nothing. Deliberately NOT done: introducing a shared walker-scratch constant
-  (the 15 literals were swapped in place — the constant-refactor stays the carried task); a
-  second DLL rebuild (one, after the folder rename).
-- **Next:** Jack runs the operator swap, then the independent floor-verify closes the rename;
-  then the provider-path + per-agent-purge build.
+- **Operator swap LANDED + verified (same session):** Jack ran the `.env` key/value rename and
+  the GitHub repo rename + `git remote set-url`; Claude drove the non-spend infra — `docker
+  compose down`/`up` (old `longmem-pgdata` orphaned intact, fresh `twicetold-pgdata`
+  initialized with the new user/DB), migrations fresh-applied to `twicetold` (001–008) + a
+  no-op idempotency re-run, the **`PRODUCT_DB`↔`.env` lockstep proven** (guard now refuses the
+  real product `twicetold`), `.env` parses in real mode with both keys, the **178-subset green**
+  on the recreated container. Committed `ec64ad8`.
+- **Abandoned — the local folder rename (ruled 2026-09-02):** Windows held a file lock across
+  repeated attempts and Jack ruled not to spend further effort — the path is local-only,
+  invisible, and no tracked file depends on it, so `C:\Users\jacks\Projects\longmem-npc` stays
+  by choice. The Claude project-state copy is therefore moot (the memory-dir key is unchanged).
+  Also deliberately NOT done: a shared walker-scratch constant (the 15 literals were swapped in
+  place — the constant-refactor stays the carried task).
+- **Carried (a future session, this same folder), not dropped:** the `demo_loader --fresh`
+  rebuild (real spend) + hero-PNG re-capture + the DLL rebuild/copy (exception-string refresh;
+  the embedded path stays valid now the folder is fixed) + the **independent floor-verifier
+  pass** (UnityMCP was unreachable this session — its Unity criteria report blocked unless the
+  bridge is up).
+- **Next:** the carried finalization above closes the rename; then the provider-path +
+  per-agent-purge build, then F1.
 
 ---
 
