@@ -2136,6 +2136,36 @@ session.
 - **Next: F1** (the full README build — now also inheriting F0's corrected reality:
   32 floors rows, 193 tests, fifteen walkers, purge built, $0.084/100 turns).
 
+## **Consumer-context scan — the pre-release market pass — 2026-09-01 (research-only; run started 2026-08-31).**
+
+- **Landed:** the five-stream internet scan Jack requested before continuing Phase F — OSS
+  agent-memory reception (Mem0/Zep/Letta/Cognee/LangMem + criticism synthesis), AI-NPC
+  platform + game-dev/player sentiment, the novelty stress test + name-collision check,
+  release-hygiene norms (license chain, no-auth service norms, UPM packaging, erasure
+  norms), and a cold consumer sub-agent (a role-played Unity indie engineer, read-only, no
+  project context — verdict: adopt-for-a-spike, prototype-only; one BLOCKED walkthrough
+  step: the shipped-game deployment story). Synthesis report with evidence links and the
+  negative-search record: `docs\research\consumer-context-scan-2026-08-31.md`. Headlines:
+  the novelty claim SURVIVES (the "reconstructed, not replayed" slogan was claimed twice in
+  mid-2026 and gets cited-and-differentiated, never led with); the license chain is CLEAN
+  for the Apache-2.0 flip (one NOTICE line queued); provider coupling and per-agent erasure
+  are the category's two table-stakes gaps; README staleness is active trust damage (the
+  consumer nearly walked at the ~10x cost discrepancy between README and status). Four
+  forks ruled at one batch (the dated decisions.md entry): the OpenAI-compatible provider
+  path builds PRE-release (with the documented small-model quality warning); the per-agent
+  purge verb builds; the project RENAMES before the flip (naming session queued before F1);
+  the Ledger TrustedHost guard lands in F3. Queue re-sequenced: naming session →
+  provider-path + per-agent-purge build → F1.
+- **Blocked:** Reddit was fetch-blocked for the research agents, so r/LocalLLaMA and
+  r/gamedev sentiment is triangulated (HN, GitHub issues, Unity Asset Store, press) rather
+  than read directly — flagged in the report's method note. Two of the five research agents
+  needed a relaunch after their first launch was interrupted.
+- **Abandoned:** nothing. By design, nothing in the product changed this session — every
+  finding routed into the report and the ruled queue. No floors row (nothing built, nothing
+  verified).
+- **Next:** the naming session (Jack picks; collision-check + rename + docs sweep), then
+  the provider-path + per-agent-purge build, then F1 with the scan's input pack.
+
 ---
 
 ## Archived phase headers
@@ -2809,3 +2839,41 @@ five authoring lessons in `decisions.md`'s E1 entry.
 D1 (optimization, 2026-08-19, no new code): perceived-first-word **p50 938 ms**, believability
 no regression (gist_precision 0.823), **model slate LOCKED** (Haiku latency-bound; Opus 4.8
 batch roles in `.env.example`), workers OFF per-agent, prompt caching DEFERRED — the D1 entry.
+
+## Archived from status.md at the consumer-scan wrap-up (2026-09-01, size tripwire)
+
+**F0 landed 2026-08-26** (no new floors row — the floors.md Re-verification entry + the
+dated F0 decisions.md entry carry the evidence): registers reconciled to MEASURED reality
+(suite **193 full / 178 subset**; fifteen walkers named everywhere; floors.md's stranded
+rows 28–32 back inside the table; 16 doc-auditor findings fixed), the init 404/422 gap
+test, the turn-path overlap + the `LONGMEM_DB_POOL_MAX_SIZE` knob, and the gated wording
+pair — the dialogue-prompt UUID strip (**dialogue input −51%; all-in $0.084/100 turns**)
++ the write-prompt voice clause (gate: NO regression — gist 0.8309, recall 0.8448,
+fabrication 0.0159). Latency: perceived p50 826–917 ms across the day's provider windows;
+the D1 attribution CLOSED (pre-prose ≈ 90% embed; the overlap cut the rest to ~20 ms);
+the ceiling recorded (embed swap ≈ 770–870 ms; caching inert on Haiku; slate stands).
+Surfaced-not-built forks: the F0 entry.
+
+**E3 first attempt 2026-08-24:** recorded + QA'd, master NOT cut (mirrored-nameplate flaw
+— the presentation redesign owns it); **the 2026-08-22 pinned state is SPENT** (a
+provision serves beat 1 exactly once; `--fresh` sanctioned); the rig is
+provision-independent and ready. Full record: the dated E3 entry +
+`demo-beat-script.md`'s E3 record; the verbatim header block moved to `session-log.md`'s
+archive at the F0 wrap-up (size tripwire).
+
+**E2 roadmap bullet as it stood before the 2026-09-01 trim:** ✅ DONE (built 2026-08-19,
+demo-scoped by ruling — no floors row; rehearsal executed 2026-08-22 after the blockers
+cleared). Landed: `demo-beat-script.md` (correction-override lead → constancy-first drift
+on the certified drovers memory → the action-observe beat + the executed rehearsal
+record), the corpus→demo-DB loader, the Ledger live feed + identity pane + label sweep,
+the C# `PrewarmContext` mirror + harness beat [17], the `NpcMemoryNpc` passthroughs, the
+Branwen scene retarget + DLL refresh. The recording state is pinned.
+
+**The walker three-bites register as it stood before the 2026-09-01 trim:** THREE
+documented bites (the first two verbatim in this archive, moved 2026-08-17): 2026-08-12
+(the DB found MISSING; psycopg_pool masked it as a 30 s `PoolTimeout`), 2026-08-17
+(`verify_reflection` is non-re-runnable on the persistent scratch — a fresh pid-scoped
+scratch is that walker's documented precondition), and 2026-08-17 again at the C4 landing
+(the elder correction walkers' DB-global corrections-emptiness asserts vs the re-opened
+`verify_reconstruction` — sweeps must run fresh + serial, elder walkers first; the C4
+build record has the detail).

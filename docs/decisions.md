@@ -97,6 +97,7 @@ its surrounding spaces both become hyphens, so `Name — 2026-07-28` anchors as 
 - [E3 first attempt — recorded and QA'd, master not cut; presentation redesign ruled — 2026-08-24](#e3-first-attempt--recorded-and-qad-master-not-cut-presentation-redesign-ruled--2026-08-24)
 - [Roadmap re-sequenced — F0 audit pass added; the demo endgame moves after Phase F; Phase G re-pointed — 2026-08-24](#roadmap-re-sequenced--f0-audit-pass-added-the-demo-endgame-moves-after-phase-f-phase-g-re-pointed--2026-08-24)
 - [F0 spec rulings + build record — the audit/test/improve pass landed — 2026-08-26](#f0-spec-rulings--build-record--the-audittestimprove-pass-landed--2026-08-26)
+- [Consumer-context scan rulings — the pre-release market pass — 2026-09-01](#consumer-context-scan-rulings--the-pre-release-market-pass--2026-09-01)
 
 ## Primary decisions
 
@@ -4498,3 +4499,69 @@ Jack's call to drop).
 independent floor-verifier **pass** is recorded as a dated entry under floors.md's
 "Re-verification passes" (cli-harness, read-path, write-path, and gate floors re-opened and
 re-closed inside it).
+
+## Consumer-context scan rulings — the pre-release market pass — 2026-09-01
+
+**Context.** Jack paused the Phase F queue for one research-only session (run 2026-08-31 →
+09-01): a five-stream internet scan to find load-bearing changes needed before the public
+push — OSS agent-memory reception, AI-NPC platform + game-dev/player sentiment, a novelty
+stress test + name check, release-hygiene norms (license chain, no-auth norms, UPM,
+erasure), and a cold consumer sub-agent (a role-played Unity indie engineer evaluating the
+repo read-only, no project context). Full findings, evidence links, and the negative-search
+record: `docs\research\consumer-context-scan-2026-08-31.md`. Nothing was built; four forks
+were surfaced and ruled at one batch.
+
+**The four rulings:**
+
+1. **OpenAI-compatible provider path — BUILD BEFORE RELEASE** (the recommended
+   defer-and-document option was declined). A base-URL provider path for the model and
+   embedding roles lands as a new pre-F1 build target (~1–2 sessions: provider
+   implementation + config + tests + floor re-verify), shipped WITH the documented
+   small-model quality warning. The evidence carried both halves: the knob is table stakes
+   in self-hosted AI infra (every surveyed comparator ships one; local-model support is
+   their loudest issue category; game-side, Mantella and LLMUnity win on it), AND small
+   local models break structured-output pipelines loudly (the comparators' own docs warn of
+   it — our write-path typology/importance JSON and drift-budgeted reconstruction are the
+   calls that break first). The ruling takes the knob plus the warning.
+2. **Per-agent bulk erase — BUILD** (recommended, taken). `DELETE /v1/agents/{id}/memories`
+   as a thin transactional extension of the C6 purge carve-out (endpoint + tests + walker
+   extension + purge-floor re-verify; may ride the provider-path session). Category
+   evidence: Mem0/Zep/Letta all ship identity-scoped bulk erase and comparison sites grade
+   the axis. The player-vs-agent attribution nuance (memories attach to NPC agents, not
+   players, so even the per-agent verb is not a GDPR button — the integrator owns the
+   player→memory mapping) goes into the F1 docs regardless.
+3. **The name — RENAME BEFORE THE F3 FLIP** (the recommended keep-and-disambiguate option
+   was declined). The facts that drove it: PyPI `longmem` is taken; longmem.dev is a live
+   same-category product literally named "LongMem"; Microsoft's LongMem (NeurIPS 2023) owns
+   the term academically; search results for the prefix are dominated by others —
+   "longmem-npc" exact-match is clean, but the neighborhood is not. The rename gets its own
+   short naming session (candidate + collision check + repo rename with GitHub redirects +
+   docs sweep) BEFORE F1, so the README is written once under the final name. Nothing is
+   packaged or published yet, so this is the last cheap moment.
+4. **The Ledger host guard — BUILD IN F3** (recommended, taken). FastAPI's stock
+   `TrustedHostMiddleware` with a localhost allowlist + tests + one honesty-section caveat
+   line, slotted into the F3 hygiene sweep. Precedent: CVE-2025-49596 (MCP Inspector, June
+   2025 — DNS rebinding against localhost-only tools; the fix was Host validation).
+
+**Queue consequence** (status.md updated): two NEW pre-F1 roadmap items — the naming
+session, then the provider-path + per-agent-purge build — and F3 gains the host guard. F1
+inherits the scan's README input pack (report Part 3: the deployment-reality section — the
+cold consumer's one BLOCKED step; the integrator quickstart; the providers section; the
+prior-art citations incl. MRAgent/MemHarness/Zep-Graphiti; ONE dated cost table; the
+evidence-backed no-auth paragraph + Steam live-AI disclosure note; the NOTICE f-coref
+line). F2 inherits the compose + UPM conformance lists (report Part 2). The
+presentation-redesign session inherits the showcase post-mortem pack (report Part 4).
+
+**Scan verdicts worth the register** (detail and links in the report): the novelty claim
+SURVIVES — nothing found, in games or out, combining identity-conditioned retelling +
+persisted compounding write-back + an immutable bi-temporal record + gist/drift
+constraints (~20 negative searches preserved as evidence) — but the "reconstructed, not
+replayed" slogan was independently claimed twice in mid-2026 (MRAgent, ICML 2026;
+MemHarness) and the bi-temporal substrate is established prior art (Zep/Graphiti; Engram
+already cited), so the README cites-and-differentiates and never leads with the bare
+slogan. The license chain is CLEAN for the Apache-2.0 flip — full verification including
+en_core_web_lg (MIT; CC0 vectors) and the runtime-downloaded biu-nlp/f-coref weights (MIT);
+the one gap is a missing NOTICE line for that runtime download (queued into F1). The cold
+consumer's verdict: adopt-for-a-spike, prototype-only, exit pre-written at the missing
+shipped-game deployment story; its near-walk moment was the README-vs-status ~10x cost
+discrepancy — F1's priority signal.
