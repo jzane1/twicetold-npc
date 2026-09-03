@@ -15,6 +15,13 @@ ruling, real mode 7 -> 6 vars). The reconstruction role
 (TWICETOLD_MODEL_RECONSTRUCTION, reconstruction build 2026-07-17) is the
 Haiku-class batched retelling call (reconstruction.md).
 
+The model BACKEND (the provider-path build, ruled 2026-09-01; shape ruled
+2026-09-02) is one explicit selector for every LLM role: TWICETOLD_MODEL_BACKEND
+= "anthropic" (the default — today's requests byte-for-byte) or "openai" (the
+OpenAI-compatible chat-completions family behind TWICETOLD_MODEL_BASE_URL). The
+embedding role carries its own independent knobs (model name, base URL, key).
+Fake mode reads none of the URL/key requirements — it constructs no client.
+
 Service-level defaults below are integrator-overridable per agent via
 `agents.config` keys of the same name (nothing integrator-configurable is
 hardcoded). `agents.config` additionally carries:
@@ -33,9 +40,13 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 ENV_PATH = REPO_ROOT / ".env"
 
-# Locked constants — not knobs (decisions.md: embedding dimension 1536, locked;
-# model text-embedding-3-small).
-EMBEDDING_MODEL = "text-embedding-3-small"
+# The embedding DIMENSION is a locked constant — not a knob (decisions.md:
+# embedding dimension 1536, locked; migration 001's vector(1536) column). The
+# embedding MODEL NAME became a knob with the provider-path build (ruled
+# 2026-09-01/02): TWICETOLD_EMBEDDING_MODEL, defaulting to the model the locked
+# slate was measured on. Narrower models are zero-padded to the locked width at
+# the provider seam (ruled 2026-09-02); wider ones are refused there.
+EMBEDDING_MODEL_DEFAULT = "text-embedding-3-small"
 EMBEDDING_DIM = 1536
 
 # Env var names — one per model role (architecture §3).
@@ -85,6 +96,39 @@ MAX_CONCURRENT_MODEL_CALLS_DEFAULT = 8
 # min_size stays 1 in build_pool: not knobbed, surfaced at F0.
 ENV_DB_POOL_MAX_SIZE = "TWICETOLD_DB_POOL_MAX_SIZE"
 DB_POOL_MAX_SIZE_DEFAULT = 8
+
+# The model backend (the provider-path build, ruled 2026-09-01; the explicit
+# selector ruled 2026-09-02): ONE selector for every LLM role — the six product
+# roles and the three judge-shaped ones. "anthropic" (the default) is today's
+# path byte-for-byte; "openai" is the OpenAI-compatible chat-completions
+# family (OpenAI, Ollama, vLLM, LM Studio, llama.cpp server, OpenRouter,
+# LiteLLM, ...) reached through TWICETOLD_MODEL_BASE_URL. The same six role
+# vars name the models on either backend. Misconfigurations are loud at
+# load_settings: a base URL or key under the anthropic backend, a missing base
+# URL under openai, the Anthropic-shaped dialogue-thinking knob under openai.
+# Fake mode constructs no client and needs no URL or key.
+ENV_MODEL_BACKEND = "TWICETOLD_MODEL_BACKEND"
+MODEL_BACKENDS = ("anthropic", "openai")
+MODEL_BACKEND_DEFAULT = "anthropic"
+ENV_MODEL_BASE_URL = "TWICETOLD_MODEL_BASE_URL"
+# Optional on the openai backend: local servers ignore the key, hosted ones
+# need it. The openai SDK refuses an EMPTY key at construction, so the
+# placeholder below is what a keyless base-URL path actually sends.
+ENV_MODEL_API_KEY = "TWICETOLD_MODEL_API_KEY"
+PLACEHOLDER_API_KEY = "twicetold-no-key"
+# The embedding role's own knobs, independent of the model backend (never
+# inherited from it — explicit, loud): the model name (default = the locked
+# slate's model), an optional base URL (set => the openai client targets it
+# and OPENAI_API_KEY is no longer required), and an optional key for that URL.
+ENV_EMBEDDING_MODEL = "TWICETOLD_EMBEDDING_MODEL"
+ENV_EMBEDDING_BASE_URL = "TWICETOLD_EMBEDDING_BASE_URL"
+ENV_EMBEDDING_API_KEY = "TWICETOLD_EMBEDDING_API_KEY"
+# The hosted endpoints, passed EXPLICITLY to both SDK clients: with base_url
+# omitted, each SDK silently honors an OPENAI_BASE_URL / ANTHROPIC_BASE_URL
+# process variable, which could re-route a key to a stranger's host. Same
+# bytes on the wire as the SDK defaults; no stray-env redirect.
+ANTHROPIC_HOSTED_BASE_URL = "https://api.anthropic.com"
+OPENAI_HOSTED_BASE_URL = "https://api.openai.com/v1"
 
 # Optional per-Mtok USD prices (CLI-harness build ruling, 2026-07-15): cost
 # fields carry token counts unconditionally; USD appears only when these are
@@ -415,6 +459,12 @@ def load_env(path: Path = ENV_PATH) -> dict[str, str]:
             ENV_JUDGE_MAX_TOKENS,
             ENV_MAX_CONCURRENT_MODEL_CALLS,
             ENV_DB_POOL_MAX_SIZE,
+            ENV_MODEL_BACKEND,
+            ENV_MODEL_BASE_URL,
+            ENV_MODEL_API_KEY,
+            ENV_EMBEDDING_MODEL,
+            ENV_EMBEDDING_BASE_URL,
+            ENV_EMBEDDING_API_KEY,
         }
         | set(PRICE_ENV_KEYS)
     )
@@ -454,6 +504,16 @@ class Settings:
     db_pool_max_size: int = DB_POOL_MAX_SIZE_DEFAULT
     anthropic_api_key: str = field(default="", repr=False)
     openai_api_key: str = field(default="", repr=False)
+    # The model backend (ruled 2026-09-02): "anthropic" | "openai"; the base
+    # URL + optional key apply to the openai backend only (loud otherwise).
+    model_backend: str = MODEL_BACKEND_DEFAULT
+    model_base_url: str = ""
+    model_api_key: str = field(default="", repr=False)
+    # The embedding role's own knobs: the model NAME (the dimension stays the
+    # locked EMBEDDING_DIM constant), an optional base URL, an optional key.
+    embedding_model: str = EMBEDDING_MODEL_DEFAULT
+    embedding_base_url: str = ""
+    embedding_api_key: str = field(default="", repr=False)
     defaults: dict[str, float] = field(default_factory=lambda: dict(SERVICE_DEFAULTS))
     # Optional USD-per-Mtok prices (PRICE_ENV_KEYS); empty = cost in tokens only.
     prices: dict[str, float] = field(default_factory=dict)
@@ -461,6 +521,18 @@ class Settings:
 
 class ConfigError(RuntimeError):
     """Loud startup configuration failure (never a silent fallback)."""
+
+
+def _base_url_or_empty(env: dict[str, str], key: str) -> str:
+    """A base-URL knob: "" when unset; otherwise it must be an http(s) URL
+    (validated in both modes — a typo is loud regardless of mode), returned
+    without a trailing slash (the SDKs append their own paths)."""
+    raw = env.get(key, "").strip()
+    if not raw:
+        return ""
+    if not (raw.startswith("http://") or raw.startswith("https://")):
+        raise ConfigError(f"{key} must be an http(s) URL, got {raw!r}.")
+    return raw.rstrip("/")
 
 
 def load_settings(env: dict[str, str] | None = None) -> Settings:
@@ -476,6 +548,40 @@ def load_settings(env: dict[str, str] | None = None) -> Settings:
     if mode not in ("real", "fake"):
         raise ConfigError(
             f"{ENV_PROVIDER_MODE} must be 'real' or 'fake', got {mode!r}."
+        )
+
+    # The model backend selector (ruled 2026-09-02). The enum and the
+    # cross-checks below run in BOTH modes (a typo is loud regardless of mode
+    # — the dialogue-thinking precedent); the presence requirements (a base
+    # URL under openai, the keys) apply in real mode only, so fake mode stays
+    # keyless and offline.
+    backend = env.get(ENV_MODEL_BACKEND, "").strip().lower() or MODEL_BACKEND_DEFAULT
+    if backend not in MODEL_BACKENDS:
+        raise ConfigError(
+            f"{ENV_MODEL_BACKEND} must be 'anthropic' or 'openai', got {backend!r}."
+        )
+    model_base_url = _base_url_or_empty(env, ENV_MODEL_BASE_URL)
+    model_api_key = env.get(ENV_MODEL_API_KEY, "")
+    if backend == "anthropic":
+        for name, value in (
+            (ENV_MODEL_BASE_URL, model_base_url),
+            (ENV_MODEL_API_KEY, model_api_key),
+        ):
+            if value:
+                raise ConfigError(
+                    f"{name} is set but {ENV_MODEL_BACKEND} is 'anthropic'; set the "
+                    "backend to 'openai' or unset it."
+                )
+    # The embedding role's own knobs — independent of the model backend.
+    embedding_model = (
+        env.get(ENV_EMBEDDING_MODEL, "").strip() or EMBEDDING_MODEL_DEFAULT
+    )
+    embedding_base_url = _base_url_or_empty(env, ENV_EMBEDDING_BASE_URL)
+    embedding_api_key = env.get(ENV_EMBEDDING_API_KEY, "")
+    if embedding_api_key and not embedding_base_url:
+        raise ConfigError(
+            f"{ENV_EMBEDDING_API_KEY} is set without {ENV_EMBEDDING_BASE_URL}; the "
+            "hosted OpenAI embedding path uses OPENAI_API_KEY."
         )
 
     model_write = ""
@@ -521,10 +627,24 @@ def load_settings(env: dict[str, str] | None = None) -> Settings:
         model_reconstruction = reconstruction
         anthropic_key = env.get("ANTHROPIC_API_KEY", "")
         openai_key = env.get("OPENAI_API_KEY", "")
-        if not anthropic_key:
-            raise ConfigError("real mode requires ANTHROPIC_API_KEY in .env.")
-        if not openai_key:
-            raise ConfigError("real mode requires OPENAI_API_KEY in .env.")
+        # Per-backend key/URL requirements (ruled 2026-09-02): the anthropic
+        # backend needs its key; the openai backend needs its base URL (the
+        # key is optional — the placeholder stands in for local servers) and
+        # ignores an ANTHROPIC_API_KEY left in .env. The hosted embedding
+        # path needs OPENAI_API_KEY unless an embedding base URL is set.
+        if backend == "anthropic" and not anthropic_key:
+            raise ConfigError(
+                "real mode on the anthropic backend requires ANTHROPIC_API_KEY in .env."
+            )
+        if backend == "openai" and not model_base_url:
+            raise ConfigError(
+                f"the openai backend requires {ENV_MODEL_BASE_URL} in .env."
+            )
+        if not embedding_base_url and not openai_key:
+            raise ConfigError(
+                "real mode requires OPENAI_API_KEY in .env (or "
+                f"{ENV_EMBEDDING_BASE_URL} for a self-hosted embedding server)."
+            )
 
     # Eval-runner-only fields, loaded in BOTH modes (never in the real-mode
     # required list above — that absence is the stage-3 ruling as code).
@@ -542,6 +662,14 @@ def load_settings(env: dict[str, str] | None = None) -> Settings:
         raise ConfigError(
             f"{ENV_DIALOGUE_THINKING} must be unset or 'disabled', "
             f"got {dialogue_thinking!r}."
+        )
+    if dialogue_thinking and backend == "openai":
+        # The knob is an Anthropic request shape (thinking={"type": ...});
+        # the OpenAI-compatible family has no equivalent — loud, never
+        # silently dropped (ruled 2026-09-02).
+        raise ConfigError(
+            f"{ENV_DIALOGUE_THINKING} is an Anthropic request knob; unset it on the "
+            "openai backend."
         )
     raw_judge_max = env.get(ENV_JUDGE_MAX_TOKENS, "")
     if raw_judge_max:
@@ -616,6 +744,12 @@ def load_settings(env: dict[str, str] | None = None) -> Settings:
         db_pool_max_size=db_pool_max_size,
         anthropic_api_key=anthropic_key,
         openai_api_key=openai_key,
+        model_backend=backend,
+        model_base_url=model_base_url,
+        model_api_key=model_api_key,
+        embedding_model=embedding_model,
+        embedding_base_url=embedding_base_url,
+        embedding_api_key=embedding_api_key,
         prices=prices,
     )
 

@@ -21,6 +21,17 @@ drift distances are meaningful, not hash noise.
 Failure-injection fakes live here too — the degradation ladder is tested per
 model call (architecture §2).
 
+The chat backend seam (the provider-path build, ruled 2026-09-01; shape ruled
+2026-09-02): every real LLM role keeps its prompt, its parse, and its error
+wrapper, and asks ONE backend for the completion — AnthropicChatBackend (the
+Messages API, today's requests byte-for-byte) or OpenAIChatBackend (the
+OpenAI-compatible chat-completions family behind TWICETOLD_MODEL_BASE_URL:
+OpenAI, Ollama, vLLM, LM Studio, llama.cpp server, OpenRouter, LiteLLM, ...).
+The embedding provider has its own base-URL path and fits every vector to
+the locked width (narrower zero-padded, wider refused). `http_client` on the
+real classes is the keyless test seam: the suite drives them against
+httpx.MockTransport handlers, so no key and no socket is ever needed.
+
 Error contract (the seam owns degradation policy, providers only signal):
   - ProviderCallError    — the call itself failed (network, API error).
   - MalformedOutputError — the call succeeded but structured output did not
@@ -41,12 +52,14 @@ from typing import Protocol
 
 from app.concurrency import ModelCallGate
 from app.config import (
+    ANTHROPIC_HOSTED_BASE_URL,
     EMBEDDING_DIM,
-    EMBEDDING_MODEL,
     ENV_MODEL_COMPILER,
     ENV_MODEL_JUDGE,
     ENV_MODEL_REFLECTION,
     MAX_CONCURRENT_MODEL_CALLS_DEFAULT,
+    OPENAI_HOSTED_BASE_URL,
+    PLACEHOLDER_API_KEY,
     ConfigError,
     Settings,
 )
@@ -991,6 +1004,277 @@ def _lenient_json_text(text: str) -> str:
     return stripped.strip()
 
 
+# ---------------------------------------------------------------------------
+# The chat backend seam (the provider-path build, ruled 2026-09-01/02)
+# ---------------------------------------------------------------------------
+# One internal seam instead of a second set of role classes: every Real* role
+# keeps its prompt, its parse, and its pinned ProviderCallError wrapper, and
+# asks the backend for a completion. Backends raise the raw SDK exceptions;
+# the role classes wrap them. Two exist — the Anthropic Messages API (today's
+# requests byte-for-byte) and the OpenAI-compatible chat-completions family
+# behind a base URL. `http_client` is the keyless test seam.
+
+
+@dataclass(frozen=True)
+class ChatCompletion:
+    """One non-streaming completion normalized across backends: the model's
+    text ("" when it emitted none — the parse site turns that into
+    MalformedOutputError, the _first_text_block precedent) plus usage (0/0
+    when the server reported none — warned once per process)."""
+
+    text: str
+    input_tokens: int
+    output_tokens: int
+
+
+@dataclass(frozen=True)
+class ChatUsage:
+    """A stream's final usage, returned via StopIteration.value."""
+
+    input_tokens: int
+    output_tokens: int
+
+
+class ChatBackend(Protocol):
+    def complete(
+        self,
+        *,
+        model: str,
+        system: str,
+        user: str,
+        max_tokens: int,
+        json_mode: bool = False,
+        thinking: str | None = None,
+    ) -> ChatCompletion: ...
+
+    def stream(
+        self,
+        *,
+        model: str,
+        system: str,
+        user: str,
+        max_tokens: int,
+        thinking: str | None = None,
+    ) -> Iterator[str]: ...
+
+
+_WARNED_ONCE: set[str] = set()
+
+
+def _warn_once(key: str, message: str, *args) -> None:
+    """Log a backend caveat exactly once per process (usage absent, a dropped
+    Anthropic-only kwarg, a padded embedding width): loud, never per-call
+    noise, never silent."""
+    if key in _WARNED_ONCE:
+        return
+    _WARNED_ONCE.add(key)
+    logger.warning(message, *args)
+
+
+def _dialogue_thinking_kwargs(value: str) -> dict:
+    """The Anthropic thinking request shape for a knob VALUE: "" -> {} — the
+    pre-B2 request byte-for-byte; "disabled" -> the thinking-off arm (the
+    TWICETOLD_DIALOGUE_THINKING knob, B2 ruling 2026-08-07; sonnet-5 accepts
+    {"type": "disabled"}); "adaptive" -> the judge's adaptive thinking (its
+    hardcoded kwarg since B2, routed through here by the provider-path build).
+    Knob values are validated at load_settings and the judge's is fixed by
+    the role; nothing else can reach here."""
+    if value in ("disabled", "adaptive"):
+        return {"thinking": {"type": value}}
+    return {}
+
+
+class AnthropicChatBackend:
+    """The Anthropic Messages API — today's request shapes byte-for-byte (the
+    role classes' `messages.create` / `messages.stream` calls moved here
+    unchanged). `json_mode` is ignored: the JSON-only contract lives in the
+    prompts, as it always has. The hosted base URL is passed explicitly so a
+    stray ANTHROPIC_BASE_URL in the process env can never re-route the key."""
+
+    def __init__(self, *, api_key: str, http_client=None):
+        import anthropic
+
+        self._client = anthropic.Anthropic(
+            api_key=api_key,
+            base_url=ANTHROPIC_HOSTED_BASE_URL,
+            http_client=http_client,
+        )
+
+    def complete(
+        self,
+        *,
+        model: str,
+        system: str,
+        user: str,
+        max_tokens: int,
+        json_mode: bool = False,
+        thinking: str | None = None,
+    ) -> ChatCompletion:
+        response = self._client.messages.create(
+            model=model,
+            max_tokens=max_tokens,
+            system=system,
+            messages=[{"role": "user", "content": user}],
+            **_dialogue_thinking_kwargs(thinking or ""),
+        )
+        return ChatCompletion(
+            text=_first_text_block(response),
+            input_tokens=response.usage.input_tokens,
+            output_tokens=response.usage.output_tokens,
+        )
+
+    def stream(
+        self,
+        *,
+        model: str,
+        system: str,
+        user: str,
+        max_tokens: int,
+        thinking: str | None = None,
+    ) -> Iterator[str]:
+        with self._client.messages.stream(
+            model=model,
+            max_tokens=max_tokens,
+            system=system,
+            messages=[{"role": "user", "content": user}],
+            **_dialogue_thinking_kwargs(thinking or ""),
+        ) as stream:
+            for text in stream.text_stream:
+                yield text
+            final = stream.get_final_message()
+        return ChatUsage(
+            input_tokens=final.usage.input_tokens,
+            output_tokens=final.usage.output_tokens,
+        )
+
+
+class OpenAIChatBackend:
+    """The OpenAI-compatible chat-completions family behind a base URL.
+
+    Wire decisions (the 2026-09-02 build): a system + a user message;
+    `max_tokens` (the field local servers document — hosted OpenAI's
+    reasoning-class models that demand max_completion_tokens are a documented
+    limitation, not engineered around); `response_format={"type":
+    "json_object"}` on the structured calls (the family's native mitigation
+    for the small-model failure mode the ruling names — every JSON prompt
+    already says "JSON"); no sampling params (parity with the Anthropic path).
+    Streams ask for usage in the trailing chunk (`stream_options.include_usage`).
+    A server that reports no usage yields 0/0 plus ONE warning per process —
+    token accounting is honest about the gap, never fabricated. `thinking` is
+    an Anthropic request shape: a non-empty value (the judge's adaptive
+    thinking) is dropped with one warning. Empty content, a None content, or
+    an empty choices list normalize to "" so the role's parse site raises its
+    usual MalformedOutputError with the tokens."""
+
+    def __init__(self, *, base_url: str, api_key: str, http_client=None):
+        import openai
+
+        self._client = openai.OpenAI(
+            api_key=api_key, base_url=base_url, http_client=http_client
+        )
+        self._base_url = base_url
+
+    @staticmethod
+    def _messages(system: str, user: str) -> list[dict]:
+        return [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ]
+
+    def _drop_thinking(self, thinking: str | None) -> None:
+        if thinking:
+            _warn_once(
+                f"thinking:{self._base_url}",
+                "the openai backend at %s has no thinking parameter; %r dropped "
+                "(Anthropic-only — adaptive thinking is unavailable here)",
+                self._base_url,
+                thinking,
+            )
+
+    def _usage(self, usage) -> tuple[int, int]:
+        if usage is None:
+            _warn_once(
+                f"usage:{self._base_url}",
+                "the openai backend at %s reported no usage; token counts recorded "
+                "as 0 (the cost table reads zero for these calls)",
+                self._base_url,
+            )
+            return 0, 0
+        return int(usage.prompt_tokens or 0), int(usage.completion_tokens or 0)
+
+    def complete(
+        self,
+        *,
+        model: str,
+        system: str,
+        user: str,
+        max_tokens: int,
+        json_mode: bool = False,
+        thinking: str | None = None,
+    ) -> ChatCompletion:
+        self._drop_thinking(thinking)
+        kwargs = {"response_format": {"type": "json_object"}} if json_mode else {}
+        response = self._client.chat.completions.create(
+            model=model,
+            messages=self._messages(system, user),
+            max_tokens=max_tokens,
+            **kwargs,
+        )
+        text = ""
+        if response.choices:
+            text = response.choices[0].message.content or ""
+        # getattr: the SDK builds response models without validation, so a
+        # server that omits usage may leave the attribute unset, not None.
+        input_tokens, output_tokens = self._usage(getattr(response, "usage", None))
+        return ChatCompletion(
+            text=text, input_tokens=input_tokens, output_tokens=output_tokens
+        )
+
+    def stream(
+        self,
+        *,
+        model: str,
+        system: str,
+        user: str,
+        max_tokens: int,
+        thinking: str | None = None,
+    ) -> Iterator[str]:
+        self._drop_thinking(thinking)
+        usage = None
+        with self._client.chat.completions.create(
+            model=model,
+            messages=self._messages(system, user),
+            max_tokens=max_tokens,
+            stream=True,
+            stream_options={"include_usage": True},
+        ) as chunks:
+            for chunk in chunks:
+                if getattr(chunk, "usage", None) is not None:
+                    usage = chunk.usage
+                if chunk.choices:
+                    delta = chunk.choices[0].delta
+                    if delta is not None and delta.content:
+                        yield delta.content
+        input_tokens, output_tokens = self._usage(usage)
+        return ChatUsage(input_tokens=input_tokens, output_tokens=output_tokens)
+
+
+def build_chat_backend(settings: Settings, *, http_client=None) -> ChatBackend:
+    """The backend for `settings.model_backend` (real mode only — fake mode
+    never constructs one). The openai backend sends the placeholder key when
+    none is configured (the SDK refuses an empty key; local servers ignore
+    it). `http_client` is the keyless test seam."""
+    if settings.model_backend == "openai":
+        return OpenAIChatBackend(
+            base_url=settings.model_base_url,
+            api_key=settings.model_api_key or PLACEHOLDER_API_KEY,
+            http_client=http_client,
+        )
+    return AnthropicChatBackend(
+        api_key=settings.anthropic_api_key, http_client=http_client
+    )
+
+
 # The rendered_content voice clause (F0, 2026-08-26) encodes the three
 # measured register rules from identity-authoring.md §5: the render model's
 # witness-voice default ("I watched Branwen turn away..." for the NPC's OWN
@@ -1023,12 +1307,11 @@ _ESCALATION_SYSTEM = (
 
 
 class RealWriteProvider:
-    """Anthropic Haiku-class call: render + importance (+ typology when absent)."""
+    """The write call: render + importance (+ typology when absent), on the
+    chat backend settings selected (Haiku-class on the locked slate)."""
 
-    def __init__(self, settings: Settings):
-        import anthropic
-
-        self._client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+    def __init__(self, settings: Settings, backend: ChatBackend):
+        self._backend = backend
         self._model = settings.model_write
 
     def render_and_score(
@@ -1041,26 +1324,22 @@ class RealWriteProvider:
         clause = _TYPOLOGY_CLAUSE if declared_typology is None else ""
         system = _WRITE_SYSTEM.format(typology_clause=clause)
         try:
-            response = self._client.messages.create(
+            completion = self._backend.complete(
                 model=self._model,
-                max_tokens=1024,
                 system=system,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": (
-                            f"Diagnosticity goal: {diagnosticity_goal}\n\n"
-                            f"Observation: {observation_text}"
-                        ),
-                    }
-                ],
+                user=(
+                    f"Diagnosticity goal: {diagnosticity_goal}\n\n"
+                    f"Observation: {observation_text}"
+                ),
+                max_tokens=1024,
+                json_mode=True,
             )
         except Exception as exc:
             raise ProviderCallError(f"write call failed: {exc}") from exc
-        input_tokens = response.usage.input_tokens
-        output_tokens = response.usage.output_tokens
+        input_tokens = completion.input_tokens
+        output_tokens = completion.output_tokens
         try:
-            payload = json.loads(_lenient_json_text(_first_text_block(response)))
+            payload = json.loads(_lenient_json_text(completion.text))
             rendered = str(payload["rendered_content"])
             importance = float(payload["importance_raw"])
             typology = payload.get("typology") if declared_typology is None else None
@@ -1101,13 +1380,12 @@ class RealWriteProvider:
 
 
 class RealEscalationProvider:
-    """Anthropic Haiku-class gist escalation. Spans returned as exact substrings,
-    mapped to half-open char offsets here; unlocatable substrings are dropped."""
+    """The gist escalation call (Haiku-class on the locked slate). Spans
+    returned as exact substrings, mapped to half-open char offsets here;
+    unlocatable substrings are dropped."""
 
-    def __init__(self, settings: Settings):
-        import anthropic
-
-        self._client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+    def __init__(self, settings: Settings, backend: ChatBackend):
+        self._backend = backend
         self._model = settings.model_escalation
 
     def extract_gist(
@@ -1128,27 +1406,23 @@ class RealEscalationProvider:
             for c in known_components
         ]
         try:
-            response = self._client.messages.create(
+            completion = self._backend.complete(
                 model=self._model,
-                max_tokens=1024,
                 system=_ESCALATION_SYSTEM,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": (
-                            f"Known identity components: {json.dumps(known)}\n"
-                            f"Escalation triggers: {triggers}\n\n"
-                            f"Observation: {observation_text}"
-                        ),
-                    }
-                ],
+                user=(
+                    f"Known identity components: {json.dumps(known)}\n"
+                    f"Escalation triggers: {triggers}\n\n"
+                    f"Observation: {observation_text}"
+                ),
+                max_tokens=1024,
+                json_mode=True,
             )
         except Exception as exc:
             raise ProviderCallError(f"escalation call failed: {exc}") from exc
-        input_tokens = response.usage.input_tokens
-        output_tokens = response.usage.output_tokens
+        input_tokens = completion.input_tokens
+        output_tokens = completion.output_tokens
         try:
-            payload = json.loads(_lenient_json_text(_first_text_block(response)))
+            payload = json.loads(_lenient_json_text(completion.text))
             by_canonical = {c["canonical"]: c for c in known_components}
             spans: list[GistSpanCandidate] = []
             for item in payload["spans"]:
@@ -1195,21 +1469,11 @@ class RealEscalationProvider:
         )
 
 
-def _dialogue_thinking_kwargs(value: str) -> dict:
-    """The TWICETOLD_DIALOGUE_THINKING knob's request shape (B2 ruling
-    2026-08-07): "" -> {} — the pre-B2 request byte-for-byte; "disabled" ->
-    the thinking-off arm (sonnet-5 accepts {"type": "disabled"}). Values are
-    validated at load_settings; nothing else can reach here."""
-    if value == "disabled":
-        return {"thinking": {"type": "disabled"}}
-    return {}
-
-
 class RealDialogueProvider:
-    """Anthropic streaming PROSE call (built 2026-07-21; the dialogue turn's
-    only model call since the A1 re-shape, 2026-08-04). Streams PURE PROSE —
-    no JSON envelope. first-token latency is measured; usage comes from the
-    final message.
+    """The streaming PROSE call (built 2026-07-21; the dialogue turn's only
+    model call since the A1 re-shape, 2026-08-04), on whichever chat backend
+    settings selected. Streams PURE PROSE — no JSON envelope. first-token
+    latency is measured here; usage comes from the backend's final usage.
 
     `stream_prose` is a sync generator: it yields prose chunks as they arrive
     and returns a ProseResult (token counts + first-token latency) via
@@ -1217,45 +1481,56 @@ class RealDialogueProvider:
     thread and bridges the chunks onto its async output. A raise before the
     first yield is a pre-first-chunk failure (fallback line); a raise after some
     chunks is a mid-stream drop (keep-partial + flag) — the seam decides by
-    what it received.
+    what it received. The backend issues its request on the first `next()`,
+    so both contracts hold by construction; GeneratorExit (an abandoned
+    consumer) passes through untouched, as before.
     """
 
-    def __init__(self, settings: Settings):
-        import anthropic
-
-        self._client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+    def __init__(self, settings: Settings, backend: ChatBackend):
+        self._backend = backend
         self._model = settings.model_dialogue
-        self._thinking_kwargs = _dialogue_thinking_kwargs(settings.dialogue_thinking)
+        # The knob VALUE ("" | "disabled"): the Anthropic backend maps it to
+        # its request shape; load_settings keeps it empty on the openai one.
+        self._thinking = settings.dialogue_thinking or None
 
     def stream_prose(self, *, system_prompt: str, utterance: str) -> Iterator[str]:
         t0 = time.perf_counter()
         first_token_ms = 0.0
         seen_first = False
+        chunks = self._backend.stream(
+            model=self._model,
+            system=system_prompt,
+            user=utterance,
+            max_tokens=1024,
+            thinking=self._thinking,
+        )
         try:
-            with self._client.messages.stream(
-                model=self._model,
-                max_tokens=1024,
-                system=system_prompt,
-                messages=[{"role": "user", "content": utterance}],
-                **self._thinking_kwargs,
-            ) as stream:
-                for text in stream.text_stream:
-                    if not seen_first:
-                        first_token_ms = round((time.perf_counter() - t0) * 1000.0, 2)
-                        seen_first = True
-                    yield text
-                final = stream.get_final_message()
+            # An explicit next() loop (not `yield from`) so the first chunk
+            # can be timed and the backend's return value captured.
+            while True:
+                try:
+                    text = next(chunks)
+                except StopIteration as stop:
+                    usage = stop.value
+                    break
+                if not seen_first:
+                    first_token_ms = round((time.perf_counter() - t0) * 1000.0, 2)
+                    seen_first = True
+                yield text
         except Exception as exc:
             raise ProviderCallError(f"prose call failed: {exc}") from exc
+        finally:
+            chunks.close()
         return ProseResult(
-            input_tokens=final.usage.input_tokens,
-            output_tokens=final.usage.output_tokens,
+            input_tokens=usage.input_tokens,
+            output_tokens=usage.output_tokens,
             first_token_ms=first_token_ms,
         )
 
 
 class RealReconstructionProvider:
-    """Anthropic Haiku-class batched retelling call (reconstruction.md).
+    """The batched retelling call (reconstruction.md; Haiku-class on the
+    locked slate), on the chat backend settings selected.
 
     Output contract (build ruling 2026-07-17, JSON-in-text per the
     write/escalation/dialogue precedent): ONLY a JSON object mapping each
@@ -1265,10 +1540,8 @@ class RealReconstructionProvider:
     parse). max_tokens scales with the batch (1024 per item, capped at 8192 —
     a fixed 1024 would truncate large batches)."""
 
-    def __init__(self, settings: Settings):
-        import anthropic
-
-        self._client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+    def __init__(self, settings: Settings, backend: ChatBackend):
+        self._backend = backend
         self._model = settings.model_reconstruction
 
     def reconstruct(
@@ -1279,18 +1552,19 @@ class RealReconstructionProvider:
         items: list[ReconstructionItem],
     ) -> ReconstructionCallResult:
         try:
-            response = self._client.messages.create(
+            completion = self._backend.complete(
                 model=self._model,
-                max_tokens=min(1024 * max(len(items), 1), 8192),
                 system=system_prompt,
-                messages=[{"role": "user", "content": user_content}],
+                user=user_content,
+                max_tokens=min(1024 * max(len(items), 1), 8192),
+                json_mode=True,
             )
         except Exception as exc:
             raise ProviderCallError(f"reconstruction call failed: {exc}") from exc
-        input_tokens = response.usage.input_tokens
-        output_tokens = response.usage.output_tokens
+        input_tokens = completion.input_tokens
+        output_tokens = completion.output_tokens
         try:
-            payload = json.loads(_lenient_json_text(_first_text_block(response)))
+            payload = json.loads(_lenient_json_text(completion.text))
             if not isinstance(payload, dict):
                 raise ValueError("batched output is not a JSON object")
         except (ValueError, TypeError, json.JSONDecodeError, IndexError) as exc:
@@ -1320,12 +1594,12 @@ class RealJudgeProvider:
     rejects temperature/top_p/top_k outright, so the spec's original
     "temperature 0" is unimplementable (dated correction in eval-harness.md);
     the rubric's JSON-only contract carries determinism instead. max_tokens is
-    the TWICETOLD_JUDGE_MAX_TOKENS knob — adaptive thinking spends against it."""
+    the TWICETOLD_JUDGE_MAX_TOKENS knob — adaptive thinking spends against it.
+    On the openai backend the adaptive-thinking kwarg has no equivalent and is
+    dropped with one warning: the judge's calibration is Anthropic-only."""
 
-    def __init__(self, settings: Settings):
-        import anthropic
-
-        self._client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+    def __init__(self, settings: Settings, backend: ChatBackend):
+        self._backend = backend
         self._model = settings.model_judge
         self._max_tokens = settings.judge_max_tokens
 
@@ -1338,19 +1612,20 @@ class RealJudgeProvider:
         n_facts: int = 0,
     ) -> JudgeCallResult:
         try:
-            response = self._client.messages.create(
+            completion = self._backend.complete(
                 model=self._model,
-                max_tokens=self._max_tokens,
-                thinking={"type": "adaptive"},
                 system=system_prompt,
-                messages=[{"role": "user", "content": user_content}],
+                user=user_content,
+                max_tokens=self._max_tokens,
+                json_mode=True,
+                thinking="adaptive",
             )
         except Exception as exc:
             raise ProviderCallError(f"judge call failed: {exc}") from exc
-        input_tokens = response.usage.input_tokens
-        output_tokens = response.usage.output_tokens
+        input_tokens = completion.input_tokens
+        output_tokens = completion.output_tokens
         try:
-            payload = json.loads(_lenient_json_text(_first_text_block(response)))
+            payload = json.loads(_lenient_json_text(completion.text))
             if not isinstance(payload, dict):
                 raise ValueError("judge output is not a JSON object")
         except (ValueError, TypeError, json.JSONDecodeError) as exc:
@@ -1375,10 +1650,8 @@ class RealReflectionProvider:
     structural input and is ignored here. Fixed max_tokens bounds follow
     the write-call precedent (a structural bound, not integrator policy)."""
 
-    def __init__(self, settings: Settings):
-        import anthropic
-
-        self._client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+    def __init__(self, settings: Settings, backend: ChatBackend):
+        self._backend = backend
         self._model = settings.model_reflection
 
     def reflect(
@@ -1389,18 +1662,19 @@ class RealReflectionProvider:
         items: list[ReflectionItem],
     ) -> ReflectionCallResult:
         try:
-            response = self._client.messages.create(
+            completion = self._backend.complete(
                 model=self._model,
-                max_tokens=2048,
                 system=system_prompt,
-                messages=[{"role": "user", "content": user_content}],
+                user=user_content,
+                max_tokens=2048,
+                json_mode=True,
             )
         except Exception as exc:
             raise ProviderCallError(f"reflect call failed: {exc}") from exc
-        input_tokens = response.usage.input_tokens
-        output_tokens = response.usage.output_tokens
+        input_tokens = completion.input_tokens
+        output_tokens = completion.output_tokens
         try:
-            payload = json.loads(_lenient_json_text(_first_text_block(response)))
+            payload = json.loads(_lenient_json_text(completion.text))
             raw_conclusions = payload["reflections"]
             if not isinstance(raw_conclusions, list):
                 raise ValueError("'reflections' is not a list")
@@ -1435,18 +1709,19 @@ class RealReflectionProvider:
         user_content: str,
     ) -> ConsolidationCallResult:
         try:
-            response = self._client.messages.create(
+            completion = self._backend.complete(
                 model=self._model,
-                max_tokens=1024,
                 system=system_prompt,
-                messages=[{"role": "user", "content": user_content}],
+                user=user_content,
+                max_tokens=1024,
+                json_mode=True,
             )
         except Exception as exc:
             raise ProviderCallError(f"consolidation call failed: {exc}") from exc
-        input_tokens = response.usage.input_tokens
-        output_tokens = response.usage.output_tokens
+        input_tokens = completion.input_tokens
+        output_tokens = completion.output_tokens
         try:
-            payload = json.loads(_lenient_json_text(_first_text_block(response)))
+            payload = json.loads(_lenient_json_text(completion.text))
             content = payload["content"]
             if not isinstance(content, str) or not content.strip():
                 raise ValueError("'content' is not a non-empty string")
@@ -1472,10 +1747,8 @@ class RealCompilerProvider:
     ignored here. Fixed max_tokens bounds follow the write-call precedent
     (a structural bound, not integrator policy)."""
 
-    def __init__(self, settings: Settings):
-        import anthropic
-
-        self._client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+    def __init__(self, settings: Settings, backend: ChatBackend):
+        self._backend = backend
         self._model = settings.model_compiler
 
     def compile(
@@ -1486,18 +1759,19 @@ class RealCompilerProvider:
         item: CompilerItem,
     ) -> CompilerCallResult:
         try:
-            response = self._client.messages.create(
+            completion = self._backend.complete(
                 model=self._model,
-                max_tokens=512,
                 system=system_prompt,
-                messages=[{"role": "user", "content": user_content}],
+                user=user_content,
+                max_tokens=512,
+                json_mode=True,
             )
         except Exception as exc:
             raise ProviderCallError(f"compile call failed: {exc}") from exc
-        input_tokens = response.usage.input_tokens
-        output_tokens = response.usage.output_tokens
+        input_tokens = completion.input_tokens
+        output_tokens = completion.output_tokens
         try:
-            payload = json.loads(_lenient_json_text(_first_text_block(response)))
+            payload = json.loads(_lenient_json_text(completion.text))
             multipliers = payload["multipliers"]
             if not isinstance(multipliers, dict):
                 raise ValueError("'multipliers' is not an object")
@@ -1522,22 +1796,78 @@ class RealCompilerProvider:
 
 
 class RealEmbeddingProvider:
-    """OpenAI text-embedding-3-small @ 1536 (locked)."""
+    """The embedding call over the OpenAI embeddings API shape: hosted OpenAI
+    by default (text-embedding-3-small on the locked slate), or any
+    OpenAI-compatible server through TWICETOLD_EMBEDDING_BASE_URL. The model
+    NAME is the TWICETOLD_EMBEDDING_MODEL knob; the DIMENSION is the locked
+    EMBEDDING_DIM, sent as `dimensions=` on both paths (Ollama truncates
+    Matryoshka models to it server-side) and FITTED here (ruled 2026-09-02):
+    a narrower vector is zero-padded to the locked width — cosine, L2, and
+    inner product between padded vectors equal those of the originals — with
+    one warning per process; exactly EMBEDDING_DIM passes; wider is refused
+    loudly (client-side truncation is unsound for non-Matryoshka models).
+    `encoding_format` stays the SDK default (base64), so hosted bytes are
+    unchanged. The hosted base URL is passed explicitly (no stray
+    OPENAI_BASE_URL redirect)."""
 
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings, *, http_client=None):
         import openai
 
-        self._client = openai.OpenAI(api_key=settings.openai_api_key)
+        if settings.embedding_base_url:
+            base_url = settings.embedding_base_url
+            api_key = settings.embedding_api_key or PLACEHOLDER_API_KEY
+        else:
+            base_url = OPENAI_HOSTED_BASE_URL
+            api_key = settings.openai_api_key
+        self._client = openai.OpenAI(
+            api_key=api_key, base_url=base_url, http_client=http_client
+        )
+        self._model = settings.embedding_model
+        self._base_url = base_url
 
     def embed(self, texts: list[str]) -> EmbedResult:
         try:
             response = self._client.embeddings.create(
-                model=EMBEDDING_MODEL, input=texts, dimensions=EMBEDDING_DIM
+                model=self._model, input=texts, dimensions=EMBEDDING_DIM
             )
         except Exception as exc:
             raise ProviderCallError(f"embedding call failed: {exc}") from exc
-        vectors = [item.embedding for item in response.data]
-        return EmbedResult(vectors=vectors, tokens=response.usage.total_tokens)
+        vectors = [self._fit(list(item.embedding)) for item in response.data]
+        usage = getattr(response, "usage", None)
+        if usage is None:
+            _warn_once(
+                f"embed-usage:{self._base_url}",
+                "the embedding server at %s reported no usage; token counts "
+                "recorded as 0",
+                self._base_url,
+            )
+            tokens = 0
+        else:
+            tokens = int(usage.total_tokens or 0)
+        return EmbedResult(vectors=vectors, tokens=tokens)
+
+    def _fit(self, vector: list[float]) -> list[float]:
+        """The ruled width fit: pad narrower, pass exact, refuse wider."""
+        width = len(vector)
+        if width == EMBEDDING_DIM:
+            return vector
+        if width > EMBEDDING_DIM:
+            raise ProviderCallError(
+                f"embedding model {self._model!r} returned a {width}-wide vector; "
+                f"the store is locked at {EMBEDDING_DIM} (migration 001) and wider "
+                "vectors are never truncated client-side. Choose a model that emits "
+                f"at most {EMBEDDING_DIM} dimensions or one that honors the "
+                "dimensions parameter (TWICETOLD_EMBEDDING_MODEL)."
+            )
+        _warn_once(
+            f"embed-pad:{self._model}",
+            "embedding model %r emits %d-wide vectors; zero-padded to the locked %d "
+            "(retrieval math unchanged: cosine, L2, and inner product are preserved)",
+            self._model,
+            width,
+            EMBEDDING_DIM,
+        )
+        return vector + [0.0] * (EMBEDDING_DIM - width)
 
 
 # ---------------------------------------------------------------------------
@@ -1568,18 +1898,47 @@ class Providers:
     )
 
 
+def _host(url: str) -> str:
+    from urllib.parse import urlsplit
+
+    return urlsplit(url).netloc or url
+
+
+def _log_real_wiring(settings: Settings) -> None:
+    """One INFO line at real-mode construction: which backend and which
+    HOSTS (never a key) — the config surface's instrumentation at the seam."""
+    model_host = (
+        _host(settings.model_base_url)
+        if settings.model_backend == "openai"
+        else _host(ANTHROPIC_HOSTED_BASE_URL)
+    )
+    embed_host = _host(settings.embedding_base_url or OPENAI_HOSTED_BASE_URL)
+    logger.info(
+        "real providers: model backend=%s host=%s; embedding model=%s host=%s",
+        settings.model_backend,
+        model_host,
+        settings.embedding_model,
+        embed_host,
+    )
+
+
 def build_providers(settings: Settings) -> Providers:
     """Provider selection by config; the services are identical under either.
     The concurrency gate is sized from settings and shared by both modes (fake
-    calls route through it too, so the gated path is exercised offline)."""
+    calls route through it too, so the gated path is exercised offline). In
+    real mode ONE chat backend (built by settings.model_backend) is shared by
+    the bundle's roles — one HTTP client, thread-safe across the gate's
+    executor threads."""
     gate = ModelCallGate(settings.max_concurrent_model_calls)
     if settings.provider_mode == "real":
+        backend = build_chat_backend(settings)
+        _log_real_wiring(settings)
         return Providers(
-            write=RealWriteProvider(settings),
-            escalation=RealEscalationProvider(settings),
+            write=RealWriteProvider(settings, backend),
+            escalation=RealEscalationProvider(settings, backend),
             embedding=RealEmbeddingProvider(settings),
-            dialogue=RealDialogueProvider(settings),
-            reconstruction=RealReconstructionProvider(settings),
+            dialogue=RealDialogueProvider(settings, backend),
+            reconstruction=RealReconstructionProvider(settings, backend),
             gate=gate,
         )
     return Providers(
@@ -1602,7 +1961,7 @@ def build_judge_provider(settings: Settings) -> JudgeProvider:
             raise ConfigError(
                 f"a judged run in real mode requires {ENV_MODEL_JUDGE} in .env."
             )
-        return RealJudgeProvider(settings)
+        return RealJudgeProvider(settings, build_chat_backend(settings))
     return FakeJudgeProvider()
 
 
@@ -1617,7 +1976,7 @@ def build_reflection_provider(settings: Settings) -> ReflectionProvider:
             raise ConfigError(
                 f"a reflect call in real mode requires {ENV_MODEL_REFLECTION} in .env."
             )
-        return RealReflectionProvider(settings)
+        return RealReflectionProvider(settings, build_chat_backend(settings))
     return FakeReflectionProvider()
 
 
@@ -1633,5 +1992,5 @@ def build_compiler_provider(settings: Settings) -> CompilerProvider:
             raise ConfigError(
                 f"a compile call in real mode requires {ENV_MODEL_COMPILER} in .env."
             )
-        return RealCompilerProvider(settings)
+        return RealCompilerProvider(settings, build_chat_backend(settings))
     return FakeCompilerProvider()
