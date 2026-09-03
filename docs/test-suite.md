@@ -1,10 +1,11 @@
 # twicetold-npc — Test suite spec
 
-**BUILT 2026-07-20 — 193 pytest scenarios today** in `tests\test_*.py` (Sets A–D + degradation +
+**BUILT 2026-07-20 — 226 pytest scenarios today** in `tests\test_*.py` (Sets A–D + degradation +
 hygiene + eval metrics + eval runner + judge + ablation + deferred writes + reflection + the
-parameter compiler + dissonance + agent state + purge + the E2 demo loader/Ledger feed; the
-Set A diegetic pair LANDED with the dissonance mechanism, 2026-08-17; Set P purge landed with C6,
-2026-08-18). Count as of 2026-08-26:
+parameter compiler + dissonance + agent state + purge + the provider path + the E2 demo
+loader/Ledger feed; the Set A diegetic pair LANDED with the dissonance mechanism, 2026-08-17;
+Set P purge landed with C6, 2026-08-18; Set Q and Set P's per-agent half landed with the
+provider-path session, 2026-09-02). Count as of 2026-09-02:
 Set A 8,
 Set B 8, Set C 7, Set D 20, degradation 12, hygiene 2, Set G eval metrics 8, **Set H eval
 runner 9** (stage 2, 2026-08-05), **Set I judge 16** (stage 3, 2026-08-07; +2 with the
@@ -13,18 +14,20 @@ config scenarios, 2026-08-15), **Set J ablation 6** (stage 4, 2026-08-12 — its
 `eval-harness.md`'s stage-4 block), **Set K deferred writes 13** (Phase C1, 2026-08-12),
 **Set L reflection 20** (Phase C2, 2026-08-15), **Set M parameter compiler 21** (Phase C3,
 2026-08-17), **Set N dissonance 23** (Phase C4, 2026-08-17), **Set O agent state 10** (Phase
-C5, 2026-08-17), **Set P purge 7** (Phase C6, 2026-08-18), **demo loader 2 + Ledger feed 1**
-(E2, 2026-08-19) — grown from the 38 built on
+C5, 2026-08-17), **Set P purge 14** (Phase C6, 2026-08-18; +7 for the per-agent verb,
+2026-09-02), **Set Q provider path 26** (the provider-path build, 2026-09-02), **demo loader 2 +
+Ledger feed 1** (E2, 2026-08-19) — grown from the 38 built on
 2026-07-20 by the
 route-contract scenarios that arrived with each later route, by the gap-closing and guard
 scenarios from the full-repo audit, and by the eval harness stages 1–4. **Fifteen carry the
-`nlp` marker** (Sets L, M, N, O, and P add none; the E2 demo loader adds one), so the turn-end
-subset runs **178**. *(Counts
+`nlp` marker** (Sets L, M, N, O, P, and Q add none; the E2 demo loader adds one), so the
+turn-end subset runs **211**. *(Counts
 corrected
 2026-08-12 with the Set K landing — the 2026-08-07 header had drifted again by the stage-4 and
 workaround-session scenarios; updated 2026-08-17 with the Set M, N, and O landings; Set P with
 C6, 2026-08-18; the E2 pair folded in and Set B +1 — the init error-contract closure — at F0,
-2026-08-26.)* Build rulings 2026-07-20
+2026-08-26; Set P +7 and Set Q +26 with the provider-path session, 2026-09-02.)* Build rulings
+2026-07-20
 (dated `decisions.md` entry): the suite-gate Stop hook runs the `-m "not nlp"` subset (the 7
 `nlp`-marked scenarios call the write pass at the service level and pay the lazy
 spaCy+fastcoref load; the full suite runs on demand + at floor verification); Postgres
@@ -424,14 +427,81 @@ precedent); it runs LAST in full sweeps (the newest — elder walkers first, fre
 C5's other half (fire-and-forget observes) is client-side C# — the console harness's beats
 [15]/[16] own both halves over the wire (36 → 50 checks).
 
-The thirteenth walker `tests\verify_purge.py` (21 criteria, lettered sections A–G) re-proves the
+The thirteenth walker `tests\verify_purge.py` (36 criteria, lettered sections A–H) re-proves the
 purge (C6) against the scratch DB: the seven-table child-before-parent delete in one transaction,
 the honest per-table counts, the survival boundary (a co-resident memory, the agent, an
 identity_component whose only referencing gist span was purged, and a reflection whose
 `source_memory_ids` still names the purged memory — dangling by design), the unknown-id → None/404
-path, and the wire contract over `httpx.ASGITransport` (200 + counts / 404 / 422). Id-scoped
-assertions (never a DB-global count); it runs after the elder correction/reconstruction walkers in
-full sweeps (fresh + serial).
+path, and the wire contract over `httpx.ASGITransport` (200 + counts / 404 / 422). **Section H
+(+15, the provider-path session 2026-09-02) re-proves the per-agent verb** `DELETE
+/v1/agents/{id}/memories`: the summed counts over two full-chain memories, the seven tables empty
+for both ids, a co-resident agent intact, the survival boundary widened to a reflection whose
+EVERY source now dangles plus its bundle and both run logs, the all-zero outcome for a known
+agent with nothing left, unknown → None / `UnknownAgentError`, and the wire contract (200 +
+counts, re-DELETE 200 with zeros, 404, 422, the per-memory verb 404ing on a bulk-erased id).
+Id-scoped assertions (never a DB-global count); it runs after the elder
+correction/reconstruction walkers in full sweeps (fresh + serial).
+
+The sixteenth walker `tests\verify_provider_path.py` (40 criteria, lettered sections A–H; the
+provider-path build, 2026-09-02) re-proves the OpenAI-compatible provider path OFFLINE and
+KEYLESS — the real provider classes driven against canned in-process HTTP handlers
+(`tests\provider_transport.py`, `httpx.MockTransport` injected as the SDK clients'
+`http_client`): the config matrix (A), the offline wiring of the bundle and the lazy factories on
+both backends (B), the openai backend's request shape and round-trip per role (C), streaming,
+usage-absent, the pre-first-chunk vs mid-stream error contracts, and the small-model hardening
+(D), the Anthropic backend's request-shape PINS — today's bytes, so the seam move is provable
+(E), the embedding width fit pad / pass / refuse plus tokens and client selection (F), a served
+dialogue turn over `httpx.ASGITransport` with mock-backed real providers — content byte-identical
+to the canned chunks, token fields the backend's usage, items with IDs + scores (G), and the
+ruling's named failure mode made structural: a small model's empty output landing as
+`scoring_failed` through the ingest ladder (H — the one section that pays the NLP load). Only G
+and H touch the scratch DB; RUN-suffixed, id-scoped, re-runnable.
+
+## Set Q — the provider path *(added 2026-09-02 with the provider-path build; the rulings in `decisions.md`)*
+
+`tests\test_set_q_provider_path.py` — 26 scenarios, all unmarked, NO database: the real
+provider classes run against canned in-process HTTP handlers (`tests\provider_transport.py`
+— request-recording `httpx.MockTransport` handlers in the exact wire shapes the SDKs parse:
+the OpenAI chat completion as JSON and as SSE with a trailing usage chunk, the OpenAI
+embeddings list in the SDK's default base64 float32 encoding, the Anthropic message as JSON
+and as the six-event SSE sequence; error fixtures are 4xx only, because both SDKs retry
+5xx/408/409/429 with backoff sleeps). Offline and keyless holds: no socket is ever opened.
+
+- **The config matrix** (8): the defaults (no new var ⇒ anthropic, byte-for-byte; Set I's
+  `REAL_ENV` still loads); the selector enum validated in BOTH modes and case-folded; openai
+  needs an http(s) base URL (trailing slash stripped), never an Anthropic key, the model key
+  optional and off the repr; a base URL or key under anthropic is loud; the dialogue-thinking
+  knob is refused under openai; the embedding knobs are independent (base URL lifts
+  `OPENAI_API_KEY`, key-without-URL and non-http URL are loud, the model name overrides, the
+  anthropic backend + a routed embedding is a legal mix); fake mode loads the selector with no
+  URL and no key; all six new keys ride the process-env override allowlist.
+- **The openai backend** (9): the write call's request shape (path, bearer placeholder,
+  system + user messages, `max_tokens` 1024, `response_format=json_object`, no stream / thinking
+  / sampling) and every `WriteCallResult` field with the fixture usage; every JSON role
+  round-trips its dataclass with its per-role `max_tokens` (escalation offsets + component id
+  with an unlocatable substring dropped; reconstruction's batch-scaled bound; the judge's
+  `judge_max_tokens` with adaptive thinking dropped off the wire and warned exactly once;
+  reflect 2048 / consolidate 1024; compile 512); usage absent ⇒ 0/0 + exactly one warning; null
+  / empty / non-JSON content and an empty choices list ⇒ `MalformedOutputError` carrying the
+  spend; 400 / 401 / 404 ⇒ the pinned `ProviderCallError`; the small-model hardening survives
+  (clamp, salvage, fenced JSON); the dialogue stream yields the fixture chunks byte-identically
+  with usage from the trailing chunk and `stream_options.include_usage` on the wire; the
+  pre-first-chunk vs mid-stream error contracts.
+- **The Anthropic backend, pinned** (2): the write request is exactly `{model, max_tokens,
+  system, messages:[user]}` on `/v1/messages` with `x-api-key` and no `response_format`; the
+  judge adds `thinking: adaptive` and nothing else; the streaming fixture round-trips with the
+  knob unset (no thinking key) and `disabled` (thinking-off).
+- **The embedding path** (2): exactly 1536 passes with `model` / `dimensions=1536` /
+  `encoding_format=base64` / `input` on the wire; 768 is zero-padded (prefix intact, zeros
+  beyond, one warning); 2560 is refused naming the model, the width, and the lock; usage
+  absent ⇒ 0 + one warning; a float-list server still lands; client selection (hosted
+  `OPENAI_API_KEY` at `api.openai.com`, base URL without a key ⇒ the placeholder, base URL with
+  a key ⇒ that key).
+- **Offline wiring** (1): real-mode construction opens no socket on either backend; the bundle's
+  four LLM roles share ONE backend object; the judge-shaped factories build real classes on
+  openai without an Anthropic key; fake mode ignores the selector.
+
+The warn-once register is process-global; scenarios that count warnings clear it first.
 
 ## Route contracts *(added as each route shipped; consolidated here 2026-07-28)*
 
@@ -459,6 +529,9 @@ route", because that is what this section is for.
   `POST /v1/memories/{id}/correction` (404/409/422/502)
 - `DELETE /v1/memories/{id}` (the purge verb — 200 + honest per-table counts, the memory gone;
   404 unknown; 422 malformed id) — `tests\test_set_p_purge.py` + the `verify_purge` route section
+- `DELETE /v1/agents/{id}/memories` (the per-agent purge verb, 2026-09-02 — 200 + summed counts
+  with `memories_deleted`, every memory gone; a re-DELETE 200 with zeros; 404 unknown agent; 422
+  malformed id) — `tests\test_set_p_purge.py` + `verify_purge` section H
 - `POST /v1/agents` (server-minted UUID, NULL knobs resolve; 422 on empty name)
 - `GET /v1/memories/{id}/chain` · `GET /v1/agents/{id}/memories` (unscored by contract; superseded
   rows present; 404) · `GET /ledger`

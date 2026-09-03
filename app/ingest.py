@@ -737,15 +737,17 @@ class IngestService:
         )
 
     # ------------------------------------------------------------------ #
-    # purge — the sole sanctioned content DELETE (C6, the release-blocker)
+    # purge — the sanctioned content-DELETE carve-out (C6, the release-blocker;
+    # the per-agent verb joined 2026-09-02 as its thin extension)
     # ------------------------------------------------------------------ #
 
     async def purge_memory(self, memory_id: UUID) -> PurgeResult:
         """Hard-delete one memory and everything beneath it (C6, ruled
-        2026-08-18): the GDPR delete verb and the ONLY content DELETE in the
-        store. Returns the per-table counts; raises UnknownMemoryError (→ 404)
-        on an unknown id, nothing deleted. Reflections derived from the memory
-        survive by design (purge honesty)."""
+        2026-08-18): the GDPR delete verb — with its per-agent extension
+        below, the only content DELETEs in the store. Returns the per-table
+        counts; raises UnknownMemoryError (→ 404) on an unknown id, nothing
+        deleted. Reflections derived from the memory survive by design (purge
+        honesty)."""
         t_total = time.perf_counter()
         outcome = await db.purge_memory(self._pool, memory_id)
         if outcome is None:

@@ -3,33 +3,27 @@
 **Last updated:** 2026-09-02
 **Phase:** **Road to completion — Phases A–D DONE; Phase E PAUSED (E3 first attempt
 recorded + QA'd, master not cut). F0 DONE 2026-08-26; the consumer-context scan DONE
-2026-09-01. The rename (longmem-npc → twicetold-npc) is DONE + independently re-verified
-2026-09-02 (bar the F1-folded hero PNG + an F3 Unity re-check); the local folder rename is
-dropped. Next: the provider + purge build → F1 → F2–F3; the demo endgame follows Phase F.**
-**The rename → `twicetold-npc` DONE + re-verified 2026-09-02:** in-repo sweep + operator swap
-(`.env` + GitHub by Jack; Docker recreated to `twicetold-pg`/`twicetold-pgdata`) + DLL
-rebuild/copy + the **independent floor-verifier pass** all landed — suite **193**, **15
-walkers**, **C# 53**, the `PRODUCT_DB`↔`.env` lockstep + guard, `git grep -i longmem` = the
-ruled allowlist only; **no new floors row, count 32**. The **local folder rename is DROPPED**
-(Windows lock + ruling — the folder and this memory-dir key stay `longmem-npc`). **Folded
-onward:** hero PNG → F1, Unity Editor re-check → F3. Full record: the dated `decisions.md`,
-`floors.md`, and `session-log.md` entries.
-**Consumer-context scan landed 2026-09-01** (research-only; no floors row): novelty claim
-SURVIVES, license chain CLEAN for the flip, README staleness is active trust damage; the
-cold consumer's one BLOCKED step (the shipped-game deployment story) is F1's top addition.
-Four rulings (the dated `decisions.md` entry): provider path pre-release, per-agent purge,
-the rename, the Ledger F3 guard. Report + per-phase input packs:
-`docs\research\consumer-context-scan-2026-08-31.md`.
-**Earlier this phase** (F0 2026-08-26; E1–E3 + D1 2026-08-19/24; the consumer scan above):
-the roadmap bullets below + the dated `decisions.md` entries + the `session-log.md` archive
-carry the full records. Headline state that stays live: **$0.084/100 turns all-in**, perceived
-p50 **826–917 ms**, believability no-regression, the model slate LOCKED, the demo rig ready
-(E3 master not cut — the presentation redesign owns the flaws; the pinned state is SPENT,
-`--fresh` sanctioned).
-The system is BUILT end to end on the final A1 seam — backend, C# client + harness, Unity
-adapter + gray-box scene, The Ledger, eval stages 1–4, deferred writes, reflection, the
-compiler, the dissonance path, agent-state + async observes, purge, the concurrency cap +
-pre-warm — schema at migrations 001–008.
+2026-09-01; the rename DONE 2026-09-02; the provider-path + per-agent-purge build DONE
+2026-09-02 (plan-to-floor; floors row 33). Next: F1 → F2–F3; the demo endgame follows Phase F.**
+**The provider-path + per-agent-purge build DONE 2026-09-02:** `TWICETOLD_MODEL_BACKEND`
+(anthropic | openai) + base URL + optional key for all nine LLM roles over ONE `ChatBackend`
+seam (Anthropic requests byte-for-byte); the embedding role's own model-name / base-URL / key
+knobs (the 1536 dimension stays locked, fitted at the seam — narrower zero-padded by Jack's
+ruling, wider refused); the small-model quality warning beside the knob (`.env.example`,
+`SETUP.md` §4b); `DELETE /v1/agents/{id}/memories` as the thin C6 extension (reflections
+survive). Suite **226 / 211**, **16 walkers** (`verify_provider_path` 40, `verify_purge` 36),
+NO migration, no C# change. Four live beats ran (fake, Anthropic, hosted OpenAI, Ollama); the
+dated entry has the record.
+**Earlier this phase** (the rename 2026-09-02; the consumer-context scan 2026-09-01; F0
+2026-08-26; E1–E3 + D1 2026-08-19/24): the roadmap bullets below + the dated `decisions.md`
+entries + the `session-log.md` archive carry the full records. Headline state that stays
+live: **$0.084/100 turns all-in** (the Anthropic slate), perceived p50 **826–917 ms**,
+believability no-regression, the model slate LOCKED, the demo rig ready (E3 master not cut —
+the presentation redesign owns the flaws; the pinned state is SPENT, `--fresh` sanctioned).
+The system is BUILT end to end on the final A1 seam — backend (two model backends), C# client
++ harness, Unity adapter + gray-box scene, The Ledger, eval stages 1–4, deferred writes,
+reflection, the compiler, the dissonance path, agent-state + async observes, the two purge
+verbs, the concurrency cap + pre-warm — schema at migrations 001–008.
 What is proven lives in `docs\floors.md`, why in `decisions.md`, the narrative in
 `session-log.md`; this file carries only what is live.
 
@@ -72,14 +66,16 @@ re-openable: re-verifying one is a step, never an argument against a design impr
 — D1 found no objective metric to tune them against, so the principled ordering was kept
 unchanged (an eyeball run available on request); (2) offline gold re-labeling if calibrated
 judged-prose numbers are wanted on screen (kappa 0.37, unquotable; the on-screen numbers are
-judge-free); (3) the `min_size` DB-pool sibling knob (the F0 entry). *(The orphaned
-`longmem_eval_14188` scratch is now moot — it lived on the `longmem-pgdata` volume the
-2026-09-02 rename orphaned; it vanishes when that volume is pruned.)*
+judge-free); (3) the `min_size` DB-pool sibling knob (the F0 entry); (4) **a token-limit-field
+knob for the openai backend** — hosted OpenAI's reasoning-class models reject `max_tokens`
+(reproduced live 2026-09-02 with `gpt-5-mini`; degraded by the ladder); the leanest fix is one
+explicit env var naming the field, default `max_tokens` — surfaced, not built (the dated
+entry's register). *(The orphaned `longmem_eval_14188` scratch is moot — it lived on the
+volume the 2026-09-02 rename orphaned; it vanishes when that volume is pruned.)*
 
-**Recently closed** (pointers only): the four consumer-scan forks — ruled 2026-09-01 at one
-batch (provider path pre-release, per-agent purge, the rename, the Ledger guard — the dated
-entry); the F0 spec forks — 2026-08-26 (the dated F0 entry; README ruled wholly to F1); the
-E3 forks + the re-sequencing — 2026-08-24; earlier batches — `decisions.md`'s index and the
+**Recently closed** (pointers only): the four provider-path forks — 2026-09-02 (the dated
+entry); the four consumer-scan forks — 2026-09-01; the F0 spec forks — 2026-08-26; the E3
+forks + the re-sequencing — 2026-08-24; earlier batches — `decisions.md`'s index and the
 `session-log.md` archive.
 
 ## The roadmap (re-planned 2026-08-04; ordering delegated to Claude on efficiency grounds)
@@ -109,36 +105,34 @@ the E2 wrap-up (size tripwire); full records in `floors.md` + `decisions.md`.
   2026-08-24: recorded + QA'd, master not cut (the header block above). PAUSED — the demo
   endgame follows Phase F; the rig is ready and provision-independent.
 
-### Phase F — Release (F0 + the scan DONE; ~5–6 sessions remain)
+### Phase F — Release (F0 → the provider-path build DONE; ~3–4 sessions remain)
 
 - **F0. Whole-project audit/test/improve pass.** ✅ DONE 2026-08-26 (spec-at-plan → build →
-  independent floor-verify **pass**; no new floors row — the Re-verification entry). Header
-  block above = the summary; the dated F0 `decisions.md` entry = the full record (rulings,
-  measurements, the ceiling, forks, incident lessons).
-- **The consumer-context scan.** ✅ DONE 2026-09-01 (research-only; the header block above;
-  report: `docs\research\consumer-context-scan-2026-08-31.md`).
-- **The naming session** (ruled 2026-09-01). ✅ DONE + independently re-verified 2026-09-02 —
-  name **twicetold-npc**; in-repo sweep + operator swap + DLL rebuild + the floor-verifier pass
-  all landed; local folder rename dropped (the header block above; the dated `decisions.md`
-  rename entry + the floors.md re-verification entry). Folded onward: the hero PNG → F1, the
-  Unity Editor re-check → F3.
-- **The provider-path + per-agent-purge build** (NEW, ruled 2026-09-01): an
-  OpenAI-compatible base-URL provider path for the model + embedding roles, shipped WITH
-  the documented small-model quality warning (~1–2 sessions; floor re-verify), plus
-  `DELETE /v1/agents/{id}/memories` as a thin extension of the C6 purge carve-out (may
-  ride the same session).
+  independent floor-verify **pass**; no new floors row — the Re-verification entry). The dated
+  F0 `decisions.md` entry = the full record (rulings, measurements, the ceiling, forks,
+  incident lessons).
+- **The consumer-context scan.** ✅ DONE 2026-09-01 (research-only; report:
+  `docs\research\consumer-context-scan-2026-08-31.md`; four rulings in the dated entry).
+- **The naming session.** ✅ DONE + independently re-verified 2026-09-02 — name
+  **twicetold-npc**; in-repo sweep + operator swap + DLL rebuild + the floor-verifier pass; the
+  local folder rename dropped (the dated rename entry + the floors.md re-verification entry).
+  Folded onward: the hero PNG → F1, the Unity Editor re-check → F3.
+- **The provider-path + per-agent-purge build.** ✅ DONE 2026-09-02 (plan-to-floor; the header
+  block above; the dated `decisions.md` entry; floors row 33). Folded onward: the F1
+  providers-section pointer and pending item 4.
 - **F1. Full README build** — incl. the destructive-compression counter-example and the honest
   "what this is not" paragraph (no auth, no rate limiting; loopback-bound by default). Ships
   WITHOUT the video link (the video publishes last; the link lands in the publish step).
-  Inherits the scan's F1 input pack (report Part 3 + the NOTICE f-coref line) AND the hero-PNG
-  re-capture (`docs\media\ledger-memory-chain.png` still shows the old name in-pixels — folded
-  here 2026-09-02 rather than spent on twice, since F1 rebuilds the README image anyway).
+  Inherits the scan's F1 input pack (report Part 3 + the NOTICE f-coref line), the hero-PNG
+  re-capture (`docs\media\ledger-memory-chain.png` still shows the old name in-pixels), and the
+  providers section (the backend knob, the warning, the two-verb erase story + the
+  player-vs-agent nuance).
 - **F2. Packaging** — the ruled end product: the Unity Package Manager package + the one-command
   backend spin-up (compose: Postgres/pgvector + API + migrations). Inherits the scan's
   compose + UPM conformance lists (report Part 2).
 - **F3. Release hygiene + the public flip** — the Ledger TrustedHost guard (ruled
-  2026-09-01), the Unity MCP pin fix + manifest/lockfile
-  reconciliation, the committed-DLL staleness check, a sweep of the minor audit leftovers (F3
+  2026-09-01), the Unity MCP pin fix + manifest/lockfile reconciliation, the Unity Editor
+  re-check, the committed-DLL staleness check, a sweep of the minor audit leftovers (F3
   check-8 teeth, CRLF renormalization, `~\.claude.json` duplicate keys, the Unity-gate
   session-ordering note — swept or consciously dropped), docs finalization, Apache-2.0 flip.
 
@@ -186,11 +180,10 @@ not vendored).
 
 **Carried, not fixed** (deliberately unscheduled, awaiting its own ruling):
 
-- **The walkers (fifteen since C7-B) share a fixed-name scratch DB** (`twicetold_test`) they
-  neither create, migrate, nor drop; some assertions are DB-global counts, so sweeps run
-  fresh + serial, elder walkers first. The right fix (the suite's pid-scoped mechanism + a
-  `tests\run-walkers.ps1` runner) wants its own scoped task. THREE documented bites — the
-  verbatim register is in the session-log archive (2026-09-01 tripwire move; the first two
-  archived fuller 2026-08-17; the C4 build record has the third's detail). *(The other
-  2026-07-28 carried items — the auth honesty paragraph, the Unity MCP pin, the DLL
-  staleness check — are scheduled: Phase F.)*
+- **The walkers (sixteen since the provider path) share a fixed-name scratch DB**
+  (`twicetold_test`) they neither create, migrate, nor drop; some assertions are DB-global
+  counts, so sweeps run fresh + serial, elder walkers first. The right fix (the suite's
+  pid-scoped mechanism + a `tests\run-walkers.ps1` runner) wants its own scoped task. THREE
+  documented bites — the verbatim register is in the session-log archive. *(The other
+  2026-07-28 carried items — the auth honesty paragraph, the Unity MCP pin, the DLL staleness
+  check — are scheduled: Phase F.)*

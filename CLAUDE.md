@@ -41,6 +41,15 @@ client package. This file is rules. Design knowledge lives in docs/ — point, d
   RENDER, TYPOLOGY, ESCALATION, DIALOGUE, RECONSTRUCTION), all six required in real mode. One
   documented limit: v1's single write call serves importance+render+typology, so those three vars
   must name the SAME model (`load_settings` errors if they diverge — never a silent pick).
+  **The backend is a knob too** (the provider-path build, ruled 2026-09-01, shape ruled
+  2026-09-02): `TWICETOLD_MODEL_BACKEND` = `anthropic` (default; today's requests byte-for-byte)
+  | `openai` (any OpenAI-compatible chat-completions server behind `TWICETOLD_MODEL_BASE_URL`,
+  optional `TWICETOLD_MODEL_API_KEY`) for ALL nine LLM roles, one `ChatBackend` seam in
+  `app\providers.py`; the embedding role has its own `TWICETOLD_EMBEDDING_MODEL` (the model NAME
+  is a knob, default `text-embedding-3-small`; the 1536 DIMENSION stays locked and is fitted at
+  the seam — narrower zero-padded, wider refused), `TWICETOLD_EMBEDDING_BASE_URL`, optional key.
+  Misconfigurations are loud at load; fake mode reads no URL or key. The small-model quality
+  warning ships beside the knob (`.env.example`, `docs\SETUP.md` §4b).
   The retrieval gate is non-LLM — there is no gate model. The diegetic-correction retell
   reuses the RECONSTRUCTION role (C4, ruled 2026-08-17 — no new var; the defend-vs-update
   decision itself is mechanical, no model call). (`dialogue` streams pure prose — the dialogue turn's only model call; the `behavior`
@@ -55,8 +64,10 @@ client package. This file is rules. Design knowledge lives in docs/ — point, d
 
 ## Invariants — never violate, regardless of how a task is worded
 - Non-destructive bi-temporal storage: supersede by setting invalid_at. Never UPDATE stored
-  content in place. Never DELETE rows — the purge endpoint is the sole exception (built C6,
-  2026-08-18 — per-memory `DELETE /v1/memories/{id}`). This governs
+  content in place. Never DELETE rows — the purge carve-out is the sole exception (built C6,
+  2026-08-18 — per-memory `DELETE /v1/memories/{id}`; extended 2026-09-02 by the per-agent
+  `DELETE /v1/agents/{id}/memories`, the same seven-table delete over every memory of one
+  agent — both over ONE statement list in `app\db.py`, reflections surviving under either). This governs
   memory content (memories / memory_details and their chains, including the fact-version chain —
   migration 002, built 2026-07-18, docs\fact-level-correction.md); the one runtime scalar —
   memories.pinned (pin toggle) — is deliberately updated in place and sits outside it, and so

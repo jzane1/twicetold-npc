@@ -43,9 +43,10 @@ memory can drift and be defended, while the ground-truth record underneath never
   `status.md`'s queues — and sequencing orders work, it never vetoes a design option (reframed
   2026-07-17; the 2026-07-14 reconstruction re-slating is the pull-forward template).
 - **Integrator-defined vocabulary everywhere.** Observation phase tags, diagnosticity goal,
-  context-match weights, scene-type vocabulary, model roles, rigidity, prose-view weights,
-  decay knobs, drift threshold, habituation cap/decay *(habituation cut 2026-08-04 —
-  annotated at the C2 dossier, 2026-08-15)* — none is ever hardcoded.
+  context-match weights, scene-type vocabulary, model roles, the model backend and its base
+  URL, the embedding model name and base URL *(the provider-path build, 2026-09-02)*, rigidity,
+  prose-view weights, decay knobs, drift threshold, habituation cap/decay *(habituation cut
+  2026-08-04 — annotated at the C2 dossier, 2026-08-15)* — none is ever hardcoded.
   Violating this anywhere makes the config surface incoherent. *(The action vocabulary and
   reputation sensitivity left the surface with the A1 re-shape, 2026-08-04.)*
 - **Instrument at the seam, not after.** Timing and token accounting are added to each layer as that
@@ -109,8 +110,41 @@ judge-shaped — loaded both modes, required by neither, loud at the first real 
 worker's first real compile; C3 has no endpoint, so that call is always the worker's —
 `parameter-compiler.md`)*. The retrieval gate is **non-LLM** — there is no gate model and no gate env var.
 
-**Embeddings.** OpenAI `text-embedding-3-small` at 1536 dimensions; the column dimension is locked.
-The same model embeds location names/descriptions and gate-time utterances.
+**The model backend** *(the provider-path build — ruled 2026-09-01 at the consumer-context
+scan, its shape ruled 2026-09-02)*. One explicit selector, `TWICETOLD_MODEL_BACKEND`, carries
+every LLM role — the six product roles and the three judge-shaped ones: `anthropic` (the
+default; the locked slate's Messages-API requests byte-for-byte) or `openai` (the
+OpenAI-compatible chat-completions family behind `TWICETOLD_MODEL_BASE_URL` — OpenAI, Ollama,
+vLLM, LM Studio, llama.cpp server, OpenRouter, LiteLLM; an optional `TWICETOLD_MODEL_API_KEY`,
+a placeholder when blank). The same six role vars name the models on either backend. In code
+it is ONE seam: every real role keeps its prompt, its parse, and its error wrapper and asks a
+`ChatBackend` for the completion — `AnthropicChatBackend` or `OpenAIChatBackend` — so no role
+logic is duplicated (`app\providers.py`). Wire decisions on the openai backend: `max_tokens`
+(the field local servers document; hosted OpenAI's reasoning-class models that demand
+`max_completion_tokens` are a documented limitation), `response_format=json_object` on every
+structured call (the family's native mitigation for the small-model failure mode the ruling
+names), `stream_options.include_usage` on the dialogue stream, no sampling params (parity);
+a server that reports no usage is counted 0 with one warning per process, and the Anthropic
+thinking kwargs (the dialogue knob, the judge's adaptive thinking) have no equivalent — the
+knob is refused at load under openai, the judge's is dropped with one warning. Misconfigurations
+are loud at `load_settings` (a base URL or key under anthropic, a missing base URL under
+openai); fake mode constructs no client and reads no URL or key. **The small-model quality
+warning ships with the knob** (`.env.example`, `SETUP.md` §4b): every measured number was taken
+on the locked Anthropic slate and does not transfer; small local models break the write call's
+JSON and the drift-budgeted reconstruction first, loudly, by the ruled degradation ladder.
+
+**Embeddings.** The OpenAI embeddings API shape — hosted OpenAI by default
+(`text-embedding-3-small`, the locked slate), or any OpenAI-compatible server through
+`TWICETOLD_EMBEDDING_BASE_URL`, independent of the model backend. The model NAME is the
+`TWICETOLD_EMBEDDING_MODEL` knob *(since 2026-09-02; the locked slate's model is its default)*;
+the column DIMENSION stays locked at 1536 and is enforced at the seam: `dimensions=1536` is
+sent on every call (Matryoshka models emit exactly 1536), a narrower vector is zero-padded to
+1536 — cosine, L2, and inner product between padded vectors equal those of the originals, so
+retrieval math is untouched — with one warning per process, and a wider one is refused loudly
+(client-side truncation is unsound for non-Matryoshka models; *the padding option was Jack's
+ruling over the recommended strict check, 2026-09-02*). The embedding model is a per-database
+choice: switching it orphans every stored vector (no re-embed tooling in v1). The same model
+embeds location names/descriptions and gate-time utterances.
 
 **Write-time NLP (no LLM).** Ruled 2026-07-13: spaCy `en_core_web_lg` + `fastcoref` for
 intra-observation coreference (never `neuralcoref` — abandonware); affect via VADER (compound →
@@ -546,18 +580,22 @@ is C2's RRR.
 
 ## 12. Integrator surface requirements
 
-**The shipped HTTP surface** *(seventeen routes; five landed 2026-07-23 and 2026-07-27 —
+**The shipped HTTP surface** *(eighteen routes; five landed 2026-07-23 and 2026-07-27 —
 `unity-client.md`; the metric read 2026-07-29 — `eval-harness.md`; the reflect verb
 2026-08-15 — `reflection.md`; this paragraph still said "twelve" and omitted reflect until
 2026-08-17, a C2 propagation miss corrected at the C3 build — C3 itself adds NO route by
 ruling; the diegetic-correction event joined with C4, 2026-08-17 — `dissonance.md`; the
 agent-state read with C5 the same day; the purge verb with C6, 2026-08-18 — the release-blocker
-realized; the Ledger turn feed with E2, 2026-08-19)*:
+realized; the Ledger turn feed with E2, 2026-08-19; the per-agent purge verb with the
+provider-path session, 2026-09-02)*:
 `POST /v1/events/observe`,
 `POST /v1/events/scene-boundary`,
 **`POST /v1/events/diegetic-correction`** (the confrontation event — the dissonance path),
 `PUT /v1/memories/{id}/pin`, `POST /v1/memories/{id}/correction`,
-**`DELETE /v1/memories/{id}`** (the purge verb — the sole sanctioned content DELETE), `POST /v1/dialogue/init`,
+**`DELETE /v1/memories/{id}`** (the purge verb — the sanctioned content DELETE) and
+**`DELETE /v1/agents/{id}/memories`** (its per-agent extension, ruled 2026-09-01 — the same
+seven-table delete over every memory of one agent, in one transaction; the two purge verbs are
+the whole carve-out), `POST /v1/dialogue/init`,
 **`POST /v1/dialogue/turn`** (stateless — all scene state rides the request; the runner bookkeeping
 is the client's job), **`POST /v1/dialogue/turn/stream`** (its SSE twin, iterating the SAME
 async-generator seam — `chunk` / `reconstructing` / `result` / `error` events), **`POST /v1/agents`**
@@ -580,8 +618,8 @@ engine-agnostic (**zero `UnityEngine` types** by ruling), one flat `NpcMemoryCli
 fourteen verbs 1:1 *(the metrics read joined 2026-07-29; the reflect verb 2026-08-15 — "eleven"
 stood stale here until the 2026-08-17 correction; C3 adds no verb, its scene_type rides the
 turn request; the diegetic-correct verb joined with C4 and the agent-state read with C5, both
-2026-08-17 — "thirteen" missed C4's verb until the F0 audit, 2026-08-26; purge is server-only,
-no client verb)*, plus `NpcSession`, the C# port
+2026-08-17 — "thirteen" missed C4's verb until the F0 audit, 2026-08-26; both purge verbs are
+server-only, no client verb — the per-agent one joined 2026-09-02)*, plus `NpcSession`, the C# port
 of the Python runner's turn bookkeeping *(C5 added the session's fire-and-forget observe
 surface — `unity-client.md`)*. Unity gets a
 thin MonoBehaviour adapter over it; a `dotnet run` console harness plays every demo beat headless.
@@ -590,13 +628,19 @@ Docs are written as though a **hostile integrator** is reading them, answering o
 before they're asked: Whose Postgres is this? What happens on schema migration? What is the
 retention policy? Can a player's memories be deleted?
 
-- **Retention:** a tested **purge endpoint (per-memory `DELETE /v1/memories/{id}`, built C6
-  2026-08-18), no scheduler** — the tool provides the delete verb, the schedule is the
-  integrator's policy (this is the GDPR surface). Purge completeness stated honestly: the endpoint
-  deletes the original, its chains (telling **and fact versions** — the latter specced 2026-07-18,
+- **Retention:** two tested **purge verbs (per-memory `DELETE /v1/memories/{id}`, built C6
+  2026-08-18; per-agent `DELETE /v1/agents/{id}/memories`, ruled 2026-09-01 as the thin
+  extension and built 2026-09-02 — the same delete over every memory of one agent, one
+  transaction, summed counts, a 200 with zeros for a known agent with nothing left), no
+  scheduler** — the tool provides the delete verbs, the schedule is the integrator's policy (this
+  is the GDPR surface). Purge completeness stated honestly: the verbs delete the original, its
+  chains (telling **and fact versions** — the latter specced 2026-07-18,
   `fact-level-correction.md`), and its caches; reflections previously derived from purged episodes
-  are aggregate work-product left standing (their un-FK'd `source_memory_ids` may dangle), and the
-  docs say so.
+  are aggregate work-product left standing (their un-FK'd `source_memory_ids` may dangle — under
+  the per-agent verb, every source of a reflection may), the agent row, its identity, bundles, and
+  run logs are untouched, and the docs say so. Not a GDPR button by itself: memories attach to NPC
+  agents, not players, so the integrator owns the player-to-memory mapping (F1's docs carry the
+  nuance).
 - Docs must draw the **verbatim/reconstructive read-mode boundary** (self-describing payloads carry
   it too), state per-field degradation for optional context fields, state the gate degradation
   ladder, and include a **"what this is not"** section.

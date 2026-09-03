@@ -2210,6 +2210,62 @@ session.
 - **Next:** the provider-path + per-agent-purge build, then F1 (which absorbs the hero PNG).
   The rename is complete bar those two folded items.
 
+## **The provider-path + per-agent-purge build — 2026-09-02 (both halves landed plan-to-floor: the OpenAI-compatible backend seam + the embedding knobs, and the per-agent purge verb; Ollama installed for the live beats).**
+
+- **Landed:** both ruled halves, in one session, plan-mode spec → build → live beats →
+  independent floor-verify. Four forks settled at the plan batch (three recommended options
+  taken, ONE divergence — Jack chose zero-padded embedding widths over the recommended strict
+  check; the dated `decisions.md` entry). **Half 1:** `TWICETOLD_MODEL_BACKEND` (anthropic |
+  openai) + base URL + optional key for all nine LLM roles, the embedding role's own
+  model-name / base-URL / key knobs (the 1536 dimension stays locked, fitted at the seam — pad
+  narrower, refuse wider), the loud `load_settings` matrix, ONE `ChatBackend` seam in
+  `app\providers.py` (the seven real roles keep prompts/parses/wrappers; Anthropic requests
+  byte-for-byte, PINNED by tests), `tests\provider_transport.py` (canned in-process HTTP for the
+  real classes — offline, keyless), **Set Q 26** + **the sixteenth walker `verify_provider_path`
+  40/40**. **Half 2:** `DELETE /v1/agents/{id}/memories` over ONE shared delete-order helper
+  (`_delete_memory_rows`), `FOR NO KEY UPDATE` on the agents row (a plain `FOR UPDATE` would
+  have added a deadlock class), summed counts, 200-with-zeros for an empty agent, **Set P +7**,
+  **`verify_purge` section H +15 (36/36)**. Suite **226 full / 211 subset**, the full suite green
+  twice; the serial sweep on a fresh scratch green (write_path 53, cli_harness 51,
+  reconstruction 46, purge 36, provider_path 40). Docs: `.env.example` (the new blocks + the
+  small-model quality warning), `SETUP.md` §4b (the Ollama shape, the width contract, the wire
+  notes, the warning), `architecture.md` §2/§3/§12, `CLAUDE.md`, `test-suite.md`,
+  `write-path.md`, `parameter-compiler.md`, `migration-01.md`. NO migration for either half
+  (the explicit scope fact); no C# work, no DLL rebuild. Two mid-session commits (one per
+  half) so a session cut left a clean state, then the wrap-up commit.
+- **Live beats (all four ruled substrates ran; keys never printed):** fake-mode purge beat
+  clean; the Anthropic path with the real key clean after the seam move (parsed JSON on both
+  observes, a streamed turn at 545 ms first word / 1177 ms perceived, the purge); hosted OpenAI
+  through the base-URL path with `gpt-4.1-mini` clean (parsed JSON, usage through the stream, 29
+  chunks, the purge); hosted OpenAI with `gpt-5-mini` reproduced the documented `max_tokens`
+  limitation exactly — every LLM call 400, the system degrading by the ruled ladder and
+  rejecting nothing (scoring_failed observes at neutral importance, the never-blank fallback
+  turn, the purge still 200). Ollama: absent on the machine → installed via winget (announced;
+  the per-user installer), the server started with `OLLAMA_CONTEXT_LENGTH=16384`, four models
+  pulled (`llama3.2:3b`, `nomic-embed-text`, `qwen3-embedding:4b`, `llama3.1:8b`); both local
+  beats clean — `llama3.2:3b` + `nomic-embed-text` (parsed JSON on a 3B model under JSON mode,
+  usage through the stream, the 768-wide embedding zero-padded with the warn-once firing
+  exactly once: Ollama answers an oversize `dimensions` request with the native width, no
+  error) and `llama3.1:8b` + `qwen3-embedding:4b` (parsed JSON, the Matryoshka model emitting
+  exactly 1536 through `dimensions=`, no padding). The pre-ruled fallback (drop `dimensions`
+  on the base-URL path) was NOT triggered. CPU-only latencies (10–100 s per call cold)
+  recorded, never a headline.
+- **Verified:** the independent floor-verifier returned **PASS** on all nine criteria — the
+  suite 226 twice + 211, all sixteen walkers serial on its own fresh scratch, the invariant
+  audit, the route count, boot parity, its own fake and Ollama beats, the product DB pristine
+  before and after, the docs propagation — **floors row 33** landed, row 30 carries the dated
+  re-verification note. Two stale comment lines it flagged were fixed after the pass.
+- **Blocked:** nothing.
+- **Abandoned:** nothing. Surfaced, not built (the adjacent-work register in the decisions
+  entry): a token-limit-field knob for hosted OpenAI's reasoning-class models (the live evidence
+  makes it the top item), timeout/retry knobs, a cross-backend compare arm, a
+  `DeadlockDetected` retry-once, `reasoning_effort` for the judge, a temperature knob, a
+  balanced-object parser, the startup width probe, and the cosmetic doubled "prose call failed"
+  prefix at `dialogue.py:491` (pre-existing).
+- **Next:** F1 (the full README — inherits the scan's input pack, the hero PNG, and now the
+  providers-section pointer + the token-limit knob question), then F2–F3; the demo endgame
+  follows Phase F.
+
 ---
 
 ## Archived phase headers
@@ -2921,3 +2977,25 @@ scratch is that walker's documented precondition), and 2026-08-17 again at the C
 (the elder correction walkers' DB-global corrections-emptiness asserts vs the re-opened
 `verify_reconstruction` — sweeps must run fresh + serial, elder walkers first; the C4
 build record has the detail).
+
+## Archived from status.md at the provider-path wrap-up (2026-09-02, size tripwire)
+
+*The two header paragraphs the 2026-09-02 provider-path wrap-up replaced with pointers — the
+rename paragraph and the consumer-scan paragraph — verbatim from `status.md` as they stood
+that morning (the naming session's own wrap-up wrote the first; the scan's the second).*
+
+**The rename → `twicetold-npc` DONE + re-verified 2026-09-02:** in-repo sweep + operator swap
+(`.env` + GitHub by Jack; Docker recreated to `twicetold-pg`/`twicetold-pgdata`) + DLL
+rebuild/copy + the **independent floor-verifier pass** all landed — suite **193**, **15
+walkers**, **C# 53**, the `PRODUCT_DB`↔`.env` lockstep + guard, `git grep -i longmem` = the
+ruled allowlist only; **no new floors row, count 32**. The **local folder rename is DROPPED**
+(Windows lock + ruling — the folder and this memory-dir key stay `longmem-npc`). **Folded
+onward:** hero PNG → F1, Unity Editor re-check → F3. Full record: the dated `decisions.md`,
+`floors.md`, and `session-log.md` entries.
+
+**Consumer-context scan landed 2026-09-01** (research-only; no floors row): novelty claim
+SURVIVES, license chain CLEAN for the flip, README staleness is active trust damage; the
+cold consumer's one BLOCKED step (the shipped-game deployment story) is F1's top addition.
+Four rulings (the dated `decisions.md` entry): provider path pre-release, per-agent purge,
+the rename, the Ledger F3 guard. Report + per-phase input packs:
+`docs\research\consumer-context-scan-2026-08-31.md`.

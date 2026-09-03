@@ -124,8 +124,11 @@ the 2026-07-14 re-slating)*; v1 sets the flag.
 - **diegetic-correction** — an in-world confrontation event referencing a target `memory_id`; routes
   through the dissonance path. **Built C4 (2026-08-17)** — `dissonance.md`.
 - **purge** — the GDPR delete verb (architecture §12). **Built C6 (2026-08-18)**: per-memory
-  `DELETE /v1/memories/{id}`, the sole sanctioned content DELETE; reflections derived from the
-  purged memory survive as aggregate work-product.
+  `DELETE /v1/memories/{id}`, the sanctioned content DELETE; reflections derived from the
+  purged memory survive as aggregate work-product. **Extended 2026-09-02** by the per-agent
+  `DELETE /v1/agents/{id}/memories` (ruled 2026-09-01 as the thin extension): the same
+  seven-table delete over every memory of one agent, one transaction — the two verbs are the
+  whole carve-out.
 
 ## Write pipeline (`observe`)
 

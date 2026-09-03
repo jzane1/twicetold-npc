@@ -7,7 +7,8 @@ with was removed by the A1 re-shape, 2026-08-04), plus the reconstruction
 role (the reconstruction build, 2026-07-17):
   - the single Haiku write call (render + importance + typology-when-absent),
   - the LLM-escalation gist call (hard cases, biased loose),
-  - the embedding call (text-embedding-3-small @ 1536, locked),
+  - the embedding call (the TWICETOLD_EMBEDDING_MODEL knob, default
+    text-embedding-3-small; the 1536 dimension locked and fitted at the seam),
   - the streaming dialogue call — PURE PROSE, the dialogue turn's only
     model call,
   - the batched Haiku-class reconstruction call (all cache misses of one

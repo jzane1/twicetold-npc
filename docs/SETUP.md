@@ -65,7 +65,10 @@ python -c "from app.config import load_settings; load_settings(); print('config 
 ```
 
 `.env` is gitignored and must stay that way. `TWICETOLD_PROVIDER_MODE=fake` (the template default)
-runs offline and keyless — everything below works without an API key.
+runs offline and keyless — everything below works without an API key. Real mode runs on the
+Anthropic backend by default; `TWICETOLD_MODEL_BACKEND=openai` plus a base URL points every LLM
+role at any OpenAI-compatible server instead (§4b below), and the embedding role has its own
+base URL and model knobs.
 
 ---
 
@@ -109,11 +112,75 @@ python -m app.serve
 
 Useful once it is up:
 
-- `http://127.0.0.1:8000/docs` — the generated OpenAPI surface (fifteen routes; `/ledger` and
+- `http://127.0.0.1:8000/docs` — the generated OpenAPI surface (sixteen routes; `/ledger` and
   `/v1/ledger/turns` are deliberately `include_in_schema=False`)
 - `http://127.0.0.1:8000/ledger` — **The Ledger**, the browser inspector. Paste an agent UUID to
   see its memories, and click one to see the immutable observation beside both version chains
   with superseded rows greyed but present.
+
+---
+
+## 4b. Self-hosted / OpenAI-compatible servers (the provider path, 2026-09-02)
+
+Every LLM role can run on any server that speaks the OpenAI chat-completions API — OpenAI
+itself, Ollama, vLLM, LM Studio, llama.cpp server, OpenRouter, LiteLLM — through one explicit
+selector. The Ollama shape, end to end:
+
+```powershell
+winget install --id Ollama.Ollama
+ollama pull llama3.1:8b            # any chat model; the six role vars name it
+ollama pull qwen3-embedding:4b     # Matryoshka: emits exactly 1536 via dimensions=
+$env:OLLAMA_CONTEXT_LENGTH = "16384"   # or a Modelfile num_ctx — see the warning below
+```
+
+Then in `.env` (one `KEY=VALUE` per line):
+
+```
+TWICETOLD_MODEL_BACKEND=openai
+TWICETOLD_MODEL_BASE_URL=http://127.0.0.1:11434/v1
+TWICETOLD_MODEL_IMPORTANCE=llama3.1:8b
+TWICETOLD_MODEL_RENDER=llama3.1:8b
+TWICETOLD_MODEL_TYPOLOGY=llama3.1:8b
+TWICETOLD_MODEL_ESCALATION=llama3.1:8b
+TWICETOLD_MODEL_DIALOGUE=llama3.1:8b
+TWICETOLD_MODEL_RECONSTRUCTION=llama3.1:8b
+TWICETOLD_EMBEDDING_BASE_URL=http://127.0.0.1:11434/v1
+TWICETOLD_EMBEDDING_MODEL=qwen3-embedding:4b
+```
+
+No API key is needed for a local server (a placeholder is sent; `TWICETOLD_MODEL_API_KEY` /
+`TWICETOLD_EMBEDDING_API_KEY` exist for hosted servers such as `https://api.openai.com/v1`).
+`load_settings` is loud about the misconfigurations: a base URL under the anthropic backend, a
+missing base URL under openai, and `TWICETOLD_DIALOGUE_THINKING` under openai (an Anthropic
+request knob). Fake mode reads none of this.
+
+**The embedding width contract.** The vector column is locked at 1536 dimensions. Every
+embedding call sends `dimensions=1536`, so a Matryoshka-trained model (`qwen3-embedding`)
+emits exactly 1536; a narrower model (`nomic-embed-text` at 768, `bge`/`mxbai` at 1024) is
+zero-padded to 1536 at the seam — cosine, L2, and inner-product distances between padded
+vectors equal those of the originals, so retrieval is unchanged — with one warning per
+process; a wider model is refused loudly (client-side truncation is unsound for non-Matryoshka
+models). The embedding model is a per-database choice: switching it orphans every stored
+vector, and there is no re-embed tooling in v1.
+
+**Wire notes.** Requests use `max_tokens` (the field local servers document; hosted OpenAI's
+reasoning-class models reject it — use a chat-class model there), `response_format=json_object`
+on every structured call, and `stream_options.include_usage` on the dialogue stream (a server
+that rejects it fails the turn before the first chunk, loudly; a server that omits usage is
+counted as 0 tokens with one warning, and the cost table then reads zero).
+
+**The small-model quality warning** (ruled with the path, 2026-09-01). Every measured number in
+this repo — cost per 100 turns, perceived-first-word p50, the believability no-regression —
+was taken on the locked Anthropic slate and does not transfer. Small local models break the
+structured-output contract first: the write call's JSON (rendered telling + importance +
+typology) and the drift-budgeted batched reconstruction. The failures are loud and degrade by
+the ruled ladder, never a rejected request: `scoring_failed` writes at neutral importance,
+failed enrichment runs, retellings falling back to their live heads, `MalformedOutputError` in
+the log. Ollama's default context window (4096 tokens) silently truncates the batched
+reconstruction prompt from the front, which is the single likeliest "it returns garbage"
+report — raise `OLLAMA_CONTEXT_LENGTH` (or a Modelfile `num_ctx`) to 16384 or more. The judge's
+calibration and its adaptive thinking are Anthropic-only; the judge-shaped roles (judge,
+reflection, compiler) are the most exposed to a weak model.
 
 ---
 
@@ -141,24 +208,27 @@ python -m app.load_driver
 
 Two systems, deliberately distinct — see `docs\README.md` for what each is for.
 
-**The suite** (193 scenarios, self-managing scratch DB, no arguments needed):
+**The suite** (226 scenarios, self-managing scratch DB, no arguments needed):
 
 ```powershell
 python -m pytest tests -q
-python -m pytest tests -q -m "not nlp"   # 178, the turn-end subset — seconds, not minutes
+python -m pytest tests -q -m "not nlp"   # 211, the turn-end subset — seconds, not minutes
 ```
 
 Postgres unreachable ⇒ every scenario skips loudly and the run exits green, by ruling.
 
-**The walkers** (fifteen structural done-when scripts) need a scratch DB you create yourself:
+**The walkers** (sixteen structural done-when scripts) need a scratch DB you create yourself:
 
 ```powershell
 $scratch = "postgresql://twicetold:change-me@localhost:5432/twicetold_test"
 docker exec twicetold-pg psql -U twicetold -d postgres -c "CREATE DATABASE twicetold_test"
 python db\migrate.py --database-uri $scratch
 python tests\verify_write_path.py --database-uri $scratch
-# ... verify_prewarm (C7-B, 2026-08-18), verify_concurrency (C7-A, 2026-08-18),
-#     verify_purge (C6, 2026-08-18), verify_agent_state (C5, 2026-08-17),
+# ... verify_provider_path (the provider path, 2026-09-02 — offline; only its served
+#     beat touches the scratch), verify_prewarm (C7-B, 2026-08-18),
+#     verify_concurrency (C7-A, 2026-08-18),
+#     verify_purge (C6, 2026-08-18; section H = the per-agent verb, 2026-09-02),
+#     verify_agent_state (C5, 2026-08-17),
 #     verify_dissonance (C4, 2026-08-17), verify_compiler (C3, 2026-08-17),
 #     verify_reflection (C2, 2026-08-15), verify_deferred_writes (C1, 2026-08-12),
 #     verify_read_path, verify_cli_harness, verify_gate, verify_reconstruction,
@@ -166,9 +236,9 @@ python tests\verify_write_path.py --database-uri $scratch
 docker exec twicetold-pg psql -U twicetold -d postgres -c "DROP DATABASE twicetold_test WITH (FORCE)"
 ```
 
-Run them serially on a FRESH scratch, elder walkers before `verify_dissonance` (the four
-newest — agent_state, purge, concurrency, prewarm — are id-scoped and re-runnable, so their
-position is free) — two of the
+Run them serially on a FRESH scratch, elder walkers before `verify_dissonance` (the five
+newest — agent_state, purge, concurrency, prewarm, provider_path — are id-scoped and
+re-runnable, so their position is free) — two of the
 correction walkers assert the corrections table is empty of diegetic rows, which is true in
 sweep order on a fresh scratch and false after a dissonance run (the shared-scratch
 fragility recorded in `status.md`'s carried item; `verify_reflection` additionally requires

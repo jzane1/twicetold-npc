@@ -19,7 +19,8 @@ choosing — confirm with Jack, then record the choice in `decisions.md`.
 - Bi-temporal everywhere it applies: `created_at` (server write time), `valid_at` (world time, from
   the client timestamp, timezone-aware, NOT NULL), `invalid_at` (NULL until superseded).
 - Non-destructive: supersession is setting `invalid_at`, never UPDATE-in-place of content, never
-  DELETE (the purge endpoint is the sole, explicit exception, and it is not part of this migration).
+  DELETE (the purge carve-out — per-memory since C6, per-agent since 2026-09-02 — is the sole,
+  explicit exception, and it is not part of this migration).
 - All **write-time fact** columns exist now, even where the consuming mechanism is deferred:
   typology + confidence + typology_source, provenance, context components, decay class, gist spans,
   importance, pin, scoring_failed.

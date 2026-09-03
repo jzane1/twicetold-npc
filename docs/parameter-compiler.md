@@ -53,7 +53,9 @@ eviction.
 - **`compiled_bundles`** — one row per compile call, APPEND-ONLY: `bundle_id`, `agent_id` FK,
   `reflection_id` FK (safe — reflections are invalidated, never deleted; **C6 closed
   (2026-08-18)**: purge is per-memory and does NOT reach reflections, so bundle purge semantics
-  never arise — the episode-scoped delete leaves reflections and their bundles standing),
+  never arise — the episode-scoped delete leaves reflections and their bundles standing; *still
+  true under the per-agent purge verb of 2026-09-02, which erases every memory of an agent and
+  leaves its reflections, bundles, and run logs standing*),
   `scene_type`, `w_relevance`/`w_recency`/`w_importance` (real, CHECK [0.25, 4.0]),
   `passthrough` jsonb, per-call `input_tokens`/`output_tokens`/`compile_ms`, `created_at`.
   Consume reads the newest row per (reflection_id, scene_type); a re-compile appends.

@@ -99,6 +99,7 @@ its surrounding spaces both become hyphens, so `Name — 2026-07-28` anchors as 
 - [F0 spec rulings + build record — the audit/test/improve pass landed — 2026-08-26](#f0-spec-rulings--build-record--the-audittestimprove-pass-landed--2026-08-26)
 - [Consumer-context scan rulings — the pre-release market pass — 2026-09-01](#consumer-context-scan-rulings--the-pre-release-market-pass--2026-09-01)
 - [The rename — longmem-npc → twicetold-npc — 2026-09-02](#the-rename--longmem-npc--twicetold-npc--2026-09-02)
+- [The provider-path + per-agent-purge build — the OpenAI-compatible backend and the per-agent purge verb landed — 2026-09-02](#the-provider-path--per-agent-purge-build--the-openai-compatible-backend-and-the-per-agent-purge-verb-landed--2026-09-02)
 
 ## Primary decisions
 
@@ -4661,3 +4662,219 @@ the one gap is a missing NOTICE line for that runtime download (queued into F1).
 consumer's verdict: adopt-for-a-spike, prototype-only, exit pre-written at the missing
 shipped-game deployment story; its near-walk moment was the README-vs-status ~10x cost
 discrepancy — F1's priority signal.
+
+## The provider-path + per-agent-purge build — the OpenAI-compatible backend and the per-agent purge verb landed — 2026-09-02
+
+**Decided (plan-mode session, then built plan-to-floor the same day):** the two halves ruled at
+the consumer-context scan (the 2026-09-01 entry, rulings 1 and 2) — an OpenAI-compatible
+base-URL provider path for the model AND embedding roles, shipped WITH the documented
+small-model quality warning, and `DELETE /v1/agents/{id}/memories` as the thin transactional
+extension of the C6 purge carve-out — landed on the four plan-batch rulings below. No spec doc
+(the approved plan was the spec — the C5/C6/C7 precedent; the design truth is `architecture.md`
+§3 and §12, the operator surface `.env.example` + `SETUP.md` §4b). **NO migration for either
+half** — the explicit per-target scope fact, never inherited: the provider path touches no
+schema, the per-agent purge deletes only from the existing 001–008 tables; the ledger stays at
+008 and zero ledger-pin tests moved.
+
+**The four forks, ruled at plan mode (one AskUserQuestion batch; three recommended options
+taken, ONE divergence):**
+1. **Config shape — the explicit selector** (recommended, taken). `TWICETOLD_MODEL_BACKEND` =
+   `anthropic` (default; today's requests byte-for-byte) | `openai` (the OpenAI-compatible
+   chat-completions family behind `TWICETOLD_MODEL_BASE_URL`, optional `TWICETOLD_MODEL_API_KEY`)
+   — ONE selector for all nine LLM roles, the six product roles and the three judge-shaped; the
+   same six role vars name the models on either backend. The embedding role's knobs are
+   independent and never inherited: `TWICETOLD_EMBEDDING_MODEL` (the model NAME becomes a knob,
+   default `text-embedding-3-small` — the locked slate's model; the 1536 DIMENSION stays the
+   locked constant), `TWICETOLD_EMBEDDING_BASE_URL`, optional `TWICETOLD_EMBEDDING_API_KEY`.
+   Presence-implies (a set URL switching the path, one var fewer, implicit) and per-role
+   backends (~18 more vars, a per-role client cache) were the priced alternatives.
+2. **Embedding width — ZERO-PAD narrower vectors** (the DIVERGENCE: strict was recommended).
+   `dimensions=1536` is sent on both paths (Ollama truncates Matryoshka models to it
+   server-side); a vector narrower than 1536 is padded with zeros to the locked width — cosine,
+   L2, and inner product between padded vectors equal those of the originals, so retrieval math
+   is untouched — with one warning per process naming the model and its native width; exactly
+   1536 passes; wider is refused loudly (client-side truncation is unsound for non-Matryoshka
+   models). Every local model works; the column's documented meaning becomes "the column width,
+   fitted at the seam". The strict alternative (1536 or fail, Matryoshka-capable servers only)
+   was recommended for touching nothing about the lock; Jack chose the wider door.
+3. **Per-agent purge — the thin extension exactly** (recommended, taken). The same seven-table
+   delete over every memory of one agent, one transaction, summed counts; the agent row, its
+   identity, reflections (every source may now dangle — purge honesty), bundles, and run logs
+   survive; a known agent with no memories is a 200 with zeros, unknown is 404; no guard (the C6
+   stance), no migration, no client verb (server-only, like C6). A whole-NPC reset (also erasing
+   reflections/bundles/run logs — bigger than the ruling) and a confirmation-guard variant were
+   the priced alternatives.
+4. **Live-beat substrate — Ollama + hosted OpenAI** (recommended, taken). Ollama installed on
+   Jack's machine in the build session (it was absent; `winget install Ollama.Ollama`, announced)
+   for the local-server quirks at no spend; `api.openai.com` through the same base-URL path with
+   the existing key for the reference implementation (cents).
+
+**Scope facts asserted with the plan (never inherited):** fake mode is untouched — it
+constructs no client and requires no URL or key; Anthropic stays the default with byte-identical
+requests (the locked slate and every measured number stand); no C# work and no DLL rebuild (the
+client only talks HTTP; both purge verbs are server-only); the eval runner's compare-arm
+allowlist is untouched (arms inherit the base `.env` backend; a cross-backend arm is adjacent);
+README is F1's (the warning lives in `.env.example`, `SETUP.md` §4b, `architecture.md` §3, and
+F1 inherits the pointer for its providers section); floors bookkeeping — the provider path is a
+new layer with its own walker (row 33 on the verifier's pass) and the per-agent purge re-opens
+the purge floor (row 30), re-verified in the same pass and recorded as a dated note on that row;
+and a **pre-existing lock inversion is inherited and stated, not fixed** — the C6 purge locks
+the memories row then deletes `memory_details` while the three details-first writers
+(`apply_authorial_correction`, `apply_diegetic_correction`, `write_back_reconstruction`) lock a
+details row first; Postgres detects the cycle and aborts one side, the purge rolling back clean
+with nothing deleted and the route 500ing; the bulk verb widens that window in proportion to the
+agent's memory count.
+
+**Mechanics — the provider path.** `load_settings` (`app\config.py`): the backend enum and the
+thinking cross-check validated in BOTH modes (a typo is loud regardless of mode — the
+dialogue-thinking precedent), the presence rules real-mode only; the loud rows: a bad selector,
+a base URL or model key under anthropic, a missing or non-http base URL under openai,
+`TWICETOLD_DIALOGUE_THINKING` under openai (an Anthropic request shape), an embedding key without
+an embedding base URL, `ANTHROPIC_API_KEY` missing on anthropic, `OPENAI_API_KEY` missing with no
+embedding base URL; all six new keys in the override allowlist; the hosted base URLs passed
+EXPLICITLY to both SDK clients (with `base_url` omitted each SDK silently honors an
+`OPENAI_BASE_URL` / `ANTHROPIC_BASE_URL` process variable — a latent key-redirect hole in
+today's embedding client, closed); the openai SDK refuses an empty key, so a keyless base-URL
+path sends the placeholder `twicetold-no-key`. `app\providers.py`: ONE chat-backend seam — the
+`ChatBackend` protocol (`complete` / `stream`, `thinking` carrying the knob VALUE),
+`AnthropicChatBackend` (today's `messages.create` / `messages.stream` bodies moved verbatim;
+`_dialogue_thinking_kwargs` extended with the judge's `adaptive`, not renamed — Set I pins the
+name) and `OpenAIChatBackend` (a system + a user message; `max_tokens`; `response_format=
+json_object` on the six structured calls — every JSON prompt already says "JSON";
+`stream_options.include_usage` on the stream; no sampling params, parity; usage absent → 0/0 +
+one warning per process; `thinking` dropped + one warning; null/empty content and an empty
+choices list normalize to "" so the role's parse raises its usual `MalformedOutputError` with the
+tokens). The seven real role classes keep their prompts, parses, `clamp_typology` /
+`salvage_confidence`, and their pinned `"<role> call failed"` wrappers, and ask the backend for
+the completion; `build_providers` builds ONE backend shared by the bundle's roles (both SDK
+clients thread-safe across the gate's executor threads) and logs the backend + HOSTS once (never a
+key); the three judge-shaped factories build their own. `RealDialogueProvider.stream_prose`
+drives the backend's generator with an explicit `next()` loop so the first-token fence and the
+raise-before-first-yield vs raise-after contracts stand by construction, `GeneratorExit` passing
+through untouched. `RealEmbeddingProvider`: the model knob, the base URL, `dimensions=1536`,
+`encoding_format` left at the SDK's base64 default (hosted bytes unchanged), the ruled width fit,
+tokens honest. Wire decisions recorded: `max_tokens` is the field local servers document —
+hosted OpenAI's reasoning-class models that demand `max_completion_tokens` are a documented
+limitation, not engineered around (live evidence below).
+
+**Mechanics — the per-agent purge.** `app\db.py`: the C6 statement list hoisted into ONE
+set-scoped helper `_delete_memory_rows` (`WHERE memory_id = ANY(%s)`, the forced FK order:
+corrections → reconstruction_cache → memory_fact_versions → memory_enrichment_runs →
+memory_gist_spans → memory_details → memories) reached by both verbs — `purge_memory` passes a
+single id (identical semantics; its SQL text changed, so `verify_purge` A–G re-verified).
+`purge_agent_memories`: the agents row `FOR NO KEY UPDATE` (the existence check, serializing
+concurrent agent purges and `merge_agent_config` WITHOUT conflicting with the FK KEY SHARE every
+agent-scoped writer takes — a plain `FOR UPDATE` would have added a NEW deadlock class against
+`apply_enrichment`'s novel-component path), then the agent's memory rows `FOR UPDATE` (the C6
+rationale), then the shared delete; `AgentPurgeOutcome` / `AgentPurgeResult` with
+`memories_deleted` + the summed per-table counts (`PurgeResult`'s field names);
+`IngestService.purge_agent_memories` (timed; `UnknownAgentError` → 404); the eighteenth route.
+Consequences stated in the docstring: an observe already in flight at purge time survives
+(indistinguishable from one arriving a millisecond after commit — the integrator stops feeding
+an agent before purging it); the deferred worker's `SKIP LOCKED` claim skips rows the purge
+holds, and a row claimed earlier and completed later lands its `not_pending` no-op.
+
+**Tests + walkers.** `tests\provider_transport.py` — canned in-process HTTP for the REAL
+classes (`httpx.MockTransport` as the SDK clients' `http_client`: the OpenAI chat completion
+as JSON and SSE with a trailing usage chunk, the embeddings list in base64 float32, the
+Anthropic message as JSON and the six-event SSE sequence; 4xx-only error fixtures because both
+SDKs retry 5xx/408/409/429 with backoff sleeps). **Set Q** (`test_set_q_provider_path.py`, 26
+scenarios, unmarked, no DB, offline + keyless) and **the sixteenth walker**
+`verify_provider_path.py` (40 assertions, sections A–H: the config matrix, offline wiring, the
+openai round-trips per role, streaming + usage + error contracts + the small-model hardening,
+the Anthropic request-shape PINS — today's bytes, so the seam move is provable — the embedding
+width fit, a served dialogue turn over mock-backed real providers, and the ruling's named failure
+mode made structural: a small model's empty output landing as `scoring_failed` through the
+ingest ladder). **Set P +7** (14) and **`verify_purge` section H** (+15, 36) for the per-agent
+verb: summed counts, the seven tables empty for both ids, a co-resident agent intact, the
+survival boundary widened to a reflection whose every source dangles plus its bundle and both
+run logs, the all-zero outcome, unknown → None/404, the wire contract (200 + counts, re-DELETE
+200 with zeros, 404, 422, the per-memory verb 404ing on a bulk-erased id). Suite 193 → 226
+full / 178 → 211 subset; the full suite green twice (determinism); the serial sweep on a fresh
+scratch green: `verify_write_path` 53, `verify_cli_harness` 51, `verify_reconstruction` 46,
+`verify_purge` 36, `verify_provider_path` 40.
+
+**Live beats (the ruled substrate; every beat on a pid-scoped scratch, the server launched with
+the env injected and keys never printed).** (a) **Fake mode, the purge beat:** create agent →
+two observes → a turn (items with IDs + scores) → the SSE turn → agent state → `DELETE
+/v1/agents/{id}/memories` 200 (`memories_deleted` 2, details 2, facts 2, spans 3) → the
+per-agent read `total_count` 0 → re-DELETE 200 with zeros → agent state still 200 → unknown 404.
+(b) **The Anthropic path with the real key, after the seam move:** the startup line
+`model backend=anthropic host=api.anthropic.com; embedding model=text-embedding-3-small
+host=api.openai.com`; both observes 200 with parsed JSON (importance 0.25 / 0.85, typology
+`observed` inferred, 5 / 4 gist spans, write tokens 182→96 / 179→102, escalation 164→166 /
+211→192), the turn 200 (177→47 tokens, first word 545 ms, perceived 1177 ms), the SSE turn 3
+chunks + result, the purge 200 (spans 9) — today's bytes still work. (c) **Hosted OpenAI
+through the base-URL path, `gpt-4.1-mini`:** the startup line `model backend=openai
+host=api.openai.com`; both observes 200 with parsed JSON (importance 0.7 / 0.9, 4 / 5 spans,
+write tokens 171→79 / 170→56), the turn 200 with usage delivered through the stream (157→28,
+first word 984 ms), the SSE turn 29 chunks + result, the purge 200 — the reference
+implementation passes. (d) **Hosted OpenAI, `gpt-5-mini` (reasoning-class) — the documented
+limitation reproduced exactly:** every LLM call 400 `Unsupported parameter: 'max_tokens' is not
+supported with this model. Use 'max_completion_tokens' instead`; the system degraded by the
+ruled ladder and rejected nothing — both observes 200 with `scoring_failed` + `escalation_failed`
+at neutral importance (the hosted embedding still 18 / 17 tokens), the turn served the
+never-blank fallback (3 chars, 0/0 tokens), the SSE turn a lone `result` event, the purge 200.
+(e) **Ollama, `llama3.2:3b` + `nomic-embed-text` (768-wide — the padding branch):** Ollama was
+absent on the machine and installed in the session (`winget install Ollama.Ollama`, announced;
+the server started by hand with `OLLAMA_CONTEXT_LENGTH=16384`, version 0.33.2); the startup
+line `model backend=openai host=127.0.0.1:11434; embedding model=nomic-embed-text`; both
+observes 200 with parsed JSON on a 3B model under JSON mode (importance 0.8 / 0.8, `observed`,
+3 / 5 spans, escalation parsed; the first call 99.7 s cold — model load on CPU — the second 4.1
+s), the turn 200 with usage through the stream (161→30; first word 434 ms, perceived 9.4 s on
+CPU), the SSE turn 6 chunks + result, the purge 200 (spans 8) — and the warn-once
+**`embedding model 'nomic-embed-text' emits 768-wide vectors; zero-padded to the locked 1536`**
+fired exactly once: Ollama answered a `dimensions=1536` request ABOVE the model's native width
+with the native 768 (no error), so the fit padded it and retrieval served both memories with
+IDs + scores. (f) **Ollama, `llama3.1:8b` + `qwen3-embedding:4b` (Matryoshka, 2560 native —
+the `dimensions` branch):** both observes 200 with parsed JSON (importance 0.85 / 0.85, 5 / 2
+spans; 43 s / 58 s per observe on CPU), the turn 200 (159→33; first word 10.7 s on CPU), the
+SSE turn 25 chunks + result, the purge 200 (spans 7); NO padding warning — the server truncated
+to exactly 1536 as requested. **The pre-ruled fallback (drop `dimensions` on the base-URL path
+if Ollama rejected an oversize request) was NOT triggered:** `dimensions=1536` stays on both
+paths, and both fit branches are now observed live. The local latencies are a CPU-only laptop's
+numbers, recorded for honesty, never a headline.
+
+**Verified (independent floor-verifier, PASS on all nine criteria — floors row 33, plus the
+dated re-verification note on row 30).** It re-ran everything itself: ruff check + format
+clean (67 files); the suite **226** green twice (warning summaries byte-identical, all 14
+third-party) and the **211** subset; ALL SIXTEEN walkers serially, elder-first, on a fresh
+pid-scoped scratch it provisioned and dropped (migrate a no-op "8 applied, 0 pending" before
+and after; no 009) — write 53, read 56, cli-harness 51, gate 51, reconstruction 46, authorial
+34, fact 34, deferred 51, reflection 60, compiler 48, dissonance 38, agent_state 26, purge
+**36**, concurrency 11, prewarm 14, provider_path **40**; the invariant audit (the only content
+DELETEs in `app\` are the seven set-scoped statements inside `_delete_memory_rows`, reached by
+the two verbs; the git diff adds the seven `= ANY(%s)` DELETEs + the two locks and removes the
+seven per-memory DELETEs, zero new in-place UPDATE; the only model/URL literals are the
+embedding default, the two explicit hosted base URLs, and the placeholder key; fake mode
+keyless under both selectors; 12 loud config rows each a `ConfigError` by direct probe, 6 quiet
+rows load; the Anthropic parity pins green); the route count 18; real-mode boot parity (the
+current `.env` loads backend `anthropic`, `.env.example` loads fake); its own live fake-mode
+beat and its own Ollama beat (`llama3.2:3b` + `nomic-embed-text`: the padding warn-once, real
+usage, the purge); the product DB pristine before and after (14 content tables at 0, ledger
+001–008 byte-identical); the docs propagation (226/211, sixteen walkers, eighteen routes, both
+verbs in the invariant, the backend + padding paragraphs). Two stale comment lines it flagged
+(`providers.py`'s module docstring still calling the embedding model locked; `ingest.py`'s
+purge section calling the per-memory verb the only DELETE) were corrected after the pass —
+comment-only, no behavior.
+
+**Adjacent work surfaced, none built (each priced for Jack):** (1) **a token-limit-field knob
+for the openai backend** — the live evidence in (d): hosted OpenAI's reasoning-class models
+reject `max_tokens`; the leanest fix is ONE explicit env var naming the field
+(`TWICETOLD_MODEL_TOKEN_LIMIT_FIELD` = `max_tokens` | `max_completion_tokens`, default the
+former — the field local servers document), ~10 lines + a config row + two scenarios; host
+sniffing and retry-on-error-text were rejected as magic; recommended. (2) Timeout / retry
+knobs — both SDK clients default to 2 retries with backoff and a 600 s read timeout, so a dead
+local server costs ~15 s per call before `ProviderCallError` (parity with the Anthropic path
+today). (3) A cross-backend compare arm (`_ARM_ALLOWED_KEYS` gaining the backend keys) so the
+harness can grade a local model against the slate — the judge would follow the arm's backend
+unless split. (4) A `DeadlockDetected` retry-once at the purge service layer for the inherited
+inversion (~8 lines). (5) `reasoning_effort` for the judge on the openai backend (the
+analogue of adaptive thinking). (6) A temperature knob — nothing is sent on either backend and
+local defaults differ (Ollama 0.8), which affects JSON reliability. (7) A balanced-object
+lenient parser (the first `{…}`) for chatty small models. (8) The startup width probe (one
+embed call at boot, failing loud on a wrong width) — declined for this build so real-mode boot
+stays call-free. (9) Cosmetic, pre-existing: the dialogue seam prefixes the provider's
+`prose call failed:` message with its own, so logs read `prose call failed: prose call failed:
+…` (`app\dialogue.py:491`). (10) The walkers' shared fixed-name scratch refactor — carried,
+unruled, unchanged.
