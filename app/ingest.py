@@ -67,6 +67,7 @@ from app.providers import (
 )
 from app.schemas import (
     AffectOut,
+    AgentPurgeResult,
     CorrectionRequest,
     CorrectionResult,
     CreateAgentRequest,
@@ -751,6 +752,30 @@ class IngestService:
             raise UnknownMemoryError(f"unknown memory_id {memory_id}")
         return PurgeResult(
             memory_id=outcome.memory_id,
+            corrections_deleted=outcome.corrections_deleted,
+            cache_rows_evicted=outcome.cache_rows_evicted,
+            fact_versions_deleted=outcome.fact_versions_deleted,
+            enrichment_runs_deleted=outcome.enrichment_runs_deleted,
+            gist_spans_deleted=outcome.gist_spans_deleted,
+            details_deleted=outcome.details_deleted,
+            total_ms=_ms(time.perf_counter() - t_total),
+        )
+
+    async def purge_agent_memories(self, agent_id: UUID) -> AgentPurgeResult:
+        """Hard-delete every memory of one agent (the per-agent purge verb,
+        ruled 2026-09-01 — the thin extension of C6): the same seven-table
+        delete, set-scoped, in one transaction. Returns the summed counts;
+        raises UnknownAgentError (→ 404) on an unknown agent, nothing
+        deleted; a known agent with no memories returns zeros. The agent,
+        its identity, and its reflections survive by design (purge
+        honesty)."""
+        t_total = time.perf_counter()
+        outcome = await db.purge_agent_memories(self._pool, agent_id)
+        if outcome is None:
+            raise UnknownAgentError(f"unknown agent_id {agent_id}")
+        return AgentPurgeResult(
+            agent_id=outcome.agent_id,
+            memories_deleted=outcome.memories_deleted,
             corrections_deleted=outcome.corrections_deleted,
             cache_rows_evicted=outcome.cache_rows_evicted,
             fact_versions_deleted=outcome.fact_versions_deleted,

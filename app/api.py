@@ -50,6 +50,7 @@ from app.reflection import (
 from app.retrieval import RetrievalService
 from app.schemas import (
     AgentMemoriesResult,
+    AgentPurgeResult,
     AgentStateResult,
     CorrectionRequest,
     CorrectionResult,
@@ -327,6 +328,26 @@ async def purge_memory(memory_id: UUID) -> PurgeResult:
     try:
         return await app.state.service.purge_memory(memory_id)
     except UnknownMemoryError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.delete("/v1/agents/{agent_id}/memories", response_model=AgentPurgeResult)
+async def purge_agent_memories(agent_id: UUID) -> AgentPurgeResult:
+    """The per-agent purge verb (ruled 2026-09-01 as the thin extension of
+    the C6 carve-out; contract ruled 2026-09-02) — the second and last
+    sanctioned content DELETE. Hard-removes every memory of one agent and
+    everything beneath each (both chains, gist spans, corrections, caches,
+    enrichment runs) in one transaction, returning the summed per-table
+    counts; the agent row, its identity, its reflections (dangling
+    provenance — purge honesty), bundles, and run logs survive. A known agent
+    with no memories is a 200 with zeros; no guard, no migration, no client
+    verb (server-only, like C6). Not a GDPR button by itself: memories
+    attach to NPC agents, not players, so the integrator owns the
+    player-to-memory mapping (the F1 docs carry the nuance). 404 on unknown;
+    422 on a malformed id (FastAPI); pass-through by the api.py contract."""
+    try:
+        return await app.state.service.purge_agent_memories(agent_id)
+    except UnknownAgentError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 

@@ -383,6 +383,198 @@ async def run(uri: str) -> None:
             r422 = await client.delete("/v1/memories/not-a-uuid")
             check(r422.status_code == 422, "G4 malformed memory_id -> 422")
 
+        # ------------------------------------------------------------------ #
+        print("\n-- H. the per-agent purge (ruled 2026-09-01/02): the thin extension")
+        from app.ingest import UnknownAgentError
+
+        bulk = await make_agent(pool, "bulk")
+        bulk_component = await seed_component(pool, bulk)
+        first = await seed_memory(pool, bulk, "the bulk agent's first memory")
+        second = await seed_memory(pool, bulk, "the bulk agent's second memory")
+        await add_children(pool, first, bulk_component)
+        await add_children(pool, second, bulk_component)
+        bulk_reflection = await seed_reflection(pool, bulk, [first, second])
+        async with pool.connection() as conn, conn.cursor() as cur:
+            await cur.execute(
+                "INSERT INTO compiled_bundles (agent_id, reflection_id, "
+                "scene_type, w_relevance, w_recency, w_importance, passthrough) "
+                "VALUES (%s, %s, 'default', 1.0, 1.0, 1.0, '{}') RETURNING bundle_id",
+                (bulk, bulk_reflection),
+            )
+            bulk_bundle = (await cur.fetchone())[0]
+        await db.insert_reflection_run(
+            pool,
+            db.ReflectionRunRecord(
+                agent_id=bulk,
+                outcome="completed",
+                error=None,
+                reflections_written=1,
+                dropped_ungrounded=0,
+                consolidation_ran=False,
+                consolidation_failed=False,
+                rrr=0.0,
+                rrr_blocked=False,
+                pruned_components=0,
+                evicted_cache_rows=0,
+                pressure_before=1.0,
+                pressure_after=0.0,
+                reflect_ms=1.0,
+                consolidation_ms=0.0,
+                insert_ms=1.0,
+                total_ms=2.0,
+                reflect_input_tokens=10,
+                reflect_output_tokens=5,
+                consolidation_input_tokens=0,
+                consolidation_output_tokens=0,
+            ),
+        )
+        await db.insert_compiler_run(
+            pool,
+            db.CompilerRunRecord(
+                agent_id=bulk,
+                outcome="completed",
+                error=None,
+                pairs_compiled=1,
+                pairs_failed=0,
+                passthrough_keys_dropped=0,
+                input_tokens=10,
+                output_tokens=5,
+                total_ms=2.0,
+            ),
+        )
+        bystander = await make_agent(pool, "bystander")
+        bystander_component = await seed_component(pool, bystander)
+        bystander_memory = await seed_memory(pool, bystander, "the bystander's one")
+        await add_children(pool, bystander_memory, bystander_component)
+
+        bulk_outcome = await db.purge_agent_memories(pool, bulk)
+        check(
+            bulk_outcome is not None and bulk_outcome.agent_id == bulk,
+            "H1 purge of a known agent returns an outcome echoing the agent_id",
+        )
+        check(
+            bulk_outcome.memories_deleted == 2
+            and bulk_outcome.details_deleted == 4
+            and bulk_outcome.fact_versions_deleted == 4
+            and bulk_outcome.gist_spans_deleted == 2
+            and bulk_outcome.corrections_deleted == 2
+            and bulk_outcome.cache_rows_evicted == 2
+            and bulk_outcome.enrichment_runs_deleted == 2,
+            "H2 the honest SUMMED per-table counts over two full-chain memories",
+        )
+        gone = [await scoped_counts(pool, m) for m in (first, second)]
+        check(
+            all(v == 0 for counts in gone for v in counts.values()),
+            "H3 zero rows remain for either memory_id in any of the seven tables",
+            detail=str(gone),
+        )
+        check(
+            await scoped_counts(pool, bystander_memory) == {"memories": 1, **EXPECTED},
+            "H4 the co-resident agent's memory keeps every row (no collateral)",
+        )
+        arow = await fetchrow(
+            pool, "SELECT count(*) FROM agents WHERE agent_id = %s", bulk
+        )
+        crow = await fetchrow(
+            pool,
+            "SELECT count(*) FROM identity_components WHERE component_id = %s",
+            bulk_component,
+        )
+        check(
+            arow[0] == 1 and crow[0] == 1,
+            "H5 the agent row and its identity_component survive",
+        )
+        rrow = await fetchrow(
+            pool,
+            "SELECT source_memory_ids FROM reflections WHERE reflection_id = %s",
+            bulk_reflection,
+        )
+        brow = await fetchrow(
+            pool,
+            "SELECT count(*) FROM compiled_bundles WHERE bundle_id = %s",
+            bulk_bundle,
+        )
+        runs = await fetchrow(
+            pool,
+            "SELECT (SELECT count(*) FROM reflection_runs WHERE agent_id = %s), "
+            "(SELECT count(*) FROM compiler_runs WHERE agent_id = %s)",
+            bulk,
+            bulk,
+        )
+        check(
+            rrow is not None
+            and first in rrow[0]
+            and second in rrow[0]
+            and brow[0] == 1
+            and tuple(runs) == (1, 1),
+            "H6 the reflection (EVERY source now dangling — purge honesty), its "
+            "bundle, and both run logs survive: purge does not reach reflections "
+            "under either verb",
+        )
+        zero = await db.purge_agent_memories(pool, bulk)
+        check(
+            zero is not None
+            and zero.memories_deleted == 0
+            and zero.details_deleted == 0
+            and zero.corrections_deleted == 0
+            and zero.cache_rows_evicted == 0
+            and zero.fact_versions_deleted == 0
+            and zero.enrichment_runs_deleted == 0
+            and zero.gist_spans_deleted == 0,
+            "H7 a known agent with nothing left purges to an all-zero outcome "
+            "(the 200), never None",
+        )
+        check(
+            await db.purge_agent_memories(pool, uuid4()) is None,
+            "H8 an unknown agent_id purges to None (the 404 source)",
+        )
+        try:
+            await svc.purge_agent_memories(uuid4())
+            fail("H9 the service raises UnknownAgentError", "no exception")
+        except UnknownAgentError:
+            ok("H9 the service raises UnknownAgentError (the route's 404 source)")
+        wired_agent = await make_agent(pool, "wired-bulk")
+        wired_component = await seed_component(pool, wired_agent)
+        wired_memory = await seed_memory(pool, wired_agent, "a wired bulk memory")
+        await add_children(pool, wired_memory, wired_component)
+        async with httpx.AsyncClient(
+            transport=transport, base_url="http://walker"
+        ) as client:
+            resp = await client.delete(f"/v1/agents/{wired_agent}/memories")
+            body = resp.json()
+            check(
+                resp.status_code == 200
+                and body["agent_id"] == str(wired_agent)
+                and body["memories_deleted"] == 1
+                and body["details_deleted"] == 2
+                and body["fact_versions_deleted"] == 2
+                and body["gist_spans_deleted"] == 1
+                and body["corrections_deleted"] == 1
+                and body["cache_rows_evicted"] == 1
+                and body["enrichment_runs_deleted"] == 1
+                and "total_ms" in body,
+                "H10 DELETE /v1/agents/{id}/memories returns 200 with the counts",
+                detail=f"{resp.status_code} {body}",
+            )
+            check(
+                all(v == 0 for v in (await scoped_counts(pool, wired_memory)).values()),
+                "H11 the wired agent's memory is erased after the route call",
+            )
+            again = await client.delete(f"/v1/agents/{wired_agent}/memories")
+            check(
+                again.status_code == 200 and again.json()["memories_deleted"] == 0,
+                "H12 a re-DELETE is 200 with zeros",
+            )
+            r404 = await client.delete(f"/v1/agents/{uuid4()}/memories")
+            check(r404.status_code == 404, "H13 unknown agent_id -> 404")
+            r422 = await client.delete("/v1/agents/not-a-uuid/memories")
+            check(r422.status_code == 422, "H14 malformed agent_id -> 422")
+            purged = await client.delete(f"/v1/memories/{first}")
+            check(
+                purged.status_code == 404,
+                "H15 the per-memory verb 404s on an id the bulk verb erased",
+            )
+
         print(f"\nALL CHECKS PASSED ({len(PASSED)} assertions)")
     finally:
         await pool.close()

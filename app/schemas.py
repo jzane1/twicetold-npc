@@ -348,6 +348,26 @@ class PurgeResult(BaseModel):
     total_ms: float
 
 
+class AgentPurgeResult(BaseModel):
+    """Result of DELETE /v1/agents/{agent_id}/memories (the per-agent purge,
+    ruled 2026-09-01 as the thin extension of the C6 carve-out; contract
+    ruled 2026-09-02): how many memories went plus the SUMMED per-table
+    child counts (PurgeResult's field names). A known agent with no memories
+    returns all zeros (200, never 404); the agent row, its identity,
+    reflections, bundles, and run logs are untouched, so none appears here;
+    404 (not this body) on an unknown agent."""
+
+    agent_id: UUID
+    memories_deleted: int
+    corrections_deleted: int
+    cache_rows_evicted: int
+    fact_versions_deleted: int
+    enrichment_runs_deleted: int
+    gist_spans_deleted: int
+    details_deleted: int
+    total_ms: float
+
+
 # ---------------------------------------------------------------------------
 # Reflection (docs\reflection.md; the C2 rulings dated 2026-08-15)
 # ---------------------------------------------------------------------------

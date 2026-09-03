@@ -19,11 +19,14 @@ unread.) DELETEs are of two kinds. The reconstruction-cache evictions in
 `apply_authorial_correction`, `apply_diegetic_correction`, `apply_enrichment`,
 and `apply_reflection` remove derived rows, not memory content (the standing
 eviction invariant, authorial-correction.md: any chain writer outside the
-reconstruction path evicts). The SOLE content DELETE is `purge_memory` (C6,
-ruled 2026-08-18) — the one sanctioned exception to never-DELETE: the GDPR
-purge verb hard-removes one memory and every row beneath it in one
-transaction; reflections derived from it survive as aggregate work-product
-(their un-FK'd `source_memory_ids` may dangle, by design).
+reconstruction path evicts). The SOLE content DELETE is the purge carve-out —
+`purge_memory` (C6, ruled 2026-08-18) and its per-agent extension
+`purge_agent_memories` (ruled 2026-09-01, contract 2026-09-02), both over the
+ONE statement list in `_delete_memory_rows` — the one sanctioned exception
+to never-DELETE: the GDPR purge verbs hard-remove a memory (or every memory
+of one agent) and every row beneath it in one transaction; reflections
+derived from purged memories survive as aggregate work-product (their
+un-FK'd `source_memory_ids` may dangle, by design).
 
 Two chains under one memory_id since migration 002: the telling chain
 (memory_details) and the fact chain (memory_fact_versions — basis text +
@@ -2661,9 +2664,12 @@ async def fetch_recent_compiler_runs(
 # memory-child tables clear before the memories row. Reflections derived from
 # the memory SURVIVE as aggregate work-product (their un-FK'd source_memory_ids
 # may dangle — purge honesty, migration-01.md:132); the agent, its identity,
-# reflections, and compiled bundles are untouched. Per-memory by ruling: purge
-# does NOT reach reflections (the parameter-compiler.md C6 note, closed
-# 2026-08-18).
+# reflections, and compiled bundles are untouched. Purge does NOT reach
+# reflections (the parameter-compiler.md C6 note, closed 2026-08-18) — under
+# either verb: the per-memory C6 verb, or the per-agent bulk verb added by the
+# provider-path session (ruled 2026-09-01 as a thin extension of this
+# carve-out; its contract ruled 2026-09-02), which runs the SAME statement
+# list over every memory of one agent.
 # ---------------------------------------------------------------------------
 
 
@@ -2682,6 +2688,63 @@ class PurgeOutcome:
     details_deleted: int
 
 
+@dataclass(frozen=True)
+class _PurgeCounts:
+    """Per-table rowcounts of one child-before-parent delete over a set of
+    memory ids — the shared statement list behind both purge verbs."""
+
+    corrections: int
+    cache: int
+    facts: int
+    enrichment: int
+    spans: int
+    details: int
+    memories: int
+
+
+async def _delete_memory_rows(cur, memory_ids: list[UUID]) -> _PurgeCounts:
+    """The seven child-before-parent DELETEs, set-scoped (`= ANY(%s)`), in
+    the order the schema's bare (NO ACTION) foreign keys force: corrections
+    (references memory_details AND memories) -> reconstruction_cache ->
+    memory_fact_versions -> memory_enrichment_runs -> memory_gist_spans ->
+    memory_details -> memories. ONE delete order in one place, reached by
+    both purge verbs (the per-memory verb passes a single id); an empty set
+    short-circuits to zeros without touching the database. Runs inside the
+    caller's transaction, after the caller's locks."""
+    if not memory_ids:
+        return _PurgeCounts(0, 0, 0, 0, 0, 0, 0)
+    ids = list(memory_ids)
+    await cur.execute("DELETE FROM corrections WHERE memory_id = ANY(%s)", (ids,))
+    corrections = cur.rowcount
+    await cur.execute(
+        "DELETE FROM reconstruction_cache WHERE memory_id = ANY(%s)", (ids,)
+    )
+    cache = cur.rowcount
+    await cur.execute(
+        "DELETE FROM memory_fact_versions WHERE memory_id = ANY(%s)", (ids,)
+    )
+    facts = cur.rowcount
+    await cur.execute(
+        "DELETE FROM memory_enrichment_runs WHERE memory_id = ANY(%s)", (ids,)
+    )
+    enrichment = cur.rowcount
+    await cur.execute("DELETE FROM memory_gist_spans WHERE memory_id = ANY(%s)", (ids,))
+    spans = cur.rowcount
+    await cur.execute("DELETE FROM memory_details WHERE memory_id = ANY(%s)", (ids,))
+    details = cur.rowcount
+    await cur.execute("DELETE FROM memories WHERE memory_id = ANY(%s)", (ids,))
+    memories = cur.rowcount
+    return _PurgeCounts(
+        corrections=corrections,
+        cache=cache,
+        facts=facts,
+        enrichment=enrichment,
+        spans=spans,
+        details=details,
+        memories=memories,
+    )
+
+
 async def purge_memory(
     pool: AsyncConnectionPool, memory_id: UUID
 ) -> PurgeOutcome | None:
@@ -2691,8 +2754,10 @@ async def purge_memory(
     A SELECT ... FOR UPDATE opens the transaction: it is the clean unknown-id
     check before any DELETE runs, and it locks the target so a concurrent
     correction / enrichment / reconstruction on the same memory cannot
-    interleave with the delete. The child-before-parent order below is forced
-    by the schema's bare (NO ACTION) foreign keys."""
+    interleave with the delete. The seven child-before-parent statements
+    live in `_delete_memory_rows` (shared with the per-agent verb since the
+    provider-path session, 2026-09-02) — the order the schema's bare
+    (NO ACTION) foreign keys force."""
     async with pool.connection() as conn:
         async with conn.transaction():
             async with conn.cursor() as cur:
@@ -2702,43 +2767,89 @@ async def purge_memory(
                 )
                 if await cur.fetchone() is None:
                     return None
-                await cur.execute(
-                    "DELETE FROM corrections WHERE memory_id = %s", (memory_id,)
-                )
-                corrections = cur.rowcount
-                await cur.execute(
-                    "DELETE FROM reconstruction_cache WHERE memory_id = %s",
-                    (memory_id,),
-                )
-                cache = cur.rowcount
-                await cur.execute(
-                    "DELETE FROM memory_fact_versions WHERE memory_id = %s",
-                    (memory_id,),
-                )
-                facts = cur.rowcount
-                await cur.execute(
-                    "DELETE FROM memory_enrichment_runs WHERE memory_id = %s",
-                    (memory_id,),
-                )
-                enrichment = cur.rowcount
-                await cur.execute(
-                    "DELETE FROM memory_gist_spans WHERE memory_id = %s",
-                    (memory_id,),
-                )
-                spans = cur.rowcount
-                await cur.execute(
-                    "DELETE FROM memory_details WHERE memory_id = %s", (memory_id,)
-                )
-                details = cur.rowcount
-                await cur.execute(
-                    "DELETE FROM memories WHERE memory_id = %s", (memory_id,)
-                )
+                counts = await _delete_memory_rows(cur, [memory_id])
     return PurgeOutcome(
         memory_id=memory_id,
-        corrections_deleted=corrections,
-        cache_rows_evicted=cache,
-        fact_versions_deleted=facts,
-        enrichment_runs_deleted=enrichment,
-        gist_spans_deleted=spans,
-        details_deleted=details,
+        corrections_deleted=counts.corrections,
+        cache_rows_evicted=counts.cache,
+        fact_versions_deleted=counts.facts,
+        enrichment_runs_deleted=counts.enrichment,
+        gist_spans_deleted=counts.spans,
+        details_deleted=counts.details,
+    )
+
+
+@dataclass(frozen=True)
+class AgentPurgeOutcome:
+    """The per-agent purge's counts: how many memories went and the SUMMED
+    per-table child counts (the PurgeOutcome field names). Returned for any
+    KNOWN agent — zero memories is a legal all-zero outcome (a 200), never
+    None; an unknown agent yields None (a 404)."""
+
+    agent_id: UUID
+    memories_deleted: int
+    corrections_deleted: int
+    cache_rows_evicted: int
+    fact_versions_deleted: int
+    enrichment_runs_deleted: int
+    gist_spans_deleted: int
+    details_deleted: int
+
+
+async def purge_agent_memories(
+    pool: AsyncConnectionPool, agent_id: UUID
+) -> AgentPurgeOutcome | None:
+    """Hard-delete every memory of one agent and everything beneath each, in
+    one transaction — the per-agent purge verb (ruled 2026-09-01 as the thin
+    extension of the C6 carve-out; its contract ruled 2026-09-02). Returns
+    None when the agent is unknown (→ 404), nothing deleted; a known agent
+    with no memories returns an all-zero outcome (→ 200).
+
+    Locks, in this order: the agents row FOR NO KEY UPDATE — the existence
+    check, which also serializes concurrent agent purges and
+    merge_agent_config WITHOUT conflicting with the FK KEY SHARE every
+    agent-scoped writer takes (a plain FOR UPDATE would add a deadlock class
+    against apply_enrichment's novel-component path: memories row held ->
+    wants agents); then the agent's memory rows FOR UPDATE (the C6 rationale:
+    no concurrent correction / enrichment / reconstruction interleaves with
+    the delete). Consequences stated honestly: an observe already in flight
+    (its KEY SHARE taken, uncommitted) is invisible to the collect and
+    survives — indistinguishable from one arriving a millisecond after
+    commit, so the integrator stops feeding an agent before purging it; the
+    C6-era inversion against the details-first writers (they lock a
+    memory_details row, then need the memories row) is inherited — Postgres
+    detects the cycle and aborts one side, the purge rolling back clean with
+    nothing deleted; the deferred worker's SKIP LOCKED claim skips rows this
+    transaction holds, and a row it claimed earlier and completes later finds
+    enrichment_pending gone and lands its not_pending no-op.
+
+    Survival boundary (the C6 stance): the agents row, identity_components,
+    identity_documents, reflections (every source_memory_ids entry may now
+    dangle — purge honesty), reflection_runs, compiled_bundles, and
+    compiler_runs are untouched."""
+    async with pool.connection() as conn:
+        async with conn.transaction():
+            async with conn.cursor() as cur:
+                await cur.execute(
+                    "SELECT 1 FROM agents WHERE agent_id = %s FOR NO KEY UPDATE",
+                    (agent_id,),
+                )
+                if await cur.fetchone() is None:
+                    return None
+                await cur.execute(
+                    "SELECT memory_id FROM memories WHERE agent_id = %s "
+                    "ORDER BY memory_id FOR UPDATE",
+                    (agent_id,),
+                )
+                memory_ids = [row[0] for row in await cur.fetchall()]
+                counts = await _delete_memory_rows(cur, memory_ids)
+    return AgentPurgeOutcome(
+        agent_id=agent_id,
+        memories_deleted=counts.memories,
+        corrections_deleted=counts.corrections,
+        cache_rows_evicted=counts.cache,
+        fact_versions_deleted=counts.facts,
+        enrichment_runs_deleted=counts.enrichment,
+        gist_spans_deleted=counts.spans,
+        details_deleted=counts.details,
     )
