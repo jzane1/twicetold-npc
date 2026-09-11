@@ -101,6 +101,7 @@ its surrounding spaces both become hyphens, so `Name — 2026-07-28` anchors as 
 - [The rename — longmem-npc → twicetold-npc — 2026-09-02](#the-rename--longmem-npc--twicetold-npc--2026-09-02)
 - [The provider-path + per-agent-purge build — the OpenAI-compatible backend and the per-agent purge verb landed — 2026-09-02](#the-provider-path--per-agent-purge-build--the-openai-compatible-backend-and-the-per-agent-purge-verb-landed--2026-09-02)
 - [F1 — the full README build — 2026-09-03](#f1--the-full-readme-build--2026-09-03)
+- [The token-limit-field knob — TWICETOLD_MODEL_TOKEN_LIMIT_FIELD landed plan-to-re-verify — 2026-09-11](#the-token-limit-field-knob--twicetold_model_token_limit_field-landed-plan-to-re-verify--2026-09-11)
 
 ## Primary decisions
 
@@ -5093,4 +5094,72 @@ showcase, 1260x762); the opening example realigned from the drovers to the wool 
 it; `docs\media\retelling-drift.gif` dropped (superseded by the static ruling; never
 committed). Em-dash count 0, links resolve. The agent-framing/loop reframe is the standing next
 step; Jack's deep review remains the gate before any push.
+
+## The token-limit-field knob — TWICETOLD_MODEL_TOKEN_LIMIT_FIELD landed plan-to-re-verify — 2026-09-11
+
+**Context.** Ruled 2026-09-03 (the F1 batch, ruling 8) as its own half-session target before F2,
+with the README-touch rider. The 2026-09-02 live evidence: hosted `gpt-5-mini` 400'd every LLM
+call under `max_tokens` ("Use 'max_completion_tokens' instead") while `gpt-4.1-mini` and local
+servers accept `max_tokens`; host sniffing and retry-on-error-text were rejected as magic at the
+provider-path entry. Jack picked this target ahead of the deep-review/reframe step (his call at
+the session's queue question); the review stays the push gate, and this build's README sentence
+joins the text under that review. No spec doc — the approved plan is the spec (the C5/C6/C7
+precedent).
+
+**Forks ruled (Jack, 2026-09-11, one plan-mode batch of three; every recommendation taken):**
+
+1. **The config guard: refuse only the un-honorable combo** — `max_completion_tokens` under the
+   anthropic backend is a load-time `ConfigError` (that backend's wire field is always
+   `max_tokens`); an explicit `max_tokens` under anthropic is harmless and loads. The
+   dialogue-thinking-guard logic; `.env.example` ships the row filled with the default and still
+   boots. Beat "no guard" (a silent-misconfig window) and "refuse any explicit set" (an
+   out-of-box error on a harmless value, an empty template row).
+2. **Re-verify evidence: offline + one live hosted `gpt-5-mini` beat with the knob flipped** —
+   the offline tests byte-assert the wire body through the real SDK, and one cheap live call
+   closes the loop on the exact model that produced the 400. Beat offline-only (the "gpt-5-mini
+   now works" claim would stay inferred).
+3. **README counts swept in the same pass** — the verification row and prose move to 228/213
+   (as-of 2026-09-11) beside the ruled one-line touch; SETUP/test-suite/status update
+   regardless as the count-of-record. Beat strictly-the-one-line.
+
+**Build record.** One enum knob, wire-field-name only, per-role VALUES untouched:
+`TWICETOLD_MODEL_TOKEN_LIMIT_FIELD` = `max_tokens` (default; the field local servers document)
+| `max_completion_tokens` (hosted OpenAI's reasoning-class models). `app\config.py`: constants,
+the frozen `Settings.model_token_limit_field`, parse `.strip().lower()` + enum loud in BOTH
+modes (the backend-selector precedent), the ruled guard beside the anthropic cross-checks, the
+process-env override allowlist (seventh key), the return kwargs. `app\providers.py`:
+`OpenAIChatBackend` takes `token_limit_field`, places the value via
+`kwargs[self._token_limit_field]` in `complete()` and `**{self._token_limit_field: max_tokens}`
+in `stream()` — no literal field name at either request site; `build_chat_backend` threads it
+on the openai branch only; `AnthropicChatBackend` byte-untouched (its pins re-ran). App diff 51
+insertions / 9 deletions over the two files, no migration, ledger 001–008 unchanged.
+
+**Verification.** Set Q +2 (`test_config_token_limit_field_knob`,
+`test_openai_token_limit_field_flips_wire_field` — presence AND absence asserted, both call
+paths; the mock transport ignores unknown fields, so absence is the load-bearing half) and the
+allowlist scenario now seven keys: suite **228 full / 213 subset**, both green. The walker
+gains A9 (one compound criterion: defaulted, case-folded, enum-loud, the refused combo, the
+flip on both paths) and the seven-key A8: **41/41** on a fresh scratch. The live beat
+(in-process `IngestService` observe on `twicetold_smoke`, all six roles `gpt-5-mini`, backend
+openai, knob flipped): **every hosted call 200 — the 2026-09-02 400s gone** — the write scored
+real (`scoring_failed=false`, `importance_raw` 0.55, typology `observed`); `escalation_failed`
+came back `true` — accepted on the wire, degraded by the documented ladder (reasoning-class
+models spend completion budget on reasoning; the small-model quality story, and the per-role
+VALUES are deliberately not knobs in this build). The row stands in `twicetold_smoke`,
+verifier-inspected. **Independent floor-verifier pass same day, all eight criteria** — the
+provider-path floor re-opened and re-verified, the dated note appended to floors row 33, the
+floor count stays 33.
+
+**Docs.** `.env.example` (the row + the loud-at-load list + the warning tail now names the
+knob), `SETUP.md` §4b wire notes + §6 counts, `architecture.md` §3 (design truth: the wire
+field is a knob), CLAUDE.md's stack-constants paragraph, `test-suite.md` (228 / Set Q 28 / 213
+/ walker 41 + section bullets), README (the ruled sentence — "Hosted reasoning-class models
+want `max_completion_tokens` instead of `max_tokens`; one env var,
+`TWICETOLD_MODEL_TOKEN_LIMIT_FIELD`, flips the field." — plus the ruled count sweep; em-dash
+count stays 0). Append-only registers untouched; row 33's original "26 scenarios / 40
+assertions / max_tokens" wording stays stale on purpose. README's "80 dated rulings" line was
+NOT bumped — its denominator matches neither the entry count nor the TOC count, so it is left
+for the deep review rather than silently reinterpreted here.
+
+**Adjacent, surfaced, none built:** none — the target stayed on its ruled scope.
 

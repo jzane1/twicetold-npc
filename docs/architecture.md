@@ -119,16 +119,19 @@ vLLM, LM Studio, llama.cpp server, OpenRouter, LiteLLM; an optional `TWICETOLD_M
 a placeholder when blank). The same six role vars name the models on either backend. In code
 it is ONE seam: every real role keeps its prompt, its parse, and its error wrapper and asks a
 `ChatBackend` for the completion — `AnthropicChatBackend` or `OpenAIChatBackend` — so no role
-logic is duplicated (`app\providers.py`). Wire decisions on the openai backend: `max_tokens`
-(the field local servers document; hosted OpenAI's reasoning-class models that demand
-`max_completion_tokens` are a documented limitation), `response_format=json_object` on every
+logic is duplicated (`app\providers.py`). Wire decisions on the openai backend: the
+token-limit FIELD is named by `TWICETOLD_MODEL_TOKEN_LIMIT_FIELD` (ruled 2026-09-03, built
+2026-09-11) — `max_tokens`, the default and the field local servers document, or
+`max_completion_tokens`, the field hosted OpenAI's reasoning-class models demand — with the
+per-role VALUES unchanged either way; `response_format=json_object` on every
 structured call (the family's native mitigation for the small-model failure mode the ruling
 names), `stream_options.include_usage` on the dialogue stream, no sampling params (parity);
 a server that reports no usage is counted 0 with one warning per process, and the Anthropic
 thinking kwargs (the dialogue knob, the judge's adaptive thinking) have no equivalent — the
 knob is refused at load under openai, the judge's is dropped with one warning. Misconfigurations
 are loud at `load_settings` (a base URL or key under anthropic, a missing base URL under
-openai); fake mode constructs no client and reads no URL or key. **The small-model quality
+openai, `max_completion_tokens` under anthropic — that backend's wire field is always
+`max_tokens`); fake mode constructs no client and reads no URL or key. **The small-model quality
 warning ships with the knob** (`.env.example`, `SETUP.md` §4b): every measured number was taken
 on the locked Anthropic slate and does not transfer; small local models break the write call's
 JSON and the drift-budgeted reconstruction first, loudly, by the ruled degradation ladder.

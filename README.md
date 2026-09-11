@@ -38,7 +38,7 @@ turn-path role), from a Windows laptop against hosted APIs.
 | The gist-pin ablation | gist precision **0.83 → 0.70** with the pin off | 2026-08-12. The drift budget stayed under threshold in both arms, which is the finding: distance alone cannot see fact damage. |
 | Cost, all-in | **$0.084 per 100 turns** | 2026-08-26. A turn is one dialogue line on the 60-turn load driver, observes included; write, escalation, dialogue and embedding calls are priced from the token counts every payload carries. At 20 turns per player-hour that is about $0.02 an hour. |
 | Perceived first word, p50 | **826–917 ms** | 2026-08-26, five runs across the day. Streamed text, time to first word, no speech in the loop. |
-| Verification | **226** tests (**211** keyless, run at the end of every working turn), **16** walkers, **33** verified floors, a **53**-check C# harness | 2026-09-02 |
+| Verification | **228** tests (**213** keyless, run at the end of every working turn), **16** walkers, **33** verified floors, a **53**-check C# harness | 2026-09-11 |
 | Surface | **18** routes, **8** migrations, **2** model backends, **2** purge verbs | 2026-09-02 |
 
 ## How a turn works
@@ -169,8 +169,9 @@ Ollama, vLLM, LM Studio, OpenRouter. The embedding model name is its own knob; t
 distances stay exact), wider ones refused. One warning I'll repeat from the setup guide: every
 number on this page is the Anthropic slate's and does not transfer, and small local models
 break the write call's JSON and the drift-budgeted reconstruction first, loudly, by a
-documented degradation ladder rather than a rejected request. Known limit: hosted
-reasoning-class models reject `max_tokens`, so use a chat-class model there. Details in
+documented degradation ladder rather than a rejected request. Hosted reasoning-class models
+want `max_completion_tokens` instead of `max_tokens`; one env var,
+`TWICETOLD_MODEL_TOKEN_LIMIT_FIELD`, flips the field. Details in
 [docs/SETUP.md §4b](docs/SETUP.md).
 
 ## Erasing
@@ -215,9 +216,9 @@ this. The short version:
   [docs/floors.md](docs/floors.md) only after an independent verifier pass returns pass: 33
   rows, from the schema to the provider seam. Floors are re-openable; re-verifying one is the
   normal cost of a design improvement.
-- **The suite and the walkers.** 226 pytest scenarios, offline and keyless, structural only
+- **The suite and the walkers.** 228 pytest scenarios, offline and keyless, structural only
   (IDs, chain shape, timestamps, byte-identity; a model's wording is not a test surface), with
-  the 211-scenario fast subset run by a repo hook at the end of every working turn; plus
+  the 213-scenario fast subset run by a repo hook at the end of every working turn; plus
   sixteen deep walkers (`tests\verify_*.py`), one per layer, that prove a layer once at build
   time.
 - **The registers.** An append-only decision register (80 dated rulings, each with what it

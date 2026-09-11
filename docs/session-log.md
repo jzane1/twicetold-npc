@@ -2314,6 +2314,26 @@ session.
     pass (creative work that wants his eye). Abandoned: the motion GIF (superseded). Next: the
     copy reframe + deep review, then the token-limit knob, then F2.
 
+## **The token-limit-field knob — 2026-09-11 (plan-to-re-verify in one half-session; floors row 33 re-verified, no new row).**
+
+- **Landed:** `TWICETOLD_MODEL_TOKEN_LIMIT_FIELD` = `max_tokens` (default) |
+  `max_completion_tokens` — the openai backend's wire-field name, per-role values untouched,
+  Anthropic backend byte-untouched. Jack pulled the target ahead of the deep-review/reframe
+  step at the session's queue question; three spec forks ruled at plan (the
+  refuse-only-the-un-honorable-combo guard, the live-beat re-verify, the README count sweep —
+  all recommendations taken). Set Q +2 (28), suite 228/213, walker A9 + seven-key A8 (41/41
+  fresh), docs swept (.env.example, SETUP §4b, architecture §3, CLAUDE.md, README, test-suite),
+  the ruled README sentence + count sweep in, em-dash count 0 held. Live beat on hosted
+  gpt-5-mini with the knob flipped: every call 200 (the 2026-09-02 400s gone), the write scored
+  real (scoring_failed=false, importance 0.55); escalation_failed=true — accepted on the wire,
+  degraded by the documented ladder (reasoning-class content; values are deliberately not
+  knobs). Independent floor-verifier pass, all eight criteria; the dated note appended to
+  floors row 33 (count stays 33). The full record: the dated `decisions.md` entry.
+- **Blocked:** nothing.
+- **Abandoned:** nothing — the target stayed on its ruled scope. README's "80 dated rulings"
+  line left un-bumped on purpose (its denominator matches neither register count; flagged for
+  the deep review). Next: Jack's deep review + the copy reframe, then F2.
+
 ---
 
 ## Archived phase headers

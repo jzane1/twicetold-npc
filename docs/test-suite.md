@@ -1,11 +1,11 @@
 # twicetold-npc — Test suite spec
 
-**BUILT 2026-07-20 — 226 pytest scenarios today** in `tests\test_*.py` (Sets A–D + degradation +
+**BUILT 2026-07-20 — 228 pytest scenarios today** in `tests\test_*.py` (Sets A–D + degradation +
 hygiene + eval metrics + eval runner + judge + ablation + deferred writes + reflection + the
 parameter compiler + dissonance + agent state + purge + the provider path + the E2 demo
 loader/Ledger feed; the Set A diegetic pair LANDED with the dissonance mechanism, 2026-08-17;
 Set P purge landed with C6, 2026-08-18; Set Q and Set P's per-agent half landed with the
-provider-path session, 2026-09-02). Count as of 2026-09-02:
+provider-path session, 2026-09-02). Count as of 2026-09-11:
 Set A 8,
 Set B 8, Set C 7, Set D 20, degradation 12, hygiene 2, Set G eval metrics 8, **Set H eval
 runner 9** (stage 2, 2026-08-05), **Set I judge 16** (stage 3, 2026-08-07; +2 with the
@@ -15,18 +15,20 @@ config scenarios, 2026-08-15), **Set J ablation 6** (stage 4, 2026-08-12 — its
 **Set L reflection 20** (Phase C2, 2026-08-15), **Set M parameter compiler 21** (Phase C3,
 2026-08-17), **Set N dissonance 23** (Phase C4, 2026-08-17), **Set O agent state 10** (Phase
 C5, 2026-08-17), **Set P purge 14** (Phase C6, 2026-08-18; +7 for the per-agent verb,
-2026-09-02), **Set Q provider path 26** (the provider-path build, 2026-09-02), **demo loader 2 +
+2026-09-02), **Set Q provider path 28** (the provider-path build, 2026-09-02; +2 with the
+token-limit-field knob, 2026-09-11), **demo loader 2 +
 Ledger feed 1** (E2, 2026-08-19) — grown from the 38 built on
 2026-07-20 by the
 route-contract scenarios that arrived with each later route, by the gap-closing and guard
 scenarios from the full-repo audit, and by the eval harness stages 1–4. **Fifteen carry the
 `nlp` marker** (Sets L, M, N, O, P, and Q add none; the E2 demo loader adds one), so the
-turn-end subset runs **211**. *(Counts
+turn-end subset runs **213**. *(Counts
 corrected
 2026-08-12 with the Set K landing — the 2026-08-07 header had drifted again by the stage-4 and
 workaround-session scenarios; updated 2026-08-17 with the Set M, N, and O landings; Set P with
 C6, 2026-08-18; the E2 pair folded in and Set B +1 — the init error-contract closure — at F0,
-2026-08-26; Set P +7 and Set Q +26 with the provider-path session, 2026-09-02.)* Build rulings
+2026-08-26; Set P +7 and Set Q +26 with the provider-path session, 2026-09-02; Set Q +2 with
+the token-limit-field knob, 2026-09-11.)* Build rulings
 2026-07-20
 (dated `decisions.md` entry): the suite-gate Stop hook runs the `-m "not nlp"` subset (the 7
 `nlp`-marked scenarios call the write pass at the service level and pay the lazy
@@ -442,8 +444,9 @@ counts, re-DELETE 200 with zeros, 404, 422, the per-memory verb 404ing on a bulk
 Id-scoped assertions (never a DB-global count); it runs after the elder
 correction/reconstruction walkers in full sweeps (fresh + serial).
 
-The sixteenth walker `tests\verify_provider_path.py` (40 criteria, lettered sections A–H; the
-provider-path build, 2026-09-02) re-proves the OpenAI-compatible provider path OFFLINE and
+The sixteenth walker `tests\verify_provider_path.py` (41 criteria, lettered sections A–H; the
+provider-path build, 2026-09-02; A9 and the seven-key A8 with the token-limit-field knob,
+2026-09-11) re-proves the OpenAI-compatible provider path OFFLINE and
 KEYLESS — the real provider classes driven against canned in-process HTTP handlers
 (`tests\provider_transport.py`, `httpx.MockTransport` injected as the SDK clients'
 `http_client`): the config matrix (A), the offline wiring of the bundle and the lazy factories on
@@ -459,7 +462,7 @@ and H touch the scratch DB; RUN-suffixed, id-scoped, re-runnable.
 
 ## Set Q — the provider path *(added 2026-09-02 with the provider-path build; the rulings in `decisions.md`)*
 
-`tests\test_set_q_provider_path.py` — 26 scenarios, all unmarked, NO database: the real
+`tests\test_set_q_provider_path.py` — 28 scenarios, all unmarked, NO database: the real
 provider classes run against canned in-process HTTP handlers (`tests\provider_transport.py`
 — request-recording `httpx.MockTransport` handlers in the exact wire shapes the SDKs parse:
 the OpenAI chat completion as JSON and as SSE with a trailing usage chunk, the OpenAI
@@ -467,17 +470,21 @@ embeddings list in the SDK's default base64 float32 encoding, the Anthropic mess
 and as the six-event SSE sequence; error fixtures are 4xx only, because both SDKs retry
 5xx/408/409/429 with backoff sleeps). Offline and keyless holds: no socket is ever opened.
 
-- **The config matrix** (8): the defaults (no new var ⇒ anthropic, byte-for-byte; Set I's
+- **The config matrix** (9): the defaults (no new var ⇒ anthropic, byte-for-byte; Set I's
   `REAL_ENV` still loads); the selector enum validated in BOTH modes and case-folded; openai
   needs an http(s) base URL (trailing slash stripped), never an Anthropic key, the model key
   optional and off the repr; a base URL or key under anthropic is loud; the dialogue-thinking
-  knob is refused under openai; the embedding knobs are independent (base URL lifts
-  `OPENAI_API_KEY`, key-without-URL and non-http URL are loud, the model name overrides, the
-  anthropic backend + a routed embedding is a legal mix); fake mode loads the selector with no
-  URL and no key; all six new keys ride the process-env override allowlist.
-- **The openai backend** (9): the write call's request shape (path, bearer placeholder,
-  system + user messages, `max_tokens` 1024, `response_format=json_object`, no stream / thinking
-  / sampling) and every `WriteCallResult` field with the fixture usage; every JSON role
+  knob is refused under openai; the token-limit-field knob (2026-09-11: defaulted on unset and
+  empty, case-folded, enum-loud in both modes, `max_completion_tokens` refused under anthropic
+  while an explicit `max_tokens` there is harmless); the embedding knobs are independent (base
+  URL lifts `OPENAI_API_KEY`, key-without-URL and non-http URL are loud, the model name
+  overrides, the anthropic backend + a routed embedding is a legal mix); fake mode loads the
+  selector with no URL and no key; all seven new keys ride the process-env override allowlist.
+- **The openai backend** (10): the write call's request shape (path, bearer placeholder,
+  system + user messages, `max_tokens` 1024 — the knob's default, `response_format=json_object`,
+  no stream / thinking / sampling) and every `WriteCallResult` field with the fixture usage;
+  with the knob at `max_completion_tokens` the per-role value rides that field on BOTH call
+  paths — non-streaming and streaming — and `max_tokens` is absent (2026-09-11); every JSON role
   round-trips its dataclass with its per-role `max_tokens` (escalation offsets + component id
   with an unlocatable substring dropped; reconstruction's batch-scaled bound; the judge's
   `judge_max_tokens` with adaptive thinking dropped off the wire and warned exactly once;

@@ -45,7 +45,11 @@ client package. This file is rules. Design knowledge lives in docs/ — point, d
   2026-09-02): `TWICETOLD_MODEL_BACKEND` = `anthropic` (default; today's requests byte-for-byte)
   | `openai` (any OpenAI-compatible chat-completions server behind `TWICETOLD_MODEL_BASE_URL`,
   optional `TWICETOLD_MODEL_API_KEY`) for ALL nine LLM roles, one `ChatBackend` seam in
-  `app\providers.py`; the embedding role has its own `TWICETOLD_EMBEDDING_MODEL` (the model NAME
+  `app\providers.py`; the openai backend's token-limit FIELD is the
+  `TWICETOLD_MODEL_TOKEN_LIMIT_FIELD` knob (ruled 2026-09-03, built 2026-09-11):
+  `max_tokens` (default; local servers) | `max_completion_tokens` (hosted reasoning-class
+  models) — field name only, values unchanged, the non-default value refused under anthropic;
+  the embedding role has its own `TWICETOLD_EMBEDDING_MODEL` (the model NAME
   is a knob, default `text-embedding-3-small`; the 1536 DIMENSION stays locked and is fitted at
   the seam — narrower zero-padded, wider refused), `TWICETOLD_EMBEDDING_BASE_URL`, optional key.
   Misconfigurations are loud at load; fake mode reads no URL or key. The small-model quality

@@ -1,6 +1,7 @@
 """Set Q — the provider path (docs\\test-suite.md; the provider-path build
 ruled 2026-09-01, its forks ruled 2026-09-02 — the explicit backend selector,
-zero-padded embedding widths, Anthropic the default byte-for-byte).
+zero-padded embedding widths, Anthropic the default byte-for-byte; the
+token-limit-field knob ruled 2026-09-03, built 2026-09-11).
 
 Structural-only per tests\\CLAUDE.md, and OFFLINE + KEYLESS like the rest of
 the suite: the REAL provider classes run here against canned in-process HTTP
@@ -50,6 +51,7 @@ from app.config import (
     ENV_MODEL_API_KEY,
     ENV_MODEL_BACKEND,
     ENV_MODEL_BASE_URL,
+    ENV_MODEL_TOKEN_LIMIT_FIELD,
     PLACEHOLDER_API_KEY,
     ConfigError,
     load_env,
@@ -199,6 +201,45 @@ def test_config_openai_backend_rejects_dialogue_thinking():
     )
 
 
+def test_config_token_limit_field_knob():
+    """The wire-field knob (ruled 2026-09-03): defaulted on unset and empty,
+    case-folded, enum-validated in BOTH modes; max_completion_tokens under
+    anthropic is the one refused combo (that backend's wire field is always
+    max_tokens), while an explicit max_tokens under anthropic is harmless."""
+    assert load_settings(dict(LOCAL_ENV)).model_token_limit_field == "max_tokens"
+    emptied = load_settings({**LOCAL_ENV, ENV_MODEL_TOKEN_LIMIT_FIELD: ""})
+    assert emptied.model_token_limit_field == "max_tokens"
+    folded = load_settings(
+        {**LOCAL_ENV, ENV_MODEL_TOKEN_LIMIT_FIELD: " MAX_COMPLETION_TOKENS "}
+    )
+    assert folded.model_token_limit_field == "max_completion_tokens"
+    with pytest.raises(ConfigError, match="'max_tokens' or"):
+        load_settings({**LOCAL_ENV, ENV_MODEL_TOKEN_LIMIT_FIELD: "max_output_tokens"})
+    with pytest.raises(ConfigError, match="'max_tokens' or"):
+        load_settings(
+            {
+                "DATABASE_URI": UNREACHABLE_URI,
+                "TWICETOLD_PROVIDER_MODE": "fake",
+                ENV_MODEL_BACKEND: "openai",
+                ENV_MODEL_TOKEN_LIMIT_FIELD: "max_output_tokens",
+            }
+        )
+    with pytest.raises(ConfigError, match="openai wire knob"):
+        load_settings(
+            {**REAL_ENV, ENV_MODEL_TOKEN_LIMIT_FIELD: "max_completion_tokens"}
+        )
+    with pytest.raises(ConfigError, match="openai wire knob"):
+        load_settings(
+            {
+                "DATABASE_URI": UNREACHABLE_URI,
+                "TWICETOLD_PROVIDER_MODE": "fake",
+                ENV_MODEL_TOKEN_LIMIT_FIELD: "max_completion_tokens",
+            }
+        )
+    kept = load_settings({**REAL_ENV, ENV_MODEL_TOKEN_LIMIT_FIELD: "max_tokens"})
+    assert kept.model_token_limit_field == "max_tokens"
+
+
 def test_config_embedding_knobs():
     """The embedding role's knobs are independent of the model backend: the
     model name overrides; a base URL lifts the OPENAI_API_KEY requirement; a
@@ -252,8 +293,8 @@ def test_config_fake_mode_reads_nothing_new():
 
 
 def test_override_allowlist_carries_new_keys(tmp_path, monkeypatch):
-    """All six new keys ride the process-env override allowlist (the C7 knob
-    precedent), so a one-off run can point at a local server without
+    """All seven new keys ride the process-env override allowlist (the C7
+    knob precedent), so a one-off run can point at a local server without
     touching .env."""
     env_file = tmp_path / ".env"
     env_file.write_text(f"DATABASE_URI={UNREACHABLE_URI}\n", encoding="utf-8")
@@ -261,6 +302,7 @@ def test_override_allowlist_carries_new_keys(tmp_path, monkeypatch):
         ENV_MODEL_BACKEND: "openai",
         ENV_MODEL_BASE_URL: "http://127.0.0.1:11434/v1",
         ENV_MODEL_API_KEY: "sk-local",
+        ENV_MODEL_TOKEN_LIMIT_FIELD: "max_completion_tokens",
         ENV_EMBEDDING_MODEL: "nomic-embed-text",
         ENV_EMBEDDING_BASE_URL: "http://127.0.0.1:11434/v1",
         ENV_EMBEDDING_API_KEY: "sk-embed",
@@ -350,6 +392,51 @@ def test_openai_write_call_request_shape():
         declared_typology="told",
     )
     assert declared.typology is None and declared.typology_confidence is None
+
+
+def test_openai_token_limit_field_flips_wire_field():
+    """With the knob at max_completion_tokens the per-role value rides that
+    field on BOTH call paths — non-streaming and streaming — and max_tokens
+    is ABSENT (the mock transport ignores unknown fields, so presence and
+    absence are both asserted); everything else on the wire is unchanged."""
+    settings = _openai_settings(model_token_limit_field="max_completion_tokens")
+    rec = Recorder()
+    backend = build_chat_backend(
+        settings,
+        http_client=mock_client(
+            {"/chat/completions": openai_chat_json(json.dumps(WRITE_PAYLOAD))}, rec
+        ),
+    )
+    result = RealWriteProvider(settings, backend).render_and_score(
+        observation_text=OBSERVATION,
+        diagnosticity_goal="g",
+        declared_typology=None,
+    )
+    assert result.rendered_content == WRITE_PAYLOAD["rendered_content"]
+    body = rec.last.body
+    assert body["max_completion_tokens"] == 1024
+    assert "max_tokens" not in body
+    assert body["response_format"] == {"type": "json_object"}
+
+    stream_rec = Recorder()
+    stream_backend = build_chat_backend(
+        settings,
+        http_client=mock_client(
+            {"/chat/completions": openai_chat_sse(["one ", "two"])}, stream_rec
+        ),
+    )
+    chunks, usage = _drain(
+        RealDialogueProvider(settings, stream_backend).stream_prose(
+            system_prompt="s", utterance="u"
+        )
+    )
+    assert "".join(chunks) == "one two"
+    assert (usage.input_tokens, usage.output_tokens) == (7, 3)
+    body = stream_rec.last.body
+    assert body["max_completion_tokens"] == 1024
+    assert "max_tokens" not in body
+    assert body["stream"] is True
+    assert body["stream_options"] == {"include_usage": True}
 
 
 def test_openai_every_json_role_round_trips(caplog):

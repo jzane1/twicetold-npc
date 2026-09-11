@@ -1,7 +1,8 @@
 """verify_provider_path.py — structural done-when walker for the provider path
 (the provider-path build ruled 2026-09-01; its forks ruled 2026-09-02 — the
 explicit backend selector, zero-padded embedding widths, Anthropic the
-default byte-for-byte; NO migration by ruling).
+default byte-for-byte; NO migration by ruling; the token-limit-field knob
+ruled 2026-09-03, built 2026-09-11 — criterion A9).
 
 Runs the provider-path done-when criteria OFFLINE and KEYLESS: the REAL
 provider classes are driven against canned in-process HTTP handlers
@@ -77,6 +78,7 @@ from app.config import (
     ENV_MODEL_API_KEY,
     ENV_MODEL_BACKEND,
     ENV_MODEL_BASE_URL,
+    ENV_MODEL_TOKEN_LIMIT_FIELD,
     PLACEHOLDER_API_KEY,
     ConfigError,
     load_env,
@@ -402,6 +404,7 @@ def section_a_config() -> None:
             ENV_MODEL_BACKEND: "openai",
             ENV_MODEL_BASE_URL: "http://127.0.0.1:11434/v1",
             ENV_MODEL_API_KEY: "sk-local",
+            ENV_MODEL_TOKEN_LIMIT_FIELD: "max_completion_tokens",
             "TWICETOLD_EMBEDDING_MODEL": "nomic-embed-text",
             ENV_EMBEDDING_BASE_URL: "http://127.0.0.1:11434/v1",
             ENV_EMBEDDING_API_KEY: "sk-embed",
@@ -418,7 +421,62 @@ def section_a_config() -> None:
                     os.environ[k] = v
     check(
         all(values[k] == v for k, v in overrides.items()),
-        "A8 all six new keys ride the process-env override allowlist",
+        "A8 all seven new keys ride the process-env override allowlist",
+    )
+    rec = Recorder()
+    flipped = openai_backend(
+        {"/chat/completions": openai_chat_json(json.dumps(WRITE_PAYLOAD))},
+        rec,
+        model_token_limit_field="max_completion_tokens",
+    )
+    flipped.complete(
+        model="model-w", system="s", user="u", max_tokens=64, json_mode=True
+    )
+    complete_body = rec.last.body
+    stream_rec = Recorder()
+    streamer = openai_backend(
+        {"/chat/completions": openai_chat_sse(["a ", "b"])},
+        stream_rec,
+        model_token_limit_field="max_completion_tokens",
+    )
+    chunks, _ = drain(
+        streamer.stream(model="model-d", system="s", user="u", max_tokens=64)
+    )
+    stream_body = stream_rec.last.body
+    check(
+        load_settings(dict(LOCAL_ENV)).model_token_limit_field == "max_tokens"
+        and load_settings(
+            {**LOCAL_ENV, ENV_MODEL_TOKEN_LIMIT_FIELD: " MAX_COMPLETION_TOKENS "}
+        ).model_token_limit_field
+        == "max_completion_tokens"
+        and raises(
+            ConfigError,
+            lambda: load_settings(
+                {**LOCAL_ENV, ENV_MODEL_TOKEN_LIMIT_FIELD: "max_output_tokens"}
+            ),
+            "'max_tokens' or",
+        )
+        and raises(
+            ConfigError,
+            lambda: load_settings(
+                {**REAL_ENV, ENV_MODEL_TOKEN_LIMIT_FIELD: "max_completion_tokens"}
+            ),
+            "openai wire knob",
+        )
+        and load_settings(
+            {**REAL_ENV, ENV_MODEL_TOKEN_LIMIT_FIELD: "max_tokens"}
+        ).model_token_limit_field
+        == "max_tokens"
+        and complete_body["max_completion_tokens"] == 64
+        and "max_tokens" not in complete_body
+        and complete_body["response_format"] == {"type": "json_object"}
+        and "".join(chunks) == "a b"
+        and stream_body["max_completion_tokens"] == 64
+        and "max_tokens" not in stream_body
+        and stream_body["stream"] is True,
+        "A9 the token-limit-field knob: defaulted/case-folded/enum-loud, "
+        "max_completion_tokens refused under anthropic (max_tokens harmless), "
+        "the flipped field on BOTH openai call paths with max_tokens absent",
     )
 
 

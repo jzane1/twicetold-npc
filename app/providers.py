@@ -59,6 +59,7 @@ from app.config import (
     ENV_MODEL_JUDGE,
     ENV_MODEL_REFLECTION,
     MAX_CONCURRENT_MODEL_CALLS_DEFAULT,
+    MODEL_TOKEN_LIMIT_FIELD_DEFAULT,
     OPENAI_HOSTED_BASE_URL,
     PLACEHOLDER_API_KEY,
     ConfigError,
@@ -1152,10 +1153,12 @@ class AnthropicChatBackend:
 class OpenAIChatBackend:
     """The OpenAI-compatible chat-completions family behind a base URL.
 
-    Wire decisions (the 2026-09-02 build): a system + a user message;
-    `max_tokens` (the field local servers document — hosted OpenAI's
-    reasoning-class models that demand max_completion_tokens are a documented
-    limitation, not engineered around); `response_format={"type":
+    Wire decisions (the 2026-09-02 build; the token-limit-field knob,
+    2026-09-11): a system + a user message; the token-limit field is named by
+    `token_limit_field` — `max_tokens` (the default; the field local servers
+    document) or `max_completion_tokens` (the field hosted OpenAI's
+    reasoning-class models demand) — field name only, the per-role values are
+    unchanged; `response_format={"type":
     "json_object"}` on the structured calls (the family's native mitigation
     for the small-model failure mode the ruling names — every JSON prompt
     already says "JSON"); no sampling params (parity with the Anthropic path).
@@ -1167,13 +1170,21 @@ class OpenAIChatBackend:
     an empty choices list normalize to "" so the role's parse site raises its
     usual MalformedOutputError with the tokens."""
 
-    def __init__(self, *, base_url: str, api_key: str, http_client=None):
+    def __init__(
+        self,
+        *,
+        base_url: str,
+        api_key: str,
+        token_limit_field: str = MODEL_TOKEN_LIMIT_FIELD_DEFAULT,
+        http_client=None,
+    ):
         import openai
 
         self._client = openai.OpenAI(
             api_key=api_key, base_url=base_url, http_client=http_client
         )
         self._base_url = base_url
+        self._token_limit_field = token_limit_field
 
     @staticmethod
     def _messages(system: str, user: str) -> list[dict]:
@@ -1215,10 +1226,10 @@ class OpenAIChatBackend:
     ) -> ChatCompletion:
         self._drop_thinking(thinking)
         kwargs = {"response_format": {"type": "json_object"}} if json_mode else {}
+        kwargs[self._token_limit_field] = max_tokens
         response = self._client.chat.completions.create(
             model=model,
             messages=self._messages(system, user),
-            max_tokens=max_tokens,
             **kwargs,
         )
         text = ""
@@ -1245,9 +1256,9 @@ class OpenAIChatBackend:
         with self._client.chat.completions.create(
             model=model,
             messages=self._messages(system, user),
-            max_tokens=max_tokens,
             stream=True,
             stream_options={"include_usage": True},
+            **{self._token_limit_field: max_tokens},
         ) as chunks:
             for chunk in chunks:
                 if getattr(chunk, "usage", None) is not None:
@@ -1269,6 +1280,7 @@ def build_chat_backend(settings: Settings, *, http_client=None) -> ChatBackend:
         return OpenAIChatBackend(
             base_url=settings.model_base_url,
             api_key=settings.model_api_key or PLACEHOLDER_API_KEY,
+            token_limit_field=settings.model_token_limit_field,
             http_client=http_client,
         )
     return AnthropicChatBackend(

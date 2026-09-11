@@ -105,8 +105,9 @@ DB_POOL_MAX_SIZE_DEFAULT = 8
 # LiteLLM, ...) reached through TWICETOLD_MODEL_BASE_URL. The same six role
 # vars name the models on either backend. Misconfigurations are loud at
 # load_settings: a base URL or key under the anthropic backend, a missing base
-# URL under openai, the Anthropic-shaped dialogue-thinking knob under openai.
-# Fake mode constructs no client and needs no URL or key.
+# URL under openai, the Anthropic-shaped dialogue-thinking knob under openai,
+# max_completion_tokens under anthropic (whose wire field is always
+# max_tokens). Fake mode constructs no client and needs no URL or key.
 ENV_MODEL_BACKEND = "TWICETOLD_MODEL_BACKEND"
 MODEL_BACKENDS = ("anthropic", "openai")
 MODEL_BACKEND_DEFAULT = "anthropic"
@@ -116,6 +117,13 @@ ENV_MODEL_BASE_URL = "TWICETOLD_MODEL_BASE_URL"
 # placeholder below is what a keyless base-URL path actually sends.
 ENV_MODEL_API_KEY = "TWICETOLD_MODEL_API_KEY"
 PLACEHOLDER_API_KEY = "twicetold-no-key"
+# The openai backend's token-limit FIELD NAME (ruled 2026-09-03): local
+# servers document max_tokens; hosted OpenAI's reasoning-class models demand
+# max_completion_tokens. The knob names the wire field only — the per-role
+# VALUES are unchanged, and the anthropic backend always sends max_tokens.
+ENV_MODEL_TOKEN_LIMIT_FIELD = "TWICETOLD_MODEL_TOKEN_LIMIT_FIELD"
+MODEL_TOKEN_LIMIT_FIELDS = ("max_tokens", "max_completion_tokens")
+MODEL_TOKEN_LIMIT_FIELD_DEFAULT = "max_tokens"
 # The embedding role's own knobs, independent of the model backend (never
 # inherited from it — explicit, loud): the model name (default = the locked
 # slate's model), an optional base URL (set => the openai client targets it
@@ -462,6 +470,7 @@ def load_env(path: Path = ENV_PATH) -> dict[str, str]:
             ENV_MODEL_BACKEND,
             ENV_MODEL_BASE_URL,
             ENV_MODEL_API_KEY,
+            ENV_MODEL_TOKEN_LIMIT_FIELD,
             ENV_EMBEDDING_MODEL,
             ENV_EMBEDDING_BASE_URL,
             ENV_EMBEDDING_API_KEY,
@@ -509,6 +518,9 @@ class Settings:
     model_backend: str = MODEL_BACKEND_DEFAULT
     model_base_url: str = ""
     model_api_key: str = field(default="", repr=False)
+    # The openai backend's token-limit field name (ruled 2026-09-03):
+    # "max_tokens" | "max_completion_tokens". Field name only; values stay.
+    model_token_limit_field: str = MODEL_TOKEN_LIMIT_FIELD_DEFAULT
     # The embedding role's own knobs: the model NAME (the dimension stays the
     # locked EMBEDDING_DIM constant), an optional base URL, an optional key.
     embedding_model: str = EMBEDDING_MODEL_DEFAULT
@@ -572,6 +584,23 @@ def load_settings(env: dict[str, str] | None = None) -> Settings:
                     f"{name} is set but {ENV_MODEL_BACKEND} is 'anthropic'; set the "
                     "backend to 'openai' or unset it."
                 )
+    token_limit_field = (
+        env.get(ENV_MODEL_TOKEN_LIMIT_FIELD, "").strip().lower()
+        or MODEL_TOKEN_LIMIT_FIELD_DEFAULT
+    )
+    if token_limit_field not in MODEL_TOKEN_LIMIT_FIELDS:
+        raise ConfigError(
+            f"{ENV_MODEL_TOKEN_LIMIT_FIELD} must be 'max_tokens' or "
+            f"'max_completion_tokens', got {token_limit_field!r}."
+        )
+    # Only the un-honorable combo is refused (ruled 2026-09-11): the anthropic
+    # wire field is always max_tokens, so an explicit max_tokens is harmless.
+    if backend == "anthropic" and token_limit_field != MODEL_TOKEN_LIMIT_FIELD_DEFAULT:
+        raise ConfigError(
+            f"{ENV_MODEL_TOKEN_LIMIT_FIELD} is an openai wire knob and the "
+            "anthropic backend always sends max_tokens; set the backend to "
+            "'openai' or unset it."
+        )
     # The embedding role's own knobs — independent of the model backend.
     embedding_model = (
         env.get(ENV_EMBEDDING_MODEL, "").strip() or EMBEDDING_MODEL_DEFAULT
@@ -747,6 +776,7 @@ def load_settings(env: dict[str, str] | None = None) -> Settings:
         model_backend=backend,
         model_base_url=model_base_url,
         model_api_key=model_api_key,
+        model_token_limit_field=token_limit_field,
         embedding_model=embedding_model,
         embedding_base_url=embedding_base_url,
         embedding_api_key=embedding_api_key,

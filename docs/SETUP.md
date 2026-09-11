@@ -151,8 +151,9 @@ TWICETOLD_EMBEDDING_MODEL=qwen3-embedding:4b
 No API key is needed for a local server (a placeholder is sent; `TWICETOLD_MODEL_API_KEY` /
 `TWICETOLD_EMBEDDING_API_KEY` exist for hosted servers such as `https://api.openai.com/v1`).
 `load_settings` is loud about the misconfigurations: a base URL under the anthropic backend, a
-missing base URL under openai, and `TWICETOLD_DIALOGUE_THINKING` under openai (an Anthropic
-request knob). Fake mode reads none of this.
+missing base URL under openai, `TWICETOLD_DIALOGUE_THINKING` under openai (an Anthropic
+request knob), and `TWICETOLD_MODEL_TOKEN_LIMIT_FIELD=max_completion_tokens` under anthropic
+(whose wire field is always `max_tokens`). Fake mode reads none of this.
 
 **The embedding width contract.** The vector column is locked at 1536 dimensions. Every
 embedding call sends `dimensions=1536`, so a Matryoshka-trained model (`qwen3-embedding`)
@@ -163,11 +164,14 @@ process; a wider model is refused loudly (client-side truncation is unsound for 
 models). The embedding model is a per-database choice: switching it orphans every stored
 vector, and there is no re-embed tooling in v1.
 
-**Wire notes.** Requests use `max_tokens` (the field local servers document; hosted OpenAI's
-reasoning-class models reject it — use a chat-class model there), `response_format=json_object`
-on every structured call, and `stream_options.include_usage` on the dialogue stream (a server
-that rejects it fails the turn before the first chunk, loudly; a server that omits usage is
-counted as 0 tokens with one warning, and the cost table then reads zero).
+**Wire notes.** The token-limit FIELD is a knob (ruled 2026-09-03, built 2026-09-11):
+requests use `max_tokens` (the default; the field local servers document) unless
+`TWICETOLD_MODEL_TOKEN_LIMIT_FIELD=max_completion_tokens` (the field hosted OpenAI's
+reasoning-class models — the gpt-5 family — demand); the values each role sends are unchanged
+either way. Beyond that, `response_format=json_object` on every structured call, and
+`stream_options.include_usage` on the dialogue stream (a server that rejects it fails the turn
+before the first chunk, loudly; a server that omits usage is counted as 0 tokens with one
+warning, and the cost table then reads zero).
 
 **The small-model quality warning** (ruled with the path, 2026-09-01). Every measured number in
 this repo — cost per 100 turns, perceived-first-word p50, the believability no-regression —
@@ -208,11 +212,11 @@ python -m app.load_driver
 
 Two systems, deliberately distinct — see `docs\README.md` for what each is for.
 
-**The suite** (226 scenarios, self-managing scratch DB, no arguments needed):
+**The suite** (228 scenarios, self-managing scratch DB, no arguments needed):
 
 ```powershell
 python -m pytest tests -q
-python -m pytest tests -q -m "not nlp"   # 211, the turn-end subset — seconds, not minutes
+python -m pytest tests -q -m "not nlp"   # 213, the turn-end subset — seconds, not minutes
 ```
 
 Postgres unreachable ⇒ every scenario skips loudly and the run exits green, by ruling.

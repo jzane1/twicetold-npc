@@ -4,9 +4,10 @@
 **Phase:** **Road to completion — Phases A–D DONE; Phase E PAUSED (E3 first attempt
 recorded + QA'd, master not cut). F0 DONE 2026-08-26; the consumer-context scan DONE
 2026-09-01; the rename DONE 2026-09-02; the provider-path + per-agent-purge build DONE
-2026-09-02 (floors row 33); F1 DONE 2026-09-03, hero rebuilt 2026-09-11 (no floor by design).
-Next: Jack's README deep review + the deferred agent-framing/loop copy reframe, then the
-token-limit knob (half a session) → F2–F3; the demo endgame follows Phase F.**
+2026-09-02 (floors row 33); F1 DONE 2026-09-03, hero rebuilt 2026-09-11 (no floor by design);
+the token-limit knob DONE 2026-09-11 (row 33 re-verified; suite 228/213, walker 41).
+Next: Jack's README deep review + the deferred agent-framing/loop copy reframe → F2–F3; the
+demo endgame follows Phase F.**
 **F1 DONE 2026-09-03, hero rebuilt 2026-09-11** (the `decisions.md` F1 entry + Review round 1/2
 are the full record; Jack's deep review is the gate before any push): README first-person and
 short, `docs\first-npc.md` + `docs\shipping.md`, NOTICE + docs index touched. The hero is
@@ -122,10 +123,10 @@ the E2 wrap-up (size tripwire); full records in `floors.md` + `decisions.md`.
   lands in the publish step). The scan's input pack, the NOTICE f-coref line, the hero
   re-capture, and the providers section all landed; the deferred agent-framing/loop copy
   reframe (recruiter-audience lens) is the standing follow-on.
-- **The token-limit-field knob** (ruled 2026-09-03: its own half-session target) —
-  `TWICETOLD_MODEL_TOKEN_LIMIT_FIELD` = `max_tokens` | `max_completion_tokens`, default the
-  former (~10 lines + a config row + two scenarios + a walker criterion + the provider-path
-  floor re-verified), **plus the one-line README touch** Jack asked for when it lands.
+- **The token-limit-field knob.** ✅ DONE 2026-09-11 plan-to-re-verify (the dated
+  `decisions.md` entry = the full record): floors row 33 re-verified in place (count stays 33),
+  suite 228/213, walker 41; the live gpt-5-mini beat — the 2026-09-02 400s gone, the write
+  scored real; the ruled README touch + count sweep landed.
 - **F2. Packaging** — the ruled end product: the Unity Package Manager package + the one-command
   backend spin-up (compose: Postgres/pgvector + API + migrations). Inherits the scan's
   compose + UPM conformance lists (report Part 2).
