@@ -212,8 +212,8 @@ this. The short version:
 
 ## How it's verified
 
-- **Floors.** Every layer is verified against the one beneath it, and a row lands in
-  [docs/floors.md](docs/floors.md) only after an independent verifier pass returns pass: 33
+- **Floors.** Every layer is verified against the one beneath it, and a row lands in an
+  append-only floors ledger only after an independent verifier pass returns pass: 33
   rows, from the schema to the provider seam. Floors are re-openable; re-verifying one is the
   normal cost of a design improvement.
 - **The suite and the walkers.** 228 pytest scenarios, offline and keyless, structural only
@@ -250,8 +250,6 @@ contradiction, reversal and invented answer was caught (kappa 1.00). The apparat
 - [docs/README.md](docs/README.md): the index, the reading order, and what every folder is
 - [docs/architecture.md](docs/architecture.md): the design truth, in thirteen sections
 - [docs/first-npc.md](docs/first-npc.md) and [docs/shipping.md](docs/shipping.md): the integrator pages
-- [docs/floors.md](docs/floors.md): what has actually been verified, and against what
-- [docs/status.md](docs/status.md): where the project stands right now
 
 ## Research lineage
 
@@ -264,8 +262,7 @@ budget; those four are the design. Zep/Graphiti and "Less Context, More Accuracy
 engine, arXiv 2606.09900) set the bi-temporal discipline. The rest of the lineage (RaMem's
 encoding-context read term, CoALA's supersede-versus-decay split, Bartlett and Talk of the
 Town on compounding retellings, and LoCoMo, LongMemEval, MemoryAgentBench and Fixed-Persona
-SLMs on the eval side) is mapped paper by paper in
-[docs/research/CHANGES-FROM-RESEARCH.md](docs/research/CHANGES-FROM-RESEARCH.md).
+SLMs on the eval side) is mapped paper by paper in my research notes.
 
 ## License
 

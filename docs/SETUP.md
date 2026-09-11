@@ -244,14 +244,13 @@ Run them serially on a FRESH scratch, elder walkers before `verify_dissonance` (
 newest — agent_state, purge, concurrency, prewarm, provider_path — are id-scoped and
 re-runnable, so their position is free) — two of the
 correction walkers assert the corrections table is empty of diegetic rows, which is true in
-sweep order on a fresh scratch and false after a dissonance run (the shared-scratch
-fragility recorded in `status.md`'s carried item; `verify_reflection` additionally requires
+sweep order on a fresh scratch and false after a dissonance run (a known shared-scratch
+fragility, carried; `verify_reflection` additionally requires
 a fresh scratch for its own re-run).
 
 Each prints `ALL CHECKS PASSED (N assertions)` and exits non-zero on the first failure. Assertion
-counts grow whenever a layer is re-opened, so there is no single "current" number: each
-`docs\floors.md` row records the count at the time that layer was verified, and the newest run is
-in the latest `docs\session-log.md` entry.
+counts grow whenever a layer is re-opened, so there is no single "current" number: the count
+your own run prints is the current truth for your tree.
 
 **Lint and format** are gated mechanically on every edit, but run by hand any time:
 
@@ -310,8 +309,7 @@ adapter's `agentIdOverride`, and set `baseUrl` to the running service. To play t
 Play-mode verification beats instead, temporarily flip `autoProvision` AND `autoRun` on
 against a fake-mode serve on a scratch DB — the beats provision their own agent and log
 `[npc-demo]` receipts to the console. Do that gate BEFORE pasting a demo agent id: autoRun
-replays scripted observes into whatever agent the adapter holds
-(`docs\demo-beat-script.md` has the full rehearsal ordering).
+replays scripted observes into whatever agent the adapter holds.
 
 Scene-manipulation calls through the MCP bridge fail while the Editor is in Play mode — stop
 play first.
@@ -320,8 +318,8 @@ play first.
 
 ## 9. Optional: MCP servers
 
-`docs\mcp-setup.md` is the reproduction runbook for the read-only Postgres MCP and the Unity
-bridge. Both are development conveniences; nothing in the service depends on them.
+A read-only Postgres MCP and a Unity Editor bridge run on the development machine. Both are
+development conveniences; nothing in the service depends on them.
 
 ---
 

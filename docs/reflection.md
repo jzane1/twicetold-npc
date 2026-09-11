@@ -7,7 +7,7 @@ importance × recency, writes conclusions **grounded in cited `memory_id`s** to 
 dialogue prompt moves onto), and **prunes the identity-components table** with
 constraint-follows-liveness teeth. Design truth: [architecture.md](architecture.md) §10
 (amended 2026-08-15) plus §2/§4.2–4.3/§7; the rulings are the dated 2026-08-15 C2 entries
-in [decisions.md](decisions.md); the research grounding is `docs\research\FINDINGS.md` #4.
+in `decisions.md`; the research grounding is `docs\research\FINDINGS.md` #4.
 This doc points, it does not re-derive.
 
 > **Status: BUILT + floor-verified 2026-08-15 — specced, built, and independently

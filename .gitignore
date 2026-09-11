@@ -29,12 +29,9 @@ unity/*.sln
 unity/*.slnx
 unity/.vs/
 unity/.vscode/
-# Captures are scratch by default, but a capture cited as VERIFICATION EVIDENCE
-# has to exist in the repo or the citation is empty (2026-07-28). Note the
-# trailing /* — a directory-level ignore cannot be undone by a negation inside
-# it, so the contents are excluded rather than the directory.
+# Captures are scratch; the stage-2 receipt moved to the untracked-local record
+# at the 2026-09-11 lean-down (it was negated-in as evidence 2026-07-28..09-11).
 unity/Captures/*
-!unity/Captures/graybox-stage2-receipt.png
 unity/Assets/Plugins/**/*.pdb
 # Third-party editor bridge, embedded locally by its setup wizard; the
 # Packages/manifest.json git URL re-resolves it on a fresh clone.
@@ -56,7 +53,31 @@ CLAUDE.local.md
 
 # The research folder is a ~117 MB store of 45 source PDFs — too big to upload,
 # and not ours to redistribute. The WRITING that came out of it (FINDINGS.md,
-# CHANGES-FROM-RESEARCH.md, the per-paper notes) moved into docs\research\ on
-# 2026-07-28 and IS tracked: it is project work product, it is cited by eight
-# other files, and it existed on exactly one machine until then.
+# CHANGES-FROM-RESEARCH.md, the per-paper notes) was tracked in docs\research\
+# 2026-07-28..2026-09-11, then joined the untracked-local record (below).
 Research Papers/
+
+# THE INTERNAL PROJECT RECORD — untracked-local since the 2026-09-11 lean-down
+# (ruled: the public tip carries only the integrator/evaluator set; these files
+# stay on disk and in the local working discipline, out of the published tree.
+# They keep their exact paths so CLAUDE.md's auto-load and the session commands
+# keep working. NOTE: untracked means unversioned — the registers' only backup
+# is now local; treat `git clean -fdx` as forbidden in this repo.)
+docs/status.md
+docs/decisions.md
+docs/session-log.md
+docs/floors.md
+docs/mcp-setup.md
+docs/demo-beat-script.md
+docs/external-audit-2026-07-22.md
+docs/external-audit-2026-07-22-solutions.md
+docs/split-brain-streaming.md
+docs/write-path.md
+docs/read-path.md
+docs/reconstruction.md
+docs/authorial-correction.md
+docs/fact-level-correction.md
+docs/cli-harness.md
+docs/dissonance.md
+docs/research/
+data/eval/gold/*-artifact.json

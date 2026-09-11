@@ -3,7 +3,7 @@
 Long-term-memory service for game NPCs: FastAPI + Postgres/pgvector backend + Unity-embeddable
 client package. This file is rules. Design knowledge lives in docs/ — point, don't duplicate.
 
-## Current state (auto-loaded)
+## Current state (auto-loaded; a local file — the internal record is not in the public tip)
 @docs/status.md
 
 ## Read before building
@@ -118,6 +118,17 @@ client package. This file is rules. Design knowledge lives in docs/ — point, d
   Jack's explicit confirmation.
 - Instrument at the seam: when building a layer, add its timing and token accounting in the
   same task.
+
+## The public tip is lean (ruled 2026-09-11)
+The internal record — the four registers (`docs\status.md`, `docs\decisions.md`,
+`docs\session-log.md`, `docs\floors.md`), the built/retired layer specs (write-path, read-path,
+reconstruction, authorial-correction, fact-level-correction, cli-harness, dissonance,
+split-brain-streaming), `docs\research\`, the two external audits, `demo-beat-script.md`,
+`mcp-setup.md`, the raw `data\eval\gold\*-artifact.json` dumps, and the Unity capture — is
+**untracked-local** via `.gitignore`. The files keep their exact paths, every rule about them
+still applies, and wrap-ups still update the registers; they are simply never part of a commit,
+so their only backup is this machine. **Never run `git clean -fdx` (or any -x clean) in this
+repo** — it would destroy the record.
 
 ## End of every task
 1. Update the living record (split three ways 2026-07-28 so status.md stays cheap to auto-load):

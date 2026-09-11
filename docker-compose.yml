@@ -1,7 +1,7 @@
 # Local dev database for twicetold-npc.
 # Postgres 16 + pgvector. Secrets are NOT stored here — every value is interpolated
 # from the gitignored .env at repo root (docker compose reads .env automatically).
-# See docs/mcp-setup.md §1. Schema is applied by migration 01, not by this file.
+# Schema is applied by db\migrate.py, not by this file.
 services:
   db:
     image: pgvector/pgvector:pg16

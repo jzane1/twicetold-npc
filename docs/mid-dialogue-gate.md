@@ -14,9 +14,9 @@ gate), the **block-with-"reconstructing"-signal wire shape** (deferred here by
 gate term" since the CLI-harness build). Design truth is [architecture.md](architecture.md)
 §6 (gate + degradation ladder + the prompt-caching boundary), §4.3 (the two identity
 structures), §5 (entities at write), §7 (the mid-scene miss path), §11 (efficacy definitions);
-the rulings are in [decisions.md](decisions.md); the 001 schema is in
+the rulings are in `decisions.md`; the 001 schema is in
 [migration-01.md](migration-01.md) and the 002 fact chain in
-[fact-level-correction.md](fact-level-correction.md). **A new migration is a fact of this
+`fact-level-correction.md`. **A new migration is a fact of this
 target — the second spec for which that is true**: migration 003 lands on the `db\migrate.py`
 ledger seam. This doc points, it does not re-derive.
 

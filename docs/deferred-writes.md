@@ -6,7 +6,7 @@ sleep-time-compute family). A **cost/throughput optimization by ruling**, never 
 fix: `thin_gist` closed the zero-gist correctness case inline (2026-07-23) and observe latency
 was ruled a client concern (async observes, roadmap C5). Design truth is
 [architecture.md](architecture.md) §5/§7; the five C1 spec rulings are the dated 2026-08-12
-entries in [decisions.md](decisions.md); the schema delta is migration 006. This doc points, it
+entries in `decisions.md`; the schema delta is migration 006. This doc points, it
 does not re-derive.
 
 > **Status: BUILT 2026-08-12, floor-verified 2026-08-13** (an overnight pause sat between the

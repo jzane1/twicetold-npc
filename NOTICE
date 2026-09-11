@@ -77,7 +77,7 @@ MCP for Unity (CoplayDev/unity-mcp)
 
 Postgres MCP Pro (crystaldba/postgres-mcp)
   Run from its own isolated uv-managed venv; not in requirements.txt.
-  See docs/mcp-setup.md.
+  A development-machine convenience; nothing in the service depends on it.
 
 pgvector/pgvector:pg16 (Docker image)
   The local development database. PostgreSQL License + pgvector's PostgreSQL
