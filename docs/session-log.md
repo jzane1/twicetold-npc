@@ -2266,6 +2266,54 @@ session.
   providers-section pointer + the token-limit knob question), then F2–F3; the demo endgame
   follows Phase F.
 
+## **F1 — the full README build — 2026-09-03 (README + two integrator pages + both captures, drafted in one session; no code, no floors row).**
+
+- **Landed:** the plan-mode spec (two batches of four; three divergences and a rider — the
+  dated entry), then the full draft in one pass per ruling 4: README.md rebuilt (259 lines /
+  2,345 words; first person throughout; zero em-dashes; every number dated and defined),
+  `docs\first-npc.md`, `docs\shipping.md`, the NOTICE f-coref-weights + spaCy-provenance
+  lines, the docs index (an Integrator-guides group, two Start-here rows, the layout table
+  moved out of the README), the `architecture.md` §13 pick (LangChain — closed after two
+  months "unpicked"), and the two captures on a throwaway scratch (`twicetold_readme_shot`,
+  provisioned twice by the E2 loader in real mode, cents): the hero PNG re-taken under the new
+  name (the rename's fold-forward closed) and the new `correction-override.gif` (the beat-1
+  correction, REPL above the Ledger). Memory notes updated (the deliverable-shape rulings;
+  the two divergences).
+- **Blocked:** the desktop session was locked all session, so the planned screen recording
+  (ffmpeg gdigrab over Windows Terminal + a Chrome app window) captured only the lock
+  screen; the GIF was composed headlessly instead (the cast driver + renderer live in the
+  session scratchpad; the dated entry has the mechanics). The first take was discarded (the
+  correction line read 16.6 s: the lazy NLP load on a fresh process) and re-run warm (524 ms).
+- **Abandoned:** a `?poll=1` Ledger deep-link parameter (it would have made a live-desktop
+  capture self-refreshing — a code change, out of scope) and the screen-recorded terminal
+  (the locked session). Nothing else.
+- **Next:** the token-limit knob (its own half-session target, with the README touch that
+  rides on it), then F2 packaging, then F3 and the public flip; the demo endgame follows.
+
+- **Review round 1 (same day):** Jack's brief pass over the first draft: lead with the
+  retelling machinery (identity-conditioned reconstruction, the gist pin + drift budget,
+  retellings that compound), not the corrections and the record; drop the rename note; and
+  the desktop was unlocked, so the GIF was re-shot as a TRUE screen recording of the real REPL
+  above the Ledger (`docs\media\retelling-drift.gif`: July, September, and a third ask that
+  leaves the record untouched; the beat, the band arithmetic and the capture mechanics are in
+  the dated entry). README re-shaped (the opening, the numbers order, reconstruction first,
+  the correction moved into the record section, the honest "thins rather than transforms"
+  wording). The one code touch of the session: the CLI banner's em-dash → a comma, because it
+  is on camera. The headless composition is superseded. His deep review is the next gate.
+  - **Review round 2 (2026-09-11):** the retelling GIF read as undecipherable to a cold viewer
+    ("what do all these numbers mean, what am I meant to take away"), so the hero was rebuilt
+    for the Bay Area agentic-AI recruiter audience. Landed: a `?view=showcase` display mode in
+    `ledger\index.html` (additive over the same live reads, the default inspector untouched, a
+    real code change; `markGist` extracted and shared; JS node-syntax-checked, both views
+    screenshot-verified), a richer authored memory (`data\eval\corpora\readme-shot.jsonl`,
+    Aldous the wool factor; decay tuned so a seven-month gap shows graded wear: 11/11 facts
+    held, detail_recall 0.647, 0 fabricated), the static showcase swapped in as the README hero
+    (`docs\media\showcase-hero.png`), the opening realigned from the drovers to the wool factor
+    to match it, and `retelling-drift.gif` dropped (Jack ruled static-image-over-GIF). Deferred:
+    the approved agent-framing / verification-loop copy reframe, held for Jack's deep-review
+    pass (creative work that wants his eye). Abandoned: the motion GIF (superseded). Next: the
+    copy reframe + deep review, then the token-limit knob, then F2.
+
 ---
 
 ## Archived phase headers
@@ -2999,3 +3047,20 @@ cold consumer's one BLOCKED step (the shipped-game deployment story) is F1's top
 Four rulings (the dated `decisions.md` entry): provider path pre-release, per-agent purge,
 the rename, the Ledger F3 guard. Report + per-phase input packs:
 `docs\research\consumer-context-scan-2026-08-31.md`.
+
+---
+
+## Archived from status.md at the F1 wrap-up (2026-09-03, size tripwire)
+
+*The provider-path header block, moved here verbatim; the dated `decisions.md` entry and
+floors row 33 carry the full record.*
+
+**The provider-path + per-agent-purge build DONE 2026-09-02:** `TWICETOLD_MODEL_BACKEND`
+(anthropic | openai) + base URL + optional key for all nine LLM roles over ONE `ChatBackend`
+seam (Anthropic requests byte-for-byte); the embedding role's own model-name / base-URL / key
+knobs (the 1536 dimension stays locked, fitted at the seam — narrower zero-padded by Jack's
+ruling, wider refused); the small-model quality warning beside the knob (`.env.example`,
+`SETUP.md` §4b); `DELETE /v1/agents/{id}/memories` as the thin C6 extension (reflections
+survive). Suite **226 / 211**, **16 walkers** (`verify_provider_path` 40, `verify_purge` 36),
+NO migration, no C# change. Four live beats ran (fake, Anthropic, hosted OpenAI, Ollama); the
+dated entry has the record.

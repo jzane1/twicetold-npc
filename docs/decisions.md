@@ -100,6 +100,7 @@ its surrounding spaces both become hyphens, so `Name — 2026-07-28` anchors as 
 - [Consumer-context scan rulings — the pre-release market pass — 2026-09-01](#consumer-context-scan-rulings--the-pre-release-market-pass--2026-09-01)
 - [The rename — longmem-npc → twicetold-npc — 2026-09-02](#the-rename--longmem-npc--twicetold-npc--2026-09-02)
 - [The provider-path + per-agent-purge build — the OpenAI-compatible backend and the per-agent purge verb landed — 2026-09-02](#the-provider-path--per-agent-purge-build--the-openai-compatible-backend-and-the-per-agent-purge-verb-landed--2026-09-02)
+- [F1 — the full README build — 2026-09-03](#f1--the-full-readme-build--2026-09-03)
 
 ## Primary decisions
 
@@ -4878,3 +4879,218 @@ stays call-free. (9) Cosmetic, pre-existing: the dialogue seam prefixes the prov
 `prose call failed:` message with its own, so logs read `prose call failed: prose call failed:
 …` (`app\dialogue.py:491`). (10) The walkers' shared fixed-name scratch refactor — carried,
 unruled, unchanged.
+
+## F1 — the full README build — 2026-09-03
+
+**Ruled (Jack, 2026-09-03, two plan-mode batches of four; he had asked to be "more involved
+than normal, and have a direction in what's being written/shown and how"):**
+
+1. **The opening: product line, then the correction wedge** (recommended, taken) — sentence
+   one says what it is; the lead paragraph is the Halvard correction (retrieval follows the
+   fix, the old telling stays on the record); the thesis line third; never the bare
+   "reconstructed, not replayed" slogan (the scan's cite-and-differentiate ruling stands).
+2. **Shape: a short landing page that keeps the interview-surviving tables** — answered in
+   free text against the recommended ~300-line front page: "erring on the side of a short
+   landing page since too much information will cause an interviewer to not read any of it
+   deeply… let's include material such as 'interview-surviving tables'… a lot of information
+   that was handed as 'must-include' is verbose and can be shortened down without losing
+   important information." Consequence: a compression map (the plan's section table — each
+   inherited item → its one-line form → its home); two page-sized items moved to new docs
+   pages (`docs\first-npc.md`, `docs\shipping.md`); the FAQ folded into the erase / shipping /
+   what-this-is-not sections; the repository-layout table moved to `docs\README.md`.
+3. **Visuals: the re-taken Ledger screenshot, the turn diagram, AND a short GIF** (more than
+   the recommendation — the E1 pattern on portfolio-visible content).
+4. **Review flow: outline first, then one full draft, then iterate** — the approved plan was
+   the outline; nothing committed before his read.
+5. **The counter-example: LangChain's summarization middleware only** (DIVERGENCE — Mantella +
+   LangChain was recommended). Primary-source check the same day: `SummarizationMiddleware`
+   (langchain v1) folds older messages into a running summary and removes them from the
+   agent's message state (the docs: summarized messages "are represented only by the
+   generated text summary"); the classic `ConversationSummaryBufferMemory` popped the oldest
+   messages and re-summarized (deprecated since 0.3.1); the README keeps the claim at "what
+   the agent sees afterward" (a LangGraph checkpointer can replay earlier checkpoints).
+   Dropped by the same check: MemGPT/Letta (recall storage keeps every raw message — the July
+   reader note's "served representation overwritten" read does not survive §2.2 of the
+   paper), Mem0 (v2.0.0, April 2026: ADD-only, "nothing is overwritten"), Engram (itself
+   bi-temporal; prior art beside Zep). Mantella and the OpenAI Agents SDK's compaction session
+   verified clean but not chosen. `architecture.md` §13's "still unpicked" (carried since
+   July) closes on this pick.
+6. **The GIF: the REPL beside the Ledger** (recommended, taken) — rendered STACKED at build
+   (REPL above, Ledger below) so the terminal text stays legible at GitHub's ~830 px content
+   width; the substance is unchanged.
+7. **Voice: first person throughout** (DIVERGENCE — the interim mix was recommended). The
+   `profl-writing` skill (his calibration corpus) loaded before drafting; zero em-dashes; the
+   two new pages in the same voice.
+8. **The token-limit knob: document the limitation now; the knob is its own short target**
+   (recommended, taken) **with a rider**: "once the knob is built, we'll return and slightly
+   edit the README to reflect that." Pending item 4 leaves the pending list and becomes a
+   queued half-session target before F2 that carries a one-line README touch.
+
+**Scope facts (asserted by the plan; unchanged at build):** no code change, no migration, no
+floors row (the interim-README precedent: no layer landed), no C# change, no compose change,
+no TrustedHost build. Rode along: the NOTICE f-coref-weights and spaCy-provenance lines (the
+scan's gap), the `docs\README.md` index (an "Integrator guides" group, two Start-here rows,
+the layout table moved in from the README), the `architecture.md` §13 pick.
+
+**Build record.** README.md rebuilt from scratch: 259 lines / 2,345 words after a tightening
+pass (the interim was 245 / 2,125 and carried none of the providers, erase, shipping,
+first-NPC or comparison material). Sections: the opening (product line → the Halvard wedge →
+the thesis line); the GIF; In numbers (ONE dated table: $0.084/100 turns on 2026-08-26 with
+"turn" defined on the 60-turn driver and a per-player-hour translation at a stated 20
+turns/hour; p50 826–917 ms across the five 2026-08-26 runs, "streamed text, time to first
+word, no speech in the loop"; the judge-free believability trio; the ablation; the
+verification counts; the surface counts); How a turn works (the diagram, labels em-dash-free,
++ two paragraphs); The record, not a summary (the re-taken PNG + a four-row comparison table
+naming LangChain + the Zep/Engram floor sentence); Quickstart (the `SETUP.md` commands
+verbatim + a three-row deployment-path table + the honest install line incl. Python 3.14
+only); Your first NPC (four calls in order: create and keep the UUID → observe fire-and-forget
+→ talk → drain THEN boundary — the harness beat order; a first draft had them reversed and was
+fixed before delivery); Providers (the backend knob, the embedding knob + the width fit, the
+warning in one sentence, the `max_tokens` limit); Erasing (two verbs + the player-vs-agent
+nuance); Shipping a game with this (five bullets); What this is not (the trust model with the
+reverse-proxy recipe and the F3 Host-header caveat; not benchmark-scored; not multilingual;
+no telemetry); How it's verified (floors / suite + walkers / registers + the
+human-judgment-first AI-pair paragraph); Evaluation; Read next; Research lineage (MRAgent +
+MemHarness cited and differentiated on the four axes; Engram by full title once); License
+(NOTICE mirrored incl. the f-coref weights). `docs\first-npc.md` (135 lines: the exact
+`POST /v1/agents` body, a thirty-line MonoBehaviour over `NpcMemoryNpc`, the call order and
+why, time and `AsOf`, the null-vs-absent and model-call-gate contracts, what a turn returns)
+and `docs\shipping.md` (143 lines: topology, the cost arithmetic with its assumptions in the
+open, why not player-local, the trust model + the recipe, Steam's content survey in the
+verified wording — the January 2026 rewording is press-sourced, the in-overlay reporting is
+Valve's January 2024 post — content safety, the platform matrix incl. WebGL no, the erase
+flow, the latency budget, a pre-ship checklist).
+
+**The captures** (real spend: cents; two provisions of a throwaway scratch DB
+`twicetold_readme_shot` by the E2 loader — `--fresh --no-workers`, real mode, the Anthropic
+slate; the product and demo DBs untouched). The desktop session was LOCKED throughout the
+build, so the planned screen recording (ffmpeg gdigrab over a Windows Terminal window beside
+a Chrome app window) was impossible — GDI capture returned the lock-screen wallpaper with
+`LogonUI` running. The GIF was composed headlessly instead: a cast driver ran beat 1 for real
+through the CLI's own `SessionRunner` (the Halvard question → the authored wrong answer, every
+served item `reconstructed` → `:correct` with the beat-1 override text → the same question →
+the corrected answer, the gate's `(reconstructing...)` firing after the cache eviction),
+logging every printed event with a timestamp, and took headless-Chrome screenshots of the
+Ledger deep link at three states; a renderer drew the REPL pane from the cast (Consolas 20 px,
+word-wrapped, the typing cadence scripted at 28 ms/char, idle gaps capped at 0.9 s, streamed
+chunks at their real timestamps) above the real Ledger detail pane (cropped from the stable
+"ground truth vs current telling" header), switching states 0.4 s after the correction and
+0.6 s after the second answer (the poll's cadence). The first take was discarded: the fresh
+process paid the lazy NLP load on the correction, so the corrected line read 16.6 s;
+re-provisioned and re-run with `warm_nlp=True` → 524 ms. Result: `docs\media\correction-override.gif`,
+145 frames, 1100×931, 17.2 s, 0.53 MB; the hero `docs\media\ledger-memory-chain.png` replaced
+in place with the post-correction state (headless 1440×850, 135 KB: 3 telling versions, 2
+superseded greyed, the amber `authorial_correction` live, the fact chain moved, the header
+reading twicetold-npc, no em-dash in any UI label — the model's own prose in the pixels
+carries dashes, which is model output, not Jack's). The README caption calls the REPL pane
+"real calls, real prose"; this entry records that the pane is rendered from the recorded
+session rather than screen-captured. Considered and NOT built: a `?poll=1` Ledger deep-link
+parameter (a code change, out of scope); the CLI banner's em-dash (`app\cli.py:285`) is noted,
+not on camera.
+
+**Verification** (editorial and mechanical; no walkers, no floors row): U+2014 count 0 on
+README.md, `docs\first-npc.md`, `docs\shipping.md`; every relative link resolves (the two new
+pages and both media files exist); every number cross-checked to its register line and dated
+(the F0 entry, `floors.md` row 33, `eval-harness.md` stage 4, the judge-validation entry); the
+quickstart block matches `SETUP.md` command for command; the old README's superseded claims
+(943 ms, $0.92–0.94, twelve routes, six env vars, 001–007, eight walkers, 25 rows, 108
+scenarios, "purge not built", "still ahead") are gone; the turn-end `-m "not nlp"` subset ran
+green at every turn (no code touched); the frames QA'd by contact sheet and full-resolution
+pulls; the hero PNG viewed at full resolution.
+
+**Jack's read:** the full draft (README + both pages) was delivered mid-session, then the
+media and the tightened README. His markup and the iterations it drove are in the session-log
+entry; the commit followed his read (ruling 4).
+
+**Adjacent, surfaced, none built:** the token-limit knob (ruling 8's target); the walkers'
+shared scratch (carried, unruled); the CLI banner em-dash; a `SECURITY.md` in ComfyUI's shape
+(the scan's model — the README's trust-model paragraph carries it for now; F3's call);
+`unity\Captures\graybox-stage2-receipt.png` (2026-07-27, pre-rename, pre-A1 in content) left
+as the archival receipt it is.
+
+**Review round 1 (Jack, 2026-09-03, a brief pass over the first draft, before the deep
+read; both notes taken as rulings).** (a) **The README leads with the money shots, not the
+corrections:** "the README shows off 'authorial corrections' and the 'immutable record' more
+than the things that are truly unique about this project, like reconstruction through the
+current identity, with a gist pin + drift budget, and retellings that compound. The
+'corrections' and 'record' should indeed be included, but should definitely not be the main
+event." This SUPERSEDES ruling 1's correction-wedge lead (his own redirect on seeing the
+draft): the opening now carries the retelling (the drovers asked in July and again in
+September: retold through the current identity, the gist pin, the drift budget, the
+write-back that compounds); the numbers table leads with the retelling rows; "How a turn
+works" puts reconstruction first; the correction moves into "The record, not a summary"
+beside the hero PNG. The scan's "lead with correction-override" framing constraint yields to
+this ruling. (b) **The continuity note goes:** "Renamed from longmem-npc…" removed outright
+(the alternative offered was the page bottom); the 2026-09-02 purpose of that note (covering
+the old name in the PNG's pixels) ended with the re-capture. (c) **A true screen recording**,
+the desktop now unlocked: the shipped GIF is `docs\media\retelling-drift.gif` (1100×804,
+40.8 s, 3.08 MB), composed from a real gdigrab recording (10 fps, x264 MKV) of the REAL REPL
+(`python -m app.cli` in Windows Terminal, driven by keystrokes through `SendKeys`, paced on
+the chain endpoint) above Chrome in app mode on the Ledger deep link with poll on. The beat:
+`:as-of 2026-07-02` → `:scene` → the drovers question (retelling 1: band 2 of the
+quantum-0.25 cache, strength ≈ 0.37 under the importance-stretched 17-day tau) →
+`:as-of 2026-09-01` → `:scene` → the question (retelling 2, band 3, compounded from
+retelling 1) → `:as-of clear` → `:scene` → the question (band 3 again: a cache hit, the
+record unchanged, a new spoken line). Post-processing crops the terminal client area and the
+Ledger detail pane out of each frame and stacks them; unchanged frames are dropped by pixel
+diff (a blinking cursor, under 700 px, does not count), idle stretches are capped at 0.6 s,
+streaming and typing play at 2× (real cadence ran 56 s). What it shows, honestly: the telling
+chain grows 1 → 2 → 3, gist precision stays 1.00, detail recall falls to 0.75, fabricated
+entities 0, and the retellings THIN rather than transform (this corpus is gist-dense by
+design: four spans over forty-five words) while the spoken line is new on every ask. The
+README's opening was reworded to say exactly that ("the detail wears down"; "only the wording
+of the line is new"), which is the E3 flaw-register lesson: the constancy invariant binds the
+stored telling, not the streamed wrapper. **The one code touch of the session:** the CLI
+banner's em-dash (`app\cli.py:285`) became a comma because the banner is now on camera (the
+E2 Ledger-label precedent); no test or walker pins the string; ruff clean; the turn-end
+subset green. The morning's headless composition (`correction-override.gif`) is superseded
+and not shipped; the hero PNG (the post-correction chain) stands. Recorded for the next
+capture: Windows Terminal splits its command line on `;` (a `Set-Location …; python …`
+becomes two tabs, the second outside the repo); `Start-Process -ArgumentList` drops the
+quotes around an element with spaces (use a one-word window title); the Claude desktop window
+re-took the foreground between the pre-flight and the first keystroke (compose from the first
+keystroke); a scene boundary is needed between asks, or a repeated question is answered from
+the loaded set without a retelling; the CLI's pool must be pointed at the scratch through the
+environment (a wrapper derives the URI in-process so no secret reaches a command line).
+Jack's deep review of this version is the next gate; the commit follows it.
+**Review round 2 (Jack, 2026-09-11, brainstorm + rulings on the hero artifact).** The retelling
+GIF was found undecipherable for a cold viewer ("what do all these numbers mean, and what am I
+supposed to take away"), and this README is the artifact going to Bay Area agentic-AI
+recruiters, so the hero was rebuilt. Rulings from the brainstorm batch (recruiter-audience
+lens): (1) **build a Ledger showcase display-mode NOW** (over an annotated GIF or a static
+mockup) — the root-cause fix; (2) **author a richer memory** so the mechanism shows;
+(3) **reframe the copy for the agent-builder audience and promote the AI-pair verification loop
+onto the first screen** — APPROVED, but DEFERRED to Jack's deep-review pass (queued in
+status.md; the reframe is creative and wants his review, so this wrap-up does not execute it
+blind). Then, on seeing the built showcase: (4) **the static image is the hero, not a moving
+GIF** (2026-09-11) — a before/after reads in five seconds, loads instantly, and dodges a
+looping GIF's random start frame; motion is left to the eventual demo video.
+
+**Built (a real Ledger feature — F1 now carries a code change beyond the CLI banner, still
+display-only, no floor).** `ledger\index.html` gains a `?view=showcase` display layer over the
+SAME live chain + metrics reads: the default inspector is untouched when the param is absent
+(the `/ledger` route test still passes; the file still serves), the gist-marking loop was
+extracted to a shared `markGist`, and the view renders a before/after — the immutable
+observation with its gist facts in green beside her latest telling, three plain-English stat
+tiles (facts kept / detail carried / invented), a bridge line naming the compounding
+write-back, all polling so it updates on camera. Visible on-camera strings are em-dash-free;
+the 12 em-dashes remaining in the file are all code comments. JS node-syntax-checked; both the
+showcase and the default inspector screenshot-verified.
+
+**The richer memory** (`data\eval\corpora\readme-shot.jsonl`, Aldous Merrow the wool factor, a
+fact-dense observation with perishable incidentals). Decay-tuning notes for the next capture:
+importance is model-assigned and re-rolls per provision (0.35 to 0.62 across runs), so the
+timeline is unstable unless pinned; the episodic tau was lengthened (base 8,000,000 s) so a
+believable months-scale gap decays gradually, with `reconstruction_band_quantum` 0.1 and
+`reconstruction_theta` 0.4 set in the agent config. The shipped shot: asked at 30 / 90 / 210
+days, served verbatim until ~7 months, one clean reconstruction at 210 days holding **11/11
+gist facts**, **detail_recall 0.647** (a whole incidental clause faded), **0 fabricated** — the
+honest sweet spot, visible wear with every fact intact. Real spend, cents, on a throwaway
+scratch (`twicetold_readme_shot`, dropped at wrap-up).
+
+**Landed to the README.** The hero swapped to `docs\media\showcase-hero.png` (the static
+showcase, 1260x762); the opening example realigned from the drovers to the wool factor to match
+it; `docs\media\retelling-drift.gif` dropped (superseded by the static ruling; never
+committed). Em-dash count 0, links resolve. The agent-framing/loop reframe is the standing next
+step; Jack's deep review remains the gate before any push.
+

@@ -650,8 +650,13 @@ retention policy? Can a player's memories be deleted?
 ## 13. Positioning & research angle
 
 **README positioning:** non-destructive bi-temporal storage vs destructive LLM compression, citing a
-real counter-example system (still unpicked — carried by the F1 README bullet in `status.md`'s
-roadmap; the old "artifact queue" structure is gone).
+real counter-example system (PICKED 2026-09-03 at the F1 plan batch, Jack's ruling: LangChain's
+`SummarizationMiddleware`, and the classic `ConversationSummaryBufferMemory` before it — verified
+against its source the same day: older messages are folded into a running summary and removed
+from the agent's message state, so what the model sees afterward is the summary plus the recent
+tail; the README's comparison table names it, the claim kept at "what the agent sees"; MemGPT was
+dropped as a candidate because its recall storage keeps every raw message, and Mem0 because its
+v2.0.0 pipeline (April 2026) is ADD-only).
 
 **Citations on record:** compressive-RAG framing (Spens & Burgess); the CoALA supersede-vs-decay gap
 is answered by bi-temporal invalidation + differential decay classes; Talk of the Town's

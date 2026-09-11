@@ -1,31 +1,31 @@
 # twicetold-npc — Status
 
-**Last updated:** 2026-09-02
+**Last updated:** 2026-09-11
 **Phase:** **Road to completion — Phases A–D DONE; Phase E PAUSED (E3 first attempt
 recorded + QA'd, master not cut). F0 DONE 2026-08-26; the consumer-context scan DONE
 2026-09-01; the rename DONE 2026-09-02; the provider-path + per-agent-purge build DONE
-2026-09-02 (plan-to-floor; floors row 33). Next: F1 → F2–F3; the demo endgame follows Phase F.**
-**The provider-path + per-agent-purge build DONE 2026-09-02:** `TWICETOLD_MODEL_BACKEND`
-(anthropic | openai) + base URL + optional key for all nine LLM roles over ONE `ChatBackend`
-seam (Anthropic requests byte-for-byte); the embedding role's own model-name / base-URL / key
-knobs (the 1536 dimension stays locked, fitted at the seam — narrower zero-padded by Jack's
-ruling, wider refused); the small-model quality warning beside the knob (`.env.example`,
-`SETUP.md` §4b); `DELETE /v1/agents/{id}/memories` as the thin C6 extension (reflections
-survive). Suite **226 / 211**, **16 walkers** (`verify_provider_path` 40, `verify_purge` 36),
-NO migration, no C# change. Four live beats ran (fake, Anthropic, hosted OpenAI, Ollama); the
-dated entry has the record.
-**Earlier this phase** (the rename 2026-09-02; the consumer-context scan 2026-09-01; F0
-2026-08-26; E1–E3 + D1 2026-08-19/24): the roadmap bullets below + the dated `decisions.md`
-entries + the `session-log.md` archive carry the full records. Headline state that stays
-live: **$0.084/100 turns all-in** (the Anthropic slate), perceived p50 **826–917 ms**,
-believability no-regression, the model slate LOCKED, the demo rig ready (E3 master not cut —
-the presentation redesign owns the flaws; the pinned state is SPENT, `--fresh` sanctioned).
-The system is BUILT end to end on the final A1 seam — backend (two model backends), C# client
-+ harness, Unity adapter + gray-box scene, The Ledger, eval stages 1–4, deferred writes,
-reflection, the compiler, the dissonance path, agent-state + async observes, the two purge
-verbs, the concurrency cap + pre-warm — schema at migrations 001–008.
-What is proven lives in `docs\floors.md`, why in `decisions.md`, the narrative in
-`session-log.md`; this file carries only what is live.
+2026-09-02 (floors row 33); F1 DONE 2026-09-03, hero rebuilt 2026-09-11 (no floor by design).
+Next: Jack's README deep review + the deferred agent-framing/loop copy reframe, then the
+token-limit knob (half a session) → F2–F3; the demo endgame follows Phase F.**
+**F1 DONE 2026-09-03, hero rebuilt 2026-09-11** (the `decisions.md` F1 entry + Review round 1/2
+are the full record; Jack's deep review is the gate before any push): README first-person and
+short, `docs\first-npc.md` + `docs\shipping.md`, NOTICE + docs index touched. The hero is
+`docs\media\showcase-hero.png`, a static capture of a NEW display-only Ledger showcase view
+(`?view=showcase` in `ledger\index.html`, additive) built after the motion GIF read as
+undecipherable; its before/after of the Aldous memory (`readme-shot.jsonl`) holds 11/11 facts,
+detail 0.647, 0 fabricated. One code touch beyond the CLI banner (the showcase view); no
+migration, no floor; counts unchanged (226 / 211, 16 walkers, 33). DEFERRED: the approved
+agent-framing/loop copy reframe.
+**Earlier this phase** (provider path + rename 2026-09-02; consumer scan 2026-09-01; F0
+2026-08-26; E1–E3 + D1 2026-08-19/24): the roadmap bullets + the dated `decisions.md` entries +
+the `session-log.md` archive hold the full records. Live headline: **$0.084/100 turns all-in**
+(Anthropic slate), perceived p50 **826–917 ms**, believability no-regression, the model slate
+LOCKED, the demo rig ready (E3 master not cut, `--fresh` sanctioned).
+The system is BUILT end to end on the final A1 seam (two model backends, the C# client +
+harness, the Unity gray-box scene, The Ledger, eval stages 1–4, the C-phase workers +
+dissonance path, agent-state + async observes, the two purge verbs, the concurrency cap +
+pre-warm; migrations 001–008). What is proven lives in `docs\floors.md`, why in `decisions.md`,
+the narrative in `session-log.md`; this file carries only what is live.
 
 This is the *living* file — update it at the end of every working session. `architecture.md`
 changes only when design changes; `decisions.md` is append-only. Size tripwire (ruled
@@ -66,17 +66,14 @@ re-openable: re-verifying one is a step, never an argument against a design impr
 — D1 found no objective metric to tune them against, so the principled ordering was kept
 unchanged (an eyeball run available on request); (2) offline gold re-labeling if calibrated
 judged-prose numbers are wanted on screen (kappa 0.37, unquotable; the on-screen numbers are
-judge-free); (3) the `min_size` DB-pool sibling knob (the F0 entry); (4) **a token-limit-field
-knob for the openai backend** — hosted OpenAI's reasoning-class models reject `max_tokens`
-(reproduced live 2026-09-02 with `gpt-5-mini`; degraded by the ladder); the leanest fix is one
-explicit env var naming the field, default `max_tokens` — surfaced, not built (the dated
-entry's register). *(The orphaned `longmem_eval_14188` scratch is moot — it lived on the
-volume the 2026-09-02 rename orphaned; it vanishes when that volume is pruned.)*
+judge-free); (3) the `min_size` DB-pool sibling knob (the F0 entry). *(The former item 4, the
+token-limit-field knob, was RULED 2026-09-03 at the F1 batch: documented now, built as its
+own target — the roadmap bullet below. The orphaned `longmem_eval_14188` scratch is moot — it
+lived on the volume the rename orphaned.)*
 
-**Recently closed** (pointers only): the four provider-path forks — 2026-09-02 (the dated
-entry); the four consumer-scan forks — 2026-09-01; the F0 spec forks — 2026-08-26; the E3
-forks + the re-sequencing — 2026-08-24; earlier batches — `decisions.md`'s index and the
-`session-log.md` archive.
+**Recently closed** (full list in `decisions.md`'s index): the F1 forks + Review round 1/2
+(2026-09-03/11), the provider-path and consumer-scan forks (2026-09-02/01), F0 (2026-08-26),
+the E3 forks + re-sequencing (2026-08-24), and earlier batches.
 
 ## The roadmap (re-planned 2026-08-04; ordering delegated to Claude on efficiency grounds)
 
@@ -120,13 +117,15 @@ the E2 wrap-up (size tripwire); full records in `floors.md` + `decisions.md`.
 - **The provider-path + per-agent-purge build.** ✅ DONE 2026-09-02 (plan-to-floor; the header
   block above; the dated `decisions.md` entry; floors row 33). Folded onward: the F1
   providers-section pointer and pending item 4.
-- **F1. Full README build** — incl. the destructive-compression counter-example and the honest
-  "what this is not" paragraph (no auth, no rate limiting; loopback-bound by default). Ships
-  WITHOUT the video link (the video publishes last; the link lands in the publish step).
-  Inherits the scan's F1 input pack (report Part 3 + the NOTICE f-coref line), the hero-PNG
-  re-capture (`docs\media\ledger-memory-chain.png` still shows the old name in-pixels), and the
-  providers section (the backend knob, the warning, the two-verb erase story + the
-  player-vs-agent nuance).
+- **F1. Full README build.** ✅ DONE 2026-09-03; **hero rebuilt 2026-09-11** (the dated
+  `decisions.md` entry + Review round 1/2 = the full record). Ships WITHOUT the video link (it
+  lands in the publish step). The scan's input pack, the NOTICE f-coref line, the hero
+  re-capture, and the providers section all landed; the deferred agent-framing/loop copy
+  reframe (recruiter-audience lens) is the standing follow-on.
+- **The token-limit-field knob** (ruled 2026-09-03: its own half-session target) —
+  `TWICETOLD_MODEL_TOKEN_LIMIT_FIELD` = `max_tokens` | `max_completion_tokens`, default the
+  former (~10 lines + a config row + two scenarios + a walker criterion + the provider-path
+  floor re-verified), **plus the one-line README touch** Jack asked for when it lands.
 - **F2. Packaging** — the ruled end product: the Unity Package Manager package + the one-command
   backend spin-up (compose: Postgres/pgvector + API + migrations). Inherits the scan's
   compose + UPM conformance lists (report Part 2).

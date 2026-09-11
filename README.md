@@ -1,26 +1,45 @@
 # twicetold-npc
 
-> Renamed from longmem-npc (September 2026): the old name collided with an established
-> research-project prefix. Same repo, same history; the full README rebuild lands with the
-> v1 release.
+twicetold-npc is the long-term memory service I built for game NPCs: a self-hosted FastAPI +
+PostgreSQL/pgvector backend and a Unity-embeddable C# client. There is no hosted version. This
+repo is the whole product, and it runs next to your game, on your Postgres, with your models.
 
-Self-hostable long-term-memory service for game NPCs: FastAPI + PostgreSQL/pgvector backend plus a
-Unity-embeddable client package. Characters get psychologically plausible memory: an immutable
-bi-temporal record underneath; identity-conditioned reconstructive recall and believable decay
-above it. *A psychology, not a database.*
+What it's for: characters whose memory behaves like memory, not like a database. Ask the
+innkeeper about the wool factor who paid up and rode off, and months later she reconstructs
+the memory through who she is now, on a budget: a gist pin holds the facts that matter exactly
+(his name, the four gold crowns, the two best rooms, the beaver hat he left against his
+return), a drift budget bounds how far the rest may move, and the incidental detail wears down
+the way a story told twice starts to sound like the second telling. Each retelling is written
+back so the next one starts from it. Ask her again within the same stretch of time and she
+draws on the very same telling, byte for byte; only the wording of the line is new. Underneath
+it all the observation never changes, and every telling stays inspectable beside it. I looked
+hard for prior art and found nothing that combines those four things: identity-conditioned
+retelling, a gist pin with a drift budget, persisted retellings that compound, and an
+immutable bi-temporal record. Controlled drift above an immutable record: a psychology, not a
+database.
 
-The claim it is built to defend: **memory should be reconstructed at recall time, not replayed.**
-The record underneath is never edited: corrections supersede, they do not overwrite. What the
-character *tells you* is re-told through who they currently are, and drifts as time passes.
-Both halves are inspectable side by side.
+![The showcase view of The Ledger: what the innkeeper actually saw, beside how she tells it seven months later, with three plain measures](docs/media/showcase-hero.png)
 
-> **Status (August 2026): mid-build, public, measured.** The core loop is built end to end and
-> verified: write path, retrieval, reconstruction, streaming dialogue, the C# client, a Unity
-> reference scene, and a browser inspector. The [25-row verified-floors table](docs/floors.md)
-> and a 108-scenario test suite are the evidence. Reflection, the purge endpoint, and a dedicated
-> latency pass are still ahead, so every number below is pre-optimization. This README describes
-> the current verified state; I'll rewrite it around the demo when the demo video and packaged
-> release ship.
+*A real memory in The Ledger, the browser inspector the service ships. Left: what actually
+happened, the pinned facts in green. Right: how the innkeeper tells it seven months later,
+reconstructed from who she is now, not recited from a log. Every pinned fact survived, about a
+third of the incidental detail softened with age, and nothing was invented. Every telling is
+kept beside the original.*
+
+## In numbers
+
+Every figure carries its date and its conditions, because these numbers decay within a model
+generation. All of them were taken on the locked Anthropic slate (Claude Haiku 4.5 on every
+turn-path role), from a Windows laptop against hosted APIs.
+
+| What | Measured | Conditions |
+|---|---|---|
+| Retelling, judge-free | gist precision **0.83**, detail recall **0.84**, fabrication rate **0.016** | 2026-08-26, the reconstruction metrics over the judged corpus; no regression at any landing since Phase C. |
+| The gist-pin ablation | gist precision **0.83 → 0.70** with the pin off | 2026-08-12. The drift budget stayed under threshold in both arms, which is the finding: distance alone cannot see fact damage. |
+| Cost, all-in | **$0.084 per 100 turns** | 2026-08-26. A turn is one dialogue line on the 60-turn load driver, observes included; write, escalation, dialogue and embedding calls are priced from the token counts every payload carries. At 20 turns per player-hour that is about $0.02 an hour. |
+| Perceived first word, p50 | **826–917 ms** | 2026-08-26, five runs across the day. Streamed text, time to first word, no speech in the loop. |
+| Verification | **226** tests (**211** keyless, run at the end of every working turn), **16** walkers, **33** verified floors, a **53**-check C# harness | 2026-09-02 |
+| Surface | **18** routes, **8** migrations, **2** model backends, **2** purge verbs | 2026-09-02 |
 
 ## How a turn works
 
@@ -28,143 +47,78 @@ Both halves are inspectable side by side.
 flowchart LR
     subgraph W["Write path: an event is observed"]
         direction TB
-        O["observe"] --> N["NLP pass (no LLM)<br/>spaCy + coref + affect"]
+        O["observe"] --> N["NLP pass, no LLM<br/>spaCy + coref + affect"]
         N --> M["one model call<br/>render + importance + typology"]
         M --> I["atomic insert"]
     end
     subgraph R["Read path: a player speaks"]
         direction TB
-        Q["player turn"] --> G["retrieval gate (no LLM)<br/>novelty + entity tripwire"]
+        Q["player line"] --> G["retrieval gate, no LLM<br/>novelty + entity tripwire"]
         G --> H["hybrid retrieval<br/>vector HNSW + lexical GIN"]
         H --> S["score = relevance × recency × importance"]
-        S --> C["reconstruction<br/>identity-conditioned retelling<br/>cached · drift-guarded"]
-        C --> D["dialogue<br/>streams prose · persists nothing"]
+        S --> C["reconstruction<br/>retold through the current identity<br/>cached, drift-guarded"]
+        C --> D["dialogue<br/>streams prose, persists nothing"]
     end
-    I --> B[("bi-temporal record<br/>created_at · valid_at · invalid_at<br/>supersede, never overwrite")]
+    I --> B[("bi-temporal record<br/>created_at, valid_at, invalid_at<br/>supersede, never overwrite")]
     B --> H
     C -. "write-back: retellings compound" .-> B
 ```
 
-**Writing.** An observe event runs a no-LLM NLP pass (spaCy `en_core_web_lg`, `fastcoref`
-coreference, VADER + Warriner affect), then one model call renders the memory prose, scores
-importance, and classifies typology, then an atomic insert lands every write-time fact. An
-escalation pass catches hard cases and is deliberately biased loose: a wasted call is cheap, a
-lost gist breaks the product. Deferred write processing (Engram-style) can push the model calls
-to a background worker while the raw text is stored and embedded synchronously: immediately
-retrievable, enriched at the service's own pace. It ships default OFF, and the synchronous path
-is proven byte-identical with the flag down.
+**Writing.** An observe runs a no-LLM NLP pass (spaCy, fastcoref coreference, VADER and
+Warriner affect), then one model call renders the memory prose, scores importance and
+classifies typology, and an atomic insert lands every write-time fact. An escalation pass
+catches the hard cases and is biased loose on purpose: a wasted call is cheap, a lost gist
+breaks the character.
 
-**Reading.** The retrieval gate is non-LLM by design (a novelty check plus an entity tripwire;
-there is no gate model). Retrieval is hybrid: pgvector HNSW cosine over 1536-dim embeddings,
-unioned with a lexical GIN channel before scoring, and every served item returns its score
-decomposed as `relevance × recency × importance`. Memories past their decay threshold are not
-replayed; they are **reconstructed**: retold through the character's current identity, cached
-for byte-identical rereads within a scene, drift-guarded against topic swaps, and written back
-so retellings compound over time. The dialogue role then streams pure prose. A dialogue turn
-persists nothing.
+**Reading.** The retrieval gate is not a model: a novelty check and an entity tripwire decide
+whether a mid-scene line needs a lookup at all. Retrieval is hybrid (pgvector HNSW plus a
+lexical channel), and every served item returns its score as relevance × recency ×
+importance. Past the decay threshold a memory isn't replayed. It's reconstructed: retold
+through the character's current identity under a gist pin (the spans of the observation that
+must survive, marked at write time) and a drift budget (how far the rest may move, checked in
+embedding space), cached so rereads within a scene are byte-identical, and written back as a
+new telling so the next retelling starts from this one instead of the original. That last
+part is what makes retellings compound. The dialogue role then streams prose and persists
+nothing.
 
-**Correcting.** A correction supersedes the memory's fact head and re-embeds it, so *retrieval
-follows the fix*: the corrected content is what ranks from then on. Pinning a memory exempts
-it from decay and excludes it from reconstruction: some things are never retold loosely.
+## The record, not a summary
 
-Model roles are six env vars (nothing hardcoded; all six currently run Claude Haiku 4.5), plus
-an eval-only judge var (Claude Opus 4.8) kept deliberately separate so the judge never grades
-its own model's prose. Embeddings are OpenAI `text-embedding-3-small`, dimension locked at
-1536. The service surface is twelve routes: eleven in the OpenAPI schema plus the served
-inspector page. On the game side, `NpcMemory.Core` is a netstandard2.1 C# client with zero
-`UnityEngine` references, consumed by the Unity reference scene as a committed DLL and proven
-against the live service by a 24-check console harness.
+![The Ledger's memory-chain view: the immutable observation beside the current telling, superseded rows greyed but present](docs/media/ledger-memory-chain.png)
 
-## The record underneath
+*One memory in The Ledger, just after an authorial correction: the immutable observation
+beside the current telling, the telling chain below it with the superseded rows greyed (the
+original, then the retelling a question wrote back), and the fact chain that retrieval
+actually sees.*
 
-Every memory carries three timestamps: `created_at` (when it was written), `valid_at` (when it
-happened in world time), and `invalid_at` (when it was superseded, if ever). Nothing is updated
-in place and nothing is deleted: superseded rows survive and stay queryable. Where most LLM
-memory stacks compress destructively (the summary replaces the source), here the observation is
-immutable and everything above it is versioned retelling. Recency decay and bi-temporal
-invalidation are distinct mechanisms (decay hides detail at read time without touching rows;
-correction stamps rows without touching decay), and the test suite proves the separation. The
-one sanctioned DELETE in the whole design is a purge endpoint (the GDPR surface), deliberately
-not built yet.
+Drift is only safe because the record never moves. Every memory keeps three timestamps
+(created, valid, invalid) and nothing is edited in place: a retelling inserts a new telling
+row, and when the designer knows the character is wrong, an authorial correction supersedes
+the fact head and re-embeds it, so retrieval follows the fix from her next line while the
+old telling stays greyed on the record. An in-world confrontation runs the diegetic path
+instead: she rationalizes or grudgingly updates, decided by a mechanical evidence formula.
+Pinning a memory exempts it from decay and from retelling.
 
-The Ledger, a zero-build inspector page served by the API at `/ledger`, puts that record on
-screen:
+Most LLM memory stacks compress destructively: the summary replaces what it was written from.
+LangChain's `SummarizationMiddleware` (and the classic `ConversationSummaryBufferMemory`
+before it) folds older messages into a running summary and removes them from the agent's
+message state, so what the model sees afterward is the summary plus the recent tail. That is a
+fine answer to "stay under a token budget". It is the wrong answer for a character, because
+nobody can later ask what actually happened.
 
-![The Ledger's memory-chain view: superseded versions greyed but still present beneath the live head of the chain](docs/media/ledger-memory-chain.png)
-
-*One memory's record in The Ledger: the immutable observation beside the current telling, both
-version chains below, superseded rows greyed but never dropped. The pinned fire, the corrected
-errand, and a month-old memory retold by an innkeeper who was there.*
-
-## Measured
-
-Numbers from the current rig, dated, all pre-optimization. Latency is structural
-instrumentation (every payload carries per-stage timings and token counts, so the per-100-turn
-cost table is generated, not estimated).
-
-| Measurement | Value | Context |
+| | Summarize and replace (LangChain's summarization middleware) | twicetold-npc |
 |---|---|---|
-| Perceived first word, p50 | **943 ms** | streaming dialogue turn, Haiku prose role, against a 1 s bar (2026-08-12 compare) |
-| Same, Sonnet 5 arms | 2626 / 2086 ms | thinking on / off; both ruled out on latency |
-| Dialogue cost | ~$0.92–0.94 / 100 turns | priced via env vars; token counts are unconditional |
-| Cache-hit reconstruction reread | 13 ms | call-free by design |
-| Gist survival, constraint ON → OFF | 0.8335 → 0.7036 | the ablation below |
+| The original, after an update | Gone from what the agent sees; the summary stands in | Kept. Three timestamps per row (created, valid, invalid); a correction stamps `invalid_at` and inserts, it never edits |
+| What a designer can inspect | The current summary | The observation, every telling, every fact version, side by side in The Ledger |
+| What retrieval sees after a correction | Whatever the rewritten summary says | The corrected fact head, re-embedded; the old head still queryable |
+| Forgetting | Baked into the summary, irreversible | Recency decay at read time, rows untouched; decay and invalidation are separate mechanisms |
 
-The model choice was ruled on latency with the prose verdict on the record: the judge preferred
-the slower model's prose, and the ruling took the sub-second first word anyway. In play, the
-wait breaks the illusion before the wording does.
-
-Two evaluation results I'd call load-bearing:
-
-- **The fixed-gist ablation.** Turning the gist constraint off drops gist-precision (fact
-  survival through retelling) from **0.8335 to 0.7036**, while the drift budget stayed under
-  threshold in *both* arms: proof that embedding distance alone is blind to fact-level damage.
-  The budget was re-scoped to what it actually catches (topic swaps), and factual faithfulness
-  is policed by the gist constraint at generation plus judged faithfulness at eval.
-- **Judge validation.** Against a 78-row gold file labeled blind before any verdicts were seen:
-  selective-forgetting kappa 0.75, abstention kappa 1.00. Natural faithfulness agreement came
-  back degenerate (both raters approved everything, reported honestly as a failed bar rather
-  than spun), so a 34-row constructed-truth set closed it: the judge discriminated every known
-  contradiction, reversal, and invented answer correctly (kappa 1.00). The judge layer exists
-  because lexical metrics can't do this: strict-lexical gist scoring read 0.765 where the
-  judge's semantic read was 0.9888, and the judge flagged 63 embellishments where the lexical
-  entity detector saw 2.
-
-The full apparatus (scenario runner, drift validation, A/B compares, gold emission, agreement
-gates, the ablation rig) lives in [docs/eval-harness.md](docs/eval-harness.md).
-
-## How it's verified
-
-- **Verified floors.** Every layer is verified against the known-good layer beneath it, and a
-  row lands in [docs/floors.md](docs/floors.md) only after an independent verifier pass returns
-  pass; 25 rows stand today, from the schema up through deferred writes. Floors are re-openable:
-  re-verifying one is the normal cost of a design improvement, never an argument against one.
-- **The suite.** 108 pytest scenarios, offline and keyless; the 94-scenario fast subset runs
-  mechanically at the end of every working turn via a repo hook. The one rule: assertions bind
-  IDs, chain shape, timestamps, and byte-identity. **A model's wording is not a test surface.**
-- **The walkers.** Eight deep verification scripts (`tests\verify_*.py`), one per layer: a
-  walker proves a layer once, thoroughly, at build time; the suite keeps it proven forever,
-  cheaply. Latest full-slate counts: write 53 (that file is byte-untouched since 2026-08-04,
-  which doubles as the deferred-OFF parity proof), read 56, dialogue seam 51, gate 51,
-  reconstruction 42, authorial correction 34, fact correction 34, deferred writes 51.
-- **The registers.** An append-only decision register (3,100+ lines of dated rulings with
-  rationale), an append-only session log, and append-only floor evidence. When a mid-build
-  re-design made a shipped subsystem wrong, it was removed whole and the floors re-verified;
-  the registers record both the building and the unbuilding.
-- **Research provenance.** The design followed a 45-paper sweep, and
-  [docs/research/CHANGES-FROM-RESEARCH.md](docs/research/CHANGES-FROM-RESEARCH.md) maps every
-  landed change to its source paper.
-
-This is a solo project built in 32 days of logged sessions (first commit 2026-07-12) with an AI
-pair, run under a fixed loop: design forks get surfaced as options, I rule on them, the build
-lands with its walker, an independent verifier re-runs the floor, docs and commit close the
-session. The `.claude\` apparatus that enforces the loop (auditor agents, verification hooks,
-the operating rules in `CLAUDE.md`) is tracked in this repo on purpose: the process is part of
-the work.
+Bi-temporal storage itself isn't the novelty: Zep/Graphiti and Engram do it, and I treat it as
+the floor. The claim is what sits above it: identity-conditioned retelling with a persisted,
+compounding write-back, held to a gist pin and a drift budget.
 
 ## Quickstart
 
-[docs/SETUP.md](docs/SETUP.md) takes a fresh clone to a running system. Short version,
+[docs/SETUP.md](docs/SETUP.md) takes a fresh clone to a running system. The short version,
 PowerShell:
 
 ```powershell
@@ -175,71 +129,146 @@ python db\migrate.py
 python -m app.serve
 ```
 
-It runs offline and keyless by default (`TWICETOLD_PROVIDER_MODE=fake`): no API key needed to
-explore. Then open `http://127.0.0.1:8000/ledger`, or drive a character from the REPL with
-`python -m app.cli --agent <uuid> --debug`. Two honest caveats: the install is heavy (spaCy
-model wheels plus transformers), and the first observe in a process pays a multi-minute lazy
-NLP load.
+It runs offline and keyless by default (`TWICETOLD_PROVIDER_MODE=fake`), so you can explore
+before you hold any key. Then open `http://127.0.0.1:8000/ledger` for The Ledger, `/docs` for
+the OpenAPI surface, or drive a character from the REPL with `python -m app.cli --agent <uuid>`.
+
+| Path | Keys | What you get |
+|---|---|---|
+| Fake mode (the default) | none | every route, the suite, the walkers; canned prose |
+| Anthropic | `ANTHROPIC_API_KEY`, plus `OPENAI_API_KEY` for embeddings | the measured slate: the numbers above |
+| Any OpenAI-compatible server | optional | Ollama, vLLM, LM Studio, OpenAI itself; see Providers |
+
+Honest install notes: it's heavy (spaCy model wheels plus transformers), the first observe in
+a process pays a multi-minute lazy NLP load, I developed and tested on Python 3.14 only, and
+the docs are Windows/PowerShell-first.
+
+## Your first NPC
+
+Four calls, in this order. [docs/first-npc.md](docs/first-npc.md) has the thirty-line
+MonoBehaviour and the request bodies.
+
+1. **Create the agent** (`POST /v1/agents`) with a name and a seed identity, and keep the UUID:
+   it is the character.
+2. **Observe** what happens to it from gameplay, fire-and-forget (`ObserveAndForget`); dialogue
+   never blocks on a write.
+3. **Talk** (`SayAsync`, or the streaming variant): the reply carries the memory IDs and scores
+   it was built from.
+4. **Close the scene** (`DrainObservesAsync`, then `SceneBoundaryAsync`): the drain is the
+   join for in-flight observes, and the boundary freezes identity for the next scene and can
+   pre-warm reconstruction. Real calendar time between sessions is the decay clock, and
+   `AsOf` moves game time.
+
+## Providers
+
+The nine model roles are env vars, nothing is hardcoded, and `TWICETOLD_MODEL_BACKEND` picks
+the family: `anthropic` (the default and the measured slate) or `openai`, which is any
+OpenAI-compatible chat-completions server behind `TWICETOLD_MODEL_BASE_URL`: OpenAI itself,
+Ollama, vLLM, LM Studio, OpenRouter. The embedding model name is its own knob; the
+1536-dimension column is locked and fitted at the seam, narrower models zero-padded (the
+distances stay exact), wider ones refused. One warning I'll repeat from the setup guide: every
+number on this page is the Anthropic slate's and does not transfer, and small local models
+break the write call's JSON and the drift-budgeted reconstruction first, loudly, by a
+documented degradation ladder rather than a rejected request. Known limit: hosted
+reasoning-class models reject `max_tokens`, so use a chat-class model there. Details in
+[docs/SETUP.md §4b](docs/SETUP.md).
+
+## Erasing
+
+Two DELETE verbs are the only deletes in the design: `DELETE /v1/memories/{id}` and
+`DELETE /v1/agents/{id}/memories`, one transaction each across seven tables, honest counts
+back; reflections and identity survive. Memories attach to NPC agents, not players, so
+mapping a player to the memories they generated is yours to keep. These are tools for your
+erase flow, not a GDPR button.
+
+## Shipping a game with this
+
+[docs/shipping.md](docs/shipping.md) is the page I'd have wanted before adopting anything like
+this. The short version:
+
+- **You host it.** A studio server behind auth you add, never on player machines: a
+  player-local build would ship your model keys with the game.
+- **You pay per turn.** The cost row above, at your turns per player-hour.
+- **Steam asks.** A game with live-generated AI content declares it and describes its
+  guardrails, and players can report it from the overlay.
+- **No moderation layer is included.** Content safety is the provider's filters plus whatever
+  you build.
+- **Desktop and mobile yes, WebGL no.** The client is netstandard2.1 with an IL2CPP note;
+  WebGL has no `System.Net`, Unity's constraint, not mine.
 
 ## What this is not
 
-- **Not a hosted service.** No auth, no rate limiting; the API binds `127.0.0.1:8000`. It runs
-  next to your game, on your machine.
-- **Not finished.** The purge endpoint is a documented contract without a handler, and the
-  three background workers (deferred writes, reflection, the parameter compiler) ship
-  default OFF until the tuning pass turns them on.
-- **Not optimized.** The dedicated latency pass (reconstruction pre-warm, prompt caching,
-  concurrency caps) hasn't happened; today's numbers are the floor, not the ceiling.
-- **Not platform-neutral in its docs.** Setup is written Windows/PowerShell-first and assumes a
-  global Python 3.14.
+- **Not hosted, not authenticated.** Anyone who reaches the port can read, write and purge
+  every agent's memories, so treat it like a database socket. It binds `127.0.0.1:8000` by
+  default; if you must expose it, put a reverse proxy with auth and TLS in front. A Host-header
+  guard for the inspector page lands in the release-hygiene pass.
+- **Not benchmark-scored.** LoCoMo and LongMemEval grade verbatim recall; past the decay
+  threshold this system deliberately paraphrases, so they would score the feature as a
+  failure. The judge-free metrics and the published agreement statistics stand in.
 - **Not multilingual.** The write-time NLP pass is English-only.
+- **Not phoning home.** No telemetry, no analytics; nothing leaves your machine except the
+  model calls you configured.
 
-## What's next
+## How it's verified
 
-Reflection (evidence-cited beliefs, a repetition detector, periodic identity refresh), the
-parameter compiler (formed beliefs compiled into per-scene personality weights), and
-dissonance-driven defense (an in-world confrontation event: the NPC either rationalizes its
-story or grudgingly updates it, decided by a tunable evidence formula) are now built. In
-order from here: client-contract completion, the purge endpoint, then the latency pass.
-After that: the demo video, a Unity package, and one-command backend spin-up, at which point
-this README gets rebuilt around the demo.
+- **Floors.** Every layer is verified against the one beneath it, and a row lands in
+  [docs/floors.md](docs/floors.md) only after an independent verifier pass returns pass: 33
+  rows, from the schema to the provider seam. Floors are re-openable; re-verifying one is the
+  normal cost of a design improvement.
+- **The suite and the walkers.** 226 pytest scenarios, offline and keyless, structural only
+  (IDs, chain shape, timestamps, byte-identity; a model's wording is not a test surface), with
+  the 211-scenario fast subset run by a repo hook at the end of every working turn; plus
+  sixteen deep walkers (`tests\verify_*.py`), one per layer, that prove a layer once at build
+  time.
+- **The registers.** An append-only decision register (80 dated rulings, each with what it
+  beat and why), an append-only session log, and append-only floor evidence. When a mid-build
+  redesign made a shipped subsystem wrong, it was removed whole and the floors re-verified;
+  the registers record both.
 
-## Repository layout
+I built this solo, in logged sessions since the first commit on 2026-07-12, with an AI pair,
+and the loop is the part I'd defend first: design forks get surfaced to me as priced options,
+I rule on them, the build lands with its walker, an independent verifier re-runs the floor,
+and the registers record it. The `.claude\` apparatus that enforces that loop (auditor agents,
+verification hooks, the operating rules in `CLAUDE.md`) is tracked in this repo on purpose.
+The judgment is mine; the process is inspectable.
 
-| Path | What it is |
-|---|---|
-| `app\` | the service: ingest, retrieval, reconstruction, the gate, the dialogue seam, the HTTP routes, the eval runner |
-| `db\` | numbered migrations (001–007) and the transactional migration runner |
-| `tests\` | the pytest suite + eight structural done-when walkers |
-| `client\` | `NpcMemory.Core`, the engine-agnostic C# client, plus a console harness |
-| `unity\` | the Unity 6 gray-box demo project: a thin adapter over the client, plus the set |
-| `ledger\` | The Ledger: a browser inspector for the record, served by the API at `/ledger` |
-| `data\` | eval scenarios, arms, blind gold labels, and the bundled affect lexicon |
-| `docs\` | design truth, build specs, and the append-only registers; start at `docs\README.md` |
-| `.claude\` | the AI-pair apparatus: auditor agents, verification hooks, session commands |
+## Evaluation
 
-## Where to read next
+The ablation in the table is the load-bearing result: gist precision fell from 0.8335 to
+0.7036 with the constraint off while the drift budget passed both arms, so embedding distance
+alone is blind to fact-level damage, and the budget was re-scoped to what it does catch (topic
+swaps). The judge that grades faithfulness at eval time was validated against a 78-row gold
+file labeled blind: selective-forgetting kappa 0.75, abstention 1.00, and a natural
+faithfulness bar that came back degenerate (both raters approved everything), which I report
+as a failed bar and closed with a 34-row constructed-truth set where every planted
+contradiction, reversal and invented answer was caught (kappa 1.00). The apparatus is in
+[docs/eval-harness.md](docs/eval-harness.md).
 
-- [docs/README.md](docs/README.md): the index, what every doc is for, and the reading order
+## Read next
+
+- [docs/README.md](docs/README.md): the index, the reading order, and what every folder is
 - [docs/architecture.md](docs/architecture.md): the design truth, in thirteen sections
-- [docs/status.md](docs/status.md): where the project stands right now, and what is queued
-- [docs/decisions.md](docs/decisions.md): every ruling, what it beat, and why
+- [docs/first-npc.md](docs/first-npc.md) and [docs/shipping.md](docs/shipping.md): the integrator pages
 - [docs/floors.md](docs/floors.md): what has actually been verified, and against what
+- [docs/status.md](docs/status.md): where the project stands right now
 
 ## Research lineage
 
-The mechanisms trace to named sources: **Engram** (arXiv 2606.09900) shaped deferred write
-enrichment and the lexical retrieval channel, with the sleep-time-compute family behind the
-idle-work framing; **RaMem** (2606.22844) the encoding-context read term; **CoALA** the
-supersede-vs-decay split; **Talk of the Town** and **Bartlett** the compounding-retellings
-write-back; **LoCoMo** (2402.17753) the retargeted FactScore; **LongMemEval** (2410.10813,
-2605.12493) the abstention and premise-awareness rubric; **MemoryAgentBench** (2507.05257) the
-selective-forgetting construction; **Fixed-Persona SLMs** (2511.10277) keyword retention.
-[docs/research/CHANGES-FROM-RESEARCH.md](docs/research/CHANGES-FROM-RESEARCH.md) maps each
-landed change to its paper.
+Two 2026 papers claim "memory is reconstructed, not replayed" with different mechanisms:
+MRAgent (ICML 2026, arXiv 2606.06036) reconstructs over a cue-tag-content graph, and
+MemHarness (arXiv 2607.28272) rewrites each retrieved experience for the task at hand. Neither
+conditions on a persistent identity, persists the retelling as a compounding write-back,
+keeps an immutable bi-temporal ground truth, or holds the retelling to a gist pin and a drift
+budget; those four are the design. Zep/Graphiti and "Less Context, More Accuracy" (the Engram
+engine, arXiv 2606.09900) set the bi-temporal discipline. The rest of the lineage (RaMem's
+encoding-context read term, CoALA's supersede-versus-decay split, Bartlett and Talk of the
+Town on compounding retellings, and LoCoMo, LongMemEval, MemoryAgentBench and Fixed-Persona
+SLMs on the eval side) is mapped paper by paper in
+[docs/research/CHANGES-FROM-RESEARCH.md](docs/research/CHANGES-FROM-RESEARCH.md).
 
 ## License
 
-Apache-2.0 ([LICENSE](LICENSE)); third-party inventory in [NOTICE](NOTICE): psycopg is the one
-copyleft dependency (LGPL-3.0-only, not vendored), and the bundled Warriner 2013 VAD lexicon is
-CC-BY-4.0 with attribution in `data\lexicons\`. Built by Jackson Zane.
+Apache-2.0 ([LICENSE](LICENSE)); the third-party inventory is in [NOTICE](NOTICE). psycopg is
+the one copyleft dependency (LGPL-3.0-only, not vendored), the bundled Warriner 2013 lexicon is
+CC-BY-4.0 with its attribution in `data\lexicons\`, and the fastcoref weights are MIT,
+downloaded at first use. Built by Jackson Zane.

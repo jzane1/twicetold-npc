@@ -44,7 +44,11 @@ RUNTIME DEPENDENCIES (installed via requirements.txt, not vendored)
   openai ..................................... Apache-2.0
   spacy ...................................... MIT
   en_core_web_lg, en_core_web_sm ............. MIT
+    (model code and weights MIT; trained on OntoNotes under Explosion's
+    commercial license to that data; the lg word vectors are CC0)
   fastcoref .................................. MIT
+    (its coreference weights, biu-nlp/f-coref, are MIT and are downloaded
+    from the Hugging Face Hub at first use, never vendored here)
   vaderSentiment ............................. MIT
   transformers ............................... Apache-2.0
   httpx ...................................... BSD-3-Clause

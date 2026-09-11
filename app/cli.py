@@ -282,7 +282,7 @@ async def repl(agent_id: UUID, debug: bool) -> None:
     # fires just before the retelling call blocks the turn).
     runner.on_reconstruct = lambda: print("(reconstructing…)", flush=True)
     nlp_warm = False
-    print(f"twicetold-npc CLI — agent {agent_id}  (:help for commands)")
+    print(f"twicetold-npc CLI, agent {agent_id}  (:help for commands)")
     try:
         while True:
             try:

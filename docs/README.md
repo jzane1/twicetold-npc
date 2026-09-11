@@ -15,6 +15,26 @@ were reachable only by already knowing they existed. Add new files to the right 
 | know why something is the way it is | **`decisions.md`** — append-only ruling register, with an index |
 | know what has actually been proven | **`floors.md`** — the verified-floors table |
 | author an NPC for it | **`identity-authoring.md`** — identity, memory prose, knobs, and the authoring-time checks |
+| wire it into a game | **`first-npc.md`** — your first NPC in about thirty lines: the calls, in order, and why |
+| ship a game with it | **`shipping.md`** — hosting, keys and cost, the trust model, Steam's disclosure rules, the platform matrix |
+
+---
+
+## The repository, folder by folder
+
+Moved here from the README at F1 (2026-09-03) so the front page stays short.
+
+| Path | What it is |
+|---|---|
+| `app\` | the service: ingest, retrieval, reconstruction, the gate, dialogue, the two model backends, the routes, the eval runner |
+| `db\` | migrations 001–008 and the transactional migration runner |
+| `tests\` | the pytest suite and the sixteen walkers |
+| `client\` | `NpcMemory.Core`, the engine-agnostic C# client, and its console harness |
+| `unity\` | the Unity 6 gray-box project: a thin adapter over the client, plus the set |
+| `ledger\` | The Ledger, served by the API at `/ledger` |
+| `data\` | eval corpora, arms, blind gold labels, and the bundled affect lexicon |
+| `docs\` | design truth, specs, the integrator guides, the registers (this index) |
+| `.claude\` | the AI-pair apparatus: auditor agents, hooks, session commands |
 
 ---
 
@@ -75,6 +95,21 @@ spec is no longer a plan.
 versions, fact entities, the lexical index, `escalation_failed`, deferred writes, reflection
 runs, the parameter compiler) are specced in the targets above and live in `db\migrations\`.
 For the current schema, read the SQL.
+
+---
+
+## Integrator guides
+
+Written for the person wiring this into a game, not for the build. Public pages in Jack's
+voice (zero em-dashes by ruling); the third of the set is `identity-authoring.md` below.
+
+- **`first-npc.md`** — your first NPC in about thirty lines: the exact create-agent request,
+  the MonoBehaviour call order (observe → say → scene boundary + drain, and why that order),
+  persisting the agent UUID, real calendar time vs `as_of`. Written F1 (2026-09-03).
+- **`shipping.md`** — shipping a game with this: who hosts it and who pays for keys, the
+  per-player cost math, why player-local distribution is a non-starter, the trust model (no
+  auth; loopback by default; the reverse-proxy recipe), Steam's live-AI disclosure rules, the
+  platform matrix (WebGL no), and the erase flow. Written F1 (2026-09-03).
 
 ---
 

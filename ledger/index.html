@@ -118,6 +118,36 @@
   #dropzone.hot { border-color: var(--blue); color: var(--blue); }
   .err { color: var(--red); }
   footer { padding: 10px 16px; color: var(--dead); font-size: 11px; }
+
+  /* ---- showcase view (?view=showcase): a designed, large-type demo layer
+     over the SAME live data; the default inspector is untouched. Added F1
+     (2026-09-03) for the README hero. A before/after: ground truth beside her
+     current telling, with three plain-English stats. ---- */
+  body.showcase header, body.showcase main, body.showcase footer { display: none; }
+  #showcase { max-width: 1180px; margin: 0 auto; padding: 40px 44px 52px; }
+  #showcase .sc-title { font-size: 29px; font-weight: 600; margin: 0; }
+  #showcase .sc-sub { color: var(--dim); font-size: 16px; margin: 10px 0 26px; }
+  #showcase .sc-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+  #showcase .sc-label {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .09em;
+    color: var(--dim); margin: 0 0 10px; min-height: 30px;
+  }
+  #showcase .sc-after-label { color: var(--amber); }
+  #showcase .sc-card {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 8px;
+    padding: 18px 22px; font-size: 18px; line-height: 1.62;
+  }
+  #showcase .sc-card.sc-after { border-color: var(--amber); }
+  #showcase .sc-card mark { background: var(--mark); color: var(--green); border-radius: 3px; padding: 0 3px; }
+  #showcase .sc-bridge { text-align: center; color: var(--dim); font-size: 14px; margin: 18px 0 0; }
+  #showcase .sc-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 26px; }
+  #showcase .sc-stat {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 8px; padding: 20px 24px;
+  }
+  #showcase .sc-stat b { display: block; font-size: 42px; line-height: 1; }
+  #showcase .sc-stat .sc-statlab { font-size: 16px; margin-top: 10px; }
+  #showcase .sc-stat .sc-statsub { font-size: 12px; color: var(--dim); margin-top: 4px; }
+  #showcase .sc-foot { color: var(--dim); font-size: 14px; margin-top: 26px; }
 </style>
 </head>
 <body>
@@ -162,6 +192,23 @@
     <div id="turnPanel"></div>
   </section>
 </main>
+<section id="showcase" hidden>
+  <h1 class="sc-title" id="scTitle">One memory, retold as it ages</h1>
+  <div class="sc-sub" id="scSub"></div>
+  <div class="sc-pair">
+    <div>
+      <div class="sc-label">What actually happened, kept forever. The green facts are pinned.</div>
+      <div class="sc-card" id="scObs"></div>
+    </div>
+    <div>
+      <div class="sc-label sc-after-label" id="scAfterLabel">How she tells it now</div>
+      <div class="sc-card sc-after" id="scAfter"></div>
+    </div>
+  </div>
+  <div class="sc-bridge" id="scBridge"></div>
+  <div class="sc-stats" id="scStats"></div>
+  <div class="sc-foot">The observation on the left never changes. Nothing is edited in place; every telling is kept and stays inspectable.</div>
+</section>
 <footer>
   read-only over GET /v1/agents/{id}/memories, GET /v1/agents/{id}/state, and
   GET /v1/memories/{id}/chain (unscored inspector reads by ruled contract), plus
@@ -305,23 +352,7 @@ async function renderChainFor(memoryId) {
   }
 
   // Ground truth with gist spans marked (offsets into the immutable text).
-  const obs = $("obsText");
-  obs.replaceChildren();
-  let cursor = 0;
-  const spans = [...c.gist_spans].sort((a, b) => a.start_char - b.start_char);
-  for (const s of spans) {
-    if (s.start_char > cursor) {
-      obs.append(document.createTextNode(c.observation_text.slice(cursor, s.start_char)));
-    }
-    // Spans may overlap (escalation-added over base): render each character
-    // exactly once, keeping the mark on any not-yet-rendered tail.
-    if (s.end_char > cursor) {
-      const from = Math.max(s.start_char, cursor);
-      obs.append(el("mark", null, c.observation_text.slice(from, s.end_char)));
-      cursor = s.end_char;
-    }
-  }
-  obs.append(document.createTextNode(c.observation_text.slice(cursor)));
+  markGist($("obsText"), c.observation_text, c.gist_spans);
 
   $("liveCap").textContent = live
     ? `current telling: ${live.write_cause} @ ${fmtTime(live.valid_at)}`
@@ -347,6 +378,27 @@ async function renderChainFor(memoryId) {
   })));
 }
 
+// Ground truth with gist spans marked (offsets into the immutable text).
+// Shared by the chain pane and the showcase view. Spans may overlap
+// (escalation-added over base): render each character exactly once, keeping
+// the mark on any not-yet-rendered tail.
+function markGist(host, text, gistSpans) {
+  host.replaceChildren();
+  let cursor = 0;
+  const spans = [...gistSpans].sort((a, b) => a.start_char - b.start_char);
+  for (const s of spans) {
+    if (s.start_char > cursor) {
+      host.append(document.createTextNode(text.slice(cursor, s.start_char)));
+    }
+    if (s.end_char > cursor) {
+      const from = Math.max(s.start_char, cursor);
+      host.append(el("mark", null, text.slice(from, s.end_char)));
+      cursor = s.end_char;
+    }
+  }
+  host.append(document.createTextNode(text.slice(cursor)));
+}
+
 function addNum(host, value, label) {
   const d = el("div", "num");
   d.append(el("b", null, String(value)));
@@ -367,6 +419,89 @@ function renderChain(host, rows) {
     div.append(el("div", "txt", r.text));
     host.append(div);
   }
+}
+
+// ---- the showcase view (?view=showcase) ---------------------------------
+// A designed, large-type read of ONE memory over the same live chain +
+// metrics reads. Display only: no new route, no new server surface, and the
+// default inspector above is untouched when the param is absent. Added F1
+// (2026-09-03) for the README hero; it polls so tellings appear on camera.
+
+function daysBetween(aIso, bIso) {
+  return Math.round((new Date(bIso) - new Date(aIso)) / 86400000);
+}
+
+async function renderShowcase(memoryId, agentId) {
+  const c = await fetchJson(`/v1/memories/${memoryId}/chain`);
+  const details = [...c.details].sort((a, b) =>
+    a.valid_at < b.valid_at ? -1 : a.valid_at > b.valid_at ? 1 : 0);
+  const t0 = details.length ? details[0].valid_at : null;
+  const live = details.find((d) => d.is_live) || details[details.length - 1];
+  const lastDays = live && t0 ? daysBetween(t0, live.valid_at) : 0;
+  const nRetellings = details.filter((d) => d.write_cause !== "original").length;
+
+  // Left: the immutable observation, gist facts marked. Right: her latest
+  // telling, reconstructed. The middle retellings are summed in the bridge.
+  markGist($("scObs"), c.observation_text, c.gist_spans);
+  $("scAfter").textContent = live ? live.content : "";
+  $("scAfterLabel").textContent = lastDays
+    ? `How she tells it ${monthsPhrase(lastDays)} later`
+    : "How she tells it now";
+  $("scSub").textContent = "the same question, put to her months apart";
+  const compounded = nRetellings > 1
+    ? ` ${nRetellings} tellings so far, each built on the one before.`
+    : "";
+  $("scBridge").textContent =
+    "Each time she is asked, she reconstructs the memory from who she is now, "
+    + "on a budget, and writes the new telling back." + compounded;
+
+  const stats = $("scStats");
+  stats.replaceChildren();
+  try {
+    const m = await fetchJson(`/v1/memories/${memoryId}/reconstruction-metrics`);
+    const held = m.gist_facts_present === m.gist_facts_total;
+    addStat(stats, `${m.gist_facts_present}/${m.gist_facts_total}`, "facts kept",
+      "every pinned fact survived", held ? "var(--green)" : "var(--amber)");
+    const recall = m.detail_recall == null ? null : Math.round(m.detail_recall * 100);
+    addStat(stats, recall == null ? "–" : `${recall}%`, "detail carried",
+      "the rest softened with age", "var(--amber)");
+    addStat(stats, String(m.fabricated_entities.length), "invented",
+      "nothing added that was never there",
+      m.fabricated_entities.length ? "var(--red)" : "var(--green)");
+  } catch (e) {
+    // Metrics are additive: a failure leaves the observation and telling.
+  }
+
+  if (agentId) loadShowcaseName(agentId);
+}
+
+function monthsPhrase(days) {
+  if (days < 45) return `${days} days`;
+  const months = Math.round(days / 30);
+  return `${months} month${months === 1 ? "" : "s"}`;
+}
+
+async function loadShowcaseName(agentId) {
+  try {
+    const s = await fetchJson(`/v1/agents/${agentId}/state`);
+    const name = (s.name || "").split("-")[0];
+    if (name) {
+      $("scTitle").textContent =
+        `One memory, as ${name[0].toUpperCase() + name.slice(1)} retells it over time`;
+    }
+  } catch (e) {
+    // Keep the default title if the state read is unavailable.
+  }
+}
+
+function addStat(host, num, label, sub, color) {
+  const d = el("div", "sc-stat");
+  const b = el("b", null, num);
+  b.style.color = color;
+  d.append(b);
+  d.append(el("div", "sc-statlab", label));
+  d.append(el("div", "sc-statsub", sub));
+  host.append(d);
 }
 
 // ---- the turn panel ------------------------------------------------------
@@ -483,7 +618,18 @@ document.addEventListener("paste", (e) => {
   if (text.trim().startsWith("{")) tryLoadTurn(text);
 });
 const params = new URLSearchParams(location.search);
-if (params.get("agent")) {
+if (params.get("view") === "showcase" && params.get("memory")) {
+  // Showcase: the default inspector is hidden and one memory is shown large,
+  // polled so retellings appear on camera. Requires ?memory=<uuid>; ?agent=
+  // is optional (only the title's name comes from it).
+  document.body.classList.add("showcase");
+  $("showcase").hidden = false;
+  const mem = params.get("memory");
+  const agent = params.get("agent");
+  const run = () => renderShowcase(mem, agent).catch(() => {});
+  run();
+  setInterval(run, 2000);
+} else if (params.get("agent")) {
   $("agentId").value = params.get("agent");
   loadIndex().then(() => {
     if (params.get("memory")) loadChain(params.get("memory"));
