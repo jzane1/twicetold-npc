@@ -39,8 +39,13 @@ can forget at different speeds.
 
 ## 2. The MonoBehaviour
 
-The repo ships `NpcMemoryNpc` (`unity\Assets\Scripts\NpcMemoryNpc.cs`), a thin adapter over
-the engine-agnostic `NpcMemory.Core` client. Drop it on the NPC's GameObject, set `baseUrl`,
+The client ships as an embedded Unity package at
+`unity\Packages\com.jacksonzane.twicetold-npc`. Install it through the Package Manager (Install
+package from git URL, with `?path=unity/Packages/com.jacksonzane.twicetold-npc`, forward
+slashes) or copy the folder into your project's `Packages`; the First NPC sample mirrors this
+page and ships the `link.xml` that IL2CPP builds need. The package's `NpcMemoryNpc`
+(`Runtime\NpcMemoryNpc.cs`) is a thin adapter over the engine-agnostic `NpcMemory.Core` client.
+Drop it on the NPC's GameObject, set `baseUrl`,
 and either let it provision (`autoProvision` on, with a name and seed identity in the
 inspector) or attach it to a saved character (`autoProvision` off, `agentIdOverride` set).
 Then this is the whole integration:

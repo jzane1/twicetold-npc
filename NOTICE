@@ -25,11 +25,10 @@ Warriner, Kuperman & Brysbaert (2013) VAD norms
   (NRC-VAD was rejected at this gate: research-only, incompatible with an
   Apache-2.0 flip. Ruled 2026-07-13.)
 
-NpcMemory.Core.dll
-  unity/Assets/Plugins/NpcMemory/NpcMemory.Core.dll
-  Not third party — a build artifact of this repository's own
-  client/NpcMemory.Core, committed because Unity has no package path to it.
-  Rebuild instructions: docs/SETUP.md.
+  (The client's C# source is this repository's own code, not third party. Since
+  F2, 2026-09-12, it ships as an embedded Unity package at
+  unity/Packages/com.jacksonzane.twicetold-npc; there is no longer a committed
+  build-artifact DLL.)
 
 --------------------------------------------------------------------------------
 RUNTIME DEPENDENCIES (installed via requirements.txt, not vendored)
@@ -48,7 +47,8 @@ RUNTIME DEPENDENCIES (installed via requirements.txt, not vendored)
     commercial license to that data; the lg word vectors are CC0)
   fastcoref .................................. MIT
     (its coreference weights, biu-nlp/f-coref, are MIT and are downloaded
-    from the Hugging Face Hub at first use, never vendored here)
+    from the Hugging Face Hub at first use on the bare-metal path, or baked
+    into the API image at build time on the compose path, never vendored here)
   vaderSentiment ............................. MIT
   transformers ............................... Apache-2.0
   httpx ...................................... BSD-3-Clause
@@ -82,3 +82,9 @@ Postgres MCP Pro (crystaldba/postgres-mcp)
 pgvector/pgvector:pg16 (Docker image)
   The local development database. PostgreSQL License + pgvector's PostgreSQL
   License. Pulled at runtime by docker compose; not redistributed here.
+
+python:3.14-slim (Docker base image)
+  The base image the API image is built FROM by docker compose. Python Software
+  Foundation License, plus the Debian slim base's own package licenses. Pulled
+  at build time; the resulting API image is never published (see the psycopg
+  note above for why a prebuilt image is deliberately not shipped).

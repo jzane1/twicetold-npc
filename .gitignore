@@ -32,7 +32,6 @@ unity/.vscode/
 # Captures are scratch; the stage-2 receipt moved to the untracked-local record
 # at the 2026-09-11 lean-down (it was negated-in as evidence 2026-07-28..09-11).
 unity/Captures/*
-unity/Assets/Plugins/**/*.pdb
 # Third-party editor bridge, embedded locally by its setup wizard; the
 # Packages/manifest.json git URL re-resolves it on a fresh clone.
 unity/Packages/com.coplaydev.unity-mcp/

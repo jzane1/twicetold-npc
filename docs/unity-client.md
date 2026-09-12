@@ -71,7 +71,9 @@ register entry):
 ## Scope boundary — do NOT build
 
 - **Unity Package Manager packaging** (`com.jacksonzane.npc-memory`) — deferred post-demo
-  (architecture environment section). Scripts live under `Assets\Scripts\`.
+  (architecture environment section). Scripts live under `Assets\Scripts\`. *(Superseded
+  2026-09-12: F2 landed the embedded package at `unity\Packages\com.jacksonzane.twicetold-npc\`,
+  shipping the client as source; the working id settled to the product name.)*
 - **The established-game clip** — post-demo (2026-07-27 ruling; sequenced-later ledger).
 - **The judged eval harness** — immediate-queue item 3, its own target (the Ledger binds the
   fields it will score, but builds no judge).
@@ -200,7 +202,9 @@ Passing this end-to-end IS the interop go/no-go.
 
 ### Unity adapter + gray-box scene
 
-Thin `MonoBehaviour` wrapper under `Assets\Scripts\` (`NpcMemory` namespace): async calls
+Thin `MonoBehaviour` wrapper `NpcMemoryNpc` (`NpcMemory.Unity` namespace), shipped in the UPM
+package under `unity\Packages\com.jacksonzane.twicetold-npc\Runtime\` *(F2, 2026-09-12; it lived
+under `Assets\Scripts\` before)*: async calls
 marshaled back to the main thread (Unity's SynchronizationContext — awaits resume on the main
 thread; no blocking `.Result`/`.Wait()` anywhere), dialogue text to a world-space or overlay
 TMP field, directive callback driving a visible acknowledgment (nameplate flash / simple move),
@@ -280,6 +284,10 @@ held-out corpus arm rides item 3's eval build).
 5. **Targets + repo layout.** Suggested: `client\NpcMemory.Core\` as **netstandard2.1** (the
    Unity 6 compatibility profile), `client\NpcMemory.Harness\` as a net8.0 console app, the
    Unity project under `unity\` with the adapter in `Assets\Scripts\`. `[SETTLE-AT-BUILD]`
+   *(Settled F2, 2026-09-12: the core targets netstandard2.1 and now lives as source in the
+   embedded UPM package `unity\Packages\com.jacksonzane.twicetold-npc\Runtime\Core\`, compiled
+   both by Unity and by `client\NpcMemory.Core\NpcMemory.Core.csproj` for the harness. The
+   Harness stays net8.0; `NpcDemoDriver` stays under `Assets\Scripts\` as the dev rig.)*
 6. **Ledger page stack.** Suggested: a single static HTML page + vanilla JS polling the API
    (or the fork-3 chain route), no framework, no build step — readable-as-documentation, the
    CLI precedent. `[SETTLE-AT-BUILD]`

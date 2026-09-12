@@ -9,7 +9,41 @@ at all. If you change how the project starts, change it here.
 
 ---
 
+## The one-command backend (compose)
+
+The fastest path to a running backend, and the one an integrator should use, is docker compose.
+It needs only Docker Desktop, no host Python:
+
+```powershell
+Copy-Item .env.example .env    # then edit it, or keep the fake-mode defaults
+docker compose up -d --build
+```
+
+This builds the API image, starts Postgres with pgvector, runs migrations 001 through 008 as a
+one-shot `migrate` service, and starts the API, in dependency order. `docker compose ps` shows
+progress; the `api` service reports `healthy` once its pipelines have warmed, within about a
+minute of a cached `up`. The first build is a one-time few minutes (the image is about 4.9 GB on
+disk, 1.7 GB to pull; the fastcoref weights are baked in, so a cold container needs no network).
+Then open `http://127.0.0.1:8000/ledger` (The Ledger) or `/docs` (the OpenAPI surface). Both
+published ports, Postgres 5432 and the API 8000, bind `127.0.0.1` only.
+
+If `up` fails at once on the `api` mount, you skipped `Copy-Item .env.example .env`: the API
+reads `.env` from a read-only bind mount and compose refuses to invent it. Provider mode, real
+keys, and the OpenAI-compatible backend are all configured through that same `.env`, exactly as
+in the numbered sections below. Teardown is under [Teardown](#teardown) at the end.
+
+**Everything below is the bare-metal dev path** (host Python running the app directly, how the
+maintainer develops and how the suite and walkers run). For that, `docker compose up -d db`
+brings up just the database and you run `python -m app.serve` on the host beside it. Do not run
+the full compose stack and a host `python -m app.serve` at once: they both bind port 8000 and
+both drive the same database.
+
+---
+
 ## 0. Prerequisites
+
+The compose path above needs only a running Docker Desktop. The list below is for the
+bare-metal dev path and the C# and Unity clients:
 
 | Thing | Version | Notes |
 |---|---|---|
@@ -75,12 +109,15 @@ base URL and model knobs.
 ## 3. Database
 
 ```powershell
-docker compose up -d
+docker compose up -d db
 docker ps --filter name=twicetold-pg --format "{{.Names}} {{.Status}}"
 ```
 
-Wait for `(healthy)`. Compose reads the same `.env`, so `POSTGRES_USER` / `POSTGRES_PASSWORD` /
-`POSTGRES_DB` must agree with `DATABASE_URI`.
+`up -d db` starts only the database. Plain `docker compose up -d` now starts the whole stack
+(database, the one-shot migration, and the containerized API); on the bare-metal path you want
+the database alone, because you run the API on the host in the next step. Wait for `(healthy)`.
+Compose reads the same `.env`, so `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` must
+agree with `DATABASE_URI`.
 
 Apply the schema:
 
@@ -280,18 +317,14 @@ grows with each client build, so trust the line, not a number here (this sentenc
 while the gate stood at 36, its second rot; reworded 2026-08-17). Point it
 at a scratch DB, not the product one — it writes.
 
-### Refreshing the Unity plugin DLL
+### The Unity client is source, not a DLL
 
-Unity consumes the core as a committed DLL because there is no package path to it. **Any change
-under `client\NpcMemory.Core\` requires this copy, or Unity silently runs the old code:**
-
-```powershell
-dotnet build client\NpcMemory.Core\NpcMemory.Core.csproj -c Release
-Copy-Item client\NpcMemory.Core\bin\Release\netstandard2.1\NpcMemory.Core.dll `
-          unity\Assets\Plugins\NpcMemory\NpcMemory.Core.dll -Force
-```
-
-Then re-run the harness (proves the built core still passes) and re-open Unity so it reimports.
+Since F2 (2026-09-12) the core is not a committed DLL. Its source lives in the embedded UPM
+package at `unity\Packages\com.jacksonzane.twicetold-npc\Runtime\Core\`, which Unity compiles
+directly, and `client\NpcMemory.Core\NpcMemory.Core.csproj` compiles the very same files for the
+console harness (an `EnableDefaultCompileItems=false` glob points at the package path). So a
+change under `Runtime\Core\` reaches both hosts with no copy step: rebuild the harness (above)
+to gate it on the dotnet side, and re-open Unity so it recompiles.
 
 ---
 
@@ -299,7 +332,10 @@ Then re-run the harness (proves the built core still passes) and re-open Unity s
 
 Open `unity\` with Unity 6. On first open it resolves packages, including the MCP for Unity
 bridge from the git URL in `unity\Packages\manifest.json` (the resolved copy is gitignored).
-Newtonsoft.Json comes from `com.unity.nuget.newtonsoft-json`.
+The client itself is the embedded package at `unity\Packages\com.jacksonzane.twicetold-npc`
+(asmdefs `NpcMemory.Core`, the engine-agnostic core, and `NpcMemory.Unity`, the adapter); Unity
+compiles it in place, and its `com.unity.nuget.newtonsoft-json` dependency is what pulls in
+Newtonsoft.Json.
 
 The gray-box scene holds the Branwen capsule (nameplate `Branwen` since E2, 2026-08-19) with
 `NpcMemoryNpc` (the adapter) and `NpcDemoDriver` (the IMGUI dev-tool overlay). The committed
@@ -326,6 +362,10 @@ development conveniences; nothing in the service depends on them.
 ## Teardown
 
 ```powershell
-docker compose down          # keeps the volume
-docker compose down -v       # deletes the database volume too
+docker compose down          # stops the stack, keeps the volume and the image
+docker compose down -v       # also deletes the database volume (the memories)
+docker image rm twicetold-api    # reclaim the built API image when you no longer need it
 ```
+
+`down -v` removes the volume but never the image; the image rebuilds from cache in seconds on
+the next `up -d --build`.

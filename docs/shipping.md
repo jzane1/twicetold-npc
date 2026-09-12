@@ -62,9 +62,9 @@ exactly like a database socket:
   TLS and enforces auth: mutual TLS between your game server and the proxy, or a shared secret
   that only your game server holds. This is a recipe, not a promise to build auth into the
   service; the service stays loopback-bound and dumb.
-- **Keep the database on loopback too.** The shipped compose file publishes 5432; the
-  packaging pass scopes it to `127.0.0.1`. Until then, don't run it on a machine with a public
-  interface without a firewall rule.
+- **Both ports are loopback-bound.** The shipped compose file publishes Postgres (5432) and
+  the API (8000) on `127.0.0.1` only, so neither is reachable from off the host. Don't rebind
+  them to a public interface without a firewall rule and the reverse proxy above.
 - **The Ledger is a designer tool.** It's served by the API at `/ledger` and reads the record
   in full. Don't expose it to players. A Host-header guard for the inspector page (the
   DNS-rebinding class of attack against localhost tools) lands in the release-hygiene pass
@@ -98,12 +98,15 @@ line is simply never shown; nothing has to be unwritten.
 
 | Target | Status | Note |
 |---|---|---|
-| Unity Editor, Windows, macOS, Linux | yes | the DLL targets netstandard2.1, Unity 6's compatibility profile |
+| Unity Editor, Windows, macOS, Linux | yes | the client targets netstandard2.1, Unity 6's compatibility profile |
 | iOS, Android (IL2CPP) | yes, with a `link.xml` | the client serializes with Newtonsoft.Json (`com.unity.nuget.newtonsoft-json`); preserve `NpcMemory.Core` and `Newtonsoft.Json` from stripping |
 | WebGL | no | Unity's constraint: no `System.Net` on the Web player, so an HTTP client library cannot run there |
 
-The Unity project in `unity\` is a gray-box reference scene, not a package yet; the Unity
-Package Manager package and the one-command backend spin-up are the packaging pass.
+The Unity client ships as an embedded Unity Package Manager package at
+`unity\Packages\com.jacksonzane.twicetold-npc` (install by git URL with `?path=`, or copy the
+folder into your project's `Packages`); the `unity\` project itself is the gray-box reference
+scene that consumes it. The one-command backend spin-up (`docker compose up -d --build`) is the
+other half of the packaging pass.
 
 ## Erasing a player
 

@@ -23,7 +23,11 @@ client package. This file is rules. Design knowledge lives in docs/ — point, d
   shown to the operator. Never bash syntax.
 - Python 3.14 (global, on PATH). Postgres 16 + pgvector via Docker (pgvector/pgvector image).
 - Secrets live only in .env at repo root. Never print, log, or commit .env contents.
-- C# root namespace: NpcMemory. Unity scripts under Assets\Scripts\ until packaging is settled.
+- C# root namespace: NpcMemory. The client ships as an embedded UPM package (settled F2,
+  2026-09-12) at unity\Packages\com.jacksonzane.twicetold-npc\ (Runtime\Core is the
+  engine-agnostic core, Runtime\ the MonoBehaviour adapter). NpcDemoDriver stays under
+  Assets\Scripts\ as the project dev rig, not shipped. There is no committed DLL: the dotnet
+  harness compiles the same Runtime\Core sources via client\NpcMemory.Core\NpcMemory.Core.csproj.
 
 ## Stack constants — do not substitute
 - FastAPI; psycopg v3 with AsyncConnectionPool; hand-written SQL. No ORM, no query builder.

@@ -118,20 +118,22 @@ compounding write-back, held to a gist pin and a drift budget.
 
 ## Quickstart
 
-[docs/SETUP.md](docs/SETUP.md) takes a fresh clone to a running system. The short version,
-PowerShell:
+[docs/SETUP.md](docs/SETUP.md) takes a fresh clone to a running system. The short version is
+one command, PowerShell:
 
 ```powershell
-python -m pip install -r requirements.txt
-Copy-Item .env.example .env    # then edit it
-docker compose up -d
-python db\migrate.py
-python -m app.serve
+Copy-Item .env.example .env    # then edit it, or keep the fake-mode defaults
+docker compose up -d --build
 ```
 
+That builds the API image, starts Postgres with pgvector, applies migrations 001 through 008
+as a one-shot step, and serves the API, all bound to `127.0.0.1`. The compose path needs no
+host Python. The first build takes a few minutes and the image is about 4.9 GB on disk (1.7 GB
+to pull); after that the stack is healthy within a minute of `up`. Then open
+`http://127.0.0.1:8000/ledger` for The Ledger or `/docs` for the OpenAPI surface.
+
 It runs offline and keyless by default (`TWICETOLD_PROVIDER_MODE=fake`), so you can explore
-before you hold any key. Then open `http://127.0.0.1:8000/ledger` for The Ledger, `/docs` for
-the OpenAPI surface, or drive a character from the REPL with `python -m app.cli --agent <uuid>`.
+before you hold any key.
 
 | Path | Keys | What you get |
 |---|---|---|
@@ -139,14 +141,20 @@ the OpenAPI surface, or drive a character from the REPL with `python -m app.cli 
 | Anthropic | `ANTHROPIC_API_KEY`, plus `OPENAI_API_KEY` for embeddings | the measured slate: the numbers above |
 | Any OpenAI-compatible server | optional | Ollama, vLLM, LM Studio, OpenAI itself; see Providers |
 
-Honest install notes: it's heavy (spaCy model wheels plus transformers), the first observe in
-a process pays a multi-minute lazy NLP load, I developed and tested on Python 3.14 only, and
-the docs are Windows/PowerShell-first.
+Prefer to run the backend on your host? [docs/SETUP.md](docs/SETUP.md) has the bare-metal dev
+path (host Python, `docker compose up -d db` for just the database, then `python -m app.serve`)
+and the REPL, `python -m app.cli --agent <uuid>`.
+
+Honest install notes: the API image is heavy (the spaCy model plus transformers and torch), I
+developed and tested on Python 3.14 only, and the docs are Windows/PowerShell-first. On the
+bare-metal path the first observe in a process pays a multi-minute lazy NLP load; the compose
+image bakes that in at build time.
 
 ## Your first NPC
 
 Four calls, in this order. [docs/first-npc.md](docs/first-npc.md) has the thirty-line
-MonoBehaviour and the request bodies.
+MonoBehaviour and the request bodies; the Unity client installs as a package
+(`unity/Packages/com.jacksonzane.twicetold-npc`, by git URL with `?path=`).
 
 1. **Create the agent** (`POST /v1/agents`) with a name and a seed identity, and keep the UUID:
    it is the character.
@@ -270,4 +278,5 @@ SLMs on the eval side) is mapped paper by paper in my research notes.
 Apache-2.0 ([LICENSE](LICENSE)); the third-party inventory is in [NOTICE](NOTICE). psycopg is
 the one copyleft dependency (LGPL-3.0-only, not vendored), the bundled Warriner 2013 lexicon is
 CC-BY-4.0 with its attribution in `data\lexicons\`, and the fastcoref weights are MIT,
-downloaded at first use. Built by Jackson Zane.
+downloaded at first use on the bare-metal path or baked into the API image at build time on
+the compose path. Built by Jackson Zane.

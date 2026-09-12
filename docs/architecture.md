@@ -72,10 +72,14 @@ Paths in these docs are written relative to the repo root (`docs\`, `app\`, `uni
 developer path is recorded anywhere, so a clone works from any location. Unity 6, flatscreen 3D
 (CharacterController + mouse-look, raycast-plus-key interactables); Unity's external script editor
 is VS Code. Global Python 3.14.3 on PATH. Secrets live in `.env` at repo root, never in docs.
-C# root namespace `NpcMemory`; Unity scripts under `Assets\Scripts\` until the package layout
-(`com.jacksonzane.npc-memory`) is settled; Unity Package Manager packaging lands at Phase F2,
-BEFORE the demo video *(the 2026-08-24 re-sequencing moved the whole demo endgame after Phase F;
-this line originally read "after the demo video" — corrected at F0, 2026-08-26)*.
+C# root namespace `NpcMemory`; the Unity client ships as an embedded Unity Package Manager
+package at `unity\Packages\com.jacksonzane.twicetold-npc\` (`Runtime\Core` the engine-agnostic
+core, `Runtime\` the MonoBehaviour adapter; `NpcDemoDriver` stays under `Assets\Scripts\` as the
+dev rig) *(landed at Phase F2, 2026-09-12. Earlier this line deferred the layout under
+`Assets\Scripts\` with the working id `com.jacksonzane.npc-memory`, settled to the product name
+at build. The 2026-08-24 re-sequencing had moved the demo endgame after Phase F, so F2 packaging
+preceded the video; the line before that read "after the demo video", corrected at F0,
+2026-08-26.)*.
 
 **Backend.** FastAPI; psycopg v3 with `AsyncConnectionPool`; hand-written SQL (no ORM);
 PostgreSQL 16 + pgvector in Docker (the `pgvector/pgvector` image); UUID primary keys minted
