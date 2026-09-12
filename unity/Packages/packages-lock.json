@@ -16,6 +16,14 @@
         "com.unity.test-framework": "1.1.31"
       }
     },
+    "com.jacksonzane.twicetold-npc": {
+      "version": "file:com.jacksonzane.twicetold-npc",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "3.2.2"
+      }
+    },
     "com.unity.ai.navigation": {
       "version": "2.0.12",
       "depth": 0,

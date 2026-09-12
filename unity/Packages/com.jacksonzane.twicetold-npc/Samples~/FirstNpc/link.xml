@@ -1,0 +1,8 @@
+<linker>
+  <!-- Newtonsoft deserializes the NpcMemory.Core DTOs by reflection. IL2CPP
+       managed code stripping must not remove their setters, so preserve both
+       assemblies (see the platform matrix in docs/shipping.md). Importing this
+       sample copies the file under Assets/Samples, where Unity honors link.xml. -->
+  <assembly fullname="NpcMemory.Core" preserve="all" />
+  <assembly fullname="Newtonsoft.Json" preserve="all" />
+</linker>

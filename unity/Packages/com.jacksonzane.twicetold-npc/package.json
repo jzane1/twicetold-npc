@@ -1,0 +1,29 @@
+{
+  "name": "com.jacksonzane.twicetold-npc",
+  "version": "0.1.0",
+  "displayName": "Twicetold NPC",
+  "description": "Unity client for the twicetold-npc long-memory NPC service: an engine-agnostic C# core (NpcMemoryClient, NpcSession, wire models) plus a thin MonoBehaviour adapter. Provision an agent, observe gameplay, stream dialogue, correct the record, and close scenes against a self-hosted backend.",
+  "unity": "2021.3",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Jackson Zane"
+  },
+  "dependencies": {
+    "com.unity.nuget.newtonsoft-json": "3.2.2"
+  },
+  "keywords": [
+    "npc",
+    "memory",
+    "dialogue",
+    "llm",
+    "ai",
+    "client"
+  ],
+  "samples": [
+    {
+      "displayName": "First NPC",
+      "description": "The thirty-line integration from docs/first-npc.md, plus the link.xml that IL2CPP builds need.",
+      "path": "Samples~/FirstNpc"
+    }
+  ]
+}

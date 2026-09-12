@@ -13,9 +13,16 @@
     <LangVersion>9.0</LangVersion>
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- F2 (2026-09-12): the core source now lives in the embedded UPM package,
+         so Unity compiles it directly and there is no committed DLL to refresh.
+         This project compiles the SAME files for the dotnet harness. AssemblyName
+         defaults to the project name, so the bin output stays NpcMemory.Core.dll.
+         The glob matches *.cs only; Unity's minted .meta files never match. -->
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\unity\Packages\com.jacksonzane.twicetold-npc\Runtime\Core\**\*.cs" LinkBase="Core" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
