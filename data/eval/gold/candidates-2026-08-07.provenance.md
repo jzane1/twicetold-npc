@@ -22,5 +22,6 @@ rater); the compare arms (haiku, sonnet-5) were also excluded from the rater cho
 23 pass / 1 fail; reconstruction_faithfulness 30 supported / 0 unsupported.
 
 **Jack's standing override:** any row Jack re-labels wins over this pass; re-run
-`agreement` after (seconds, offline). The join target is the tracked artifact copy
-`run-2026-08-07-judged-artifact.json` in this directory.
+`agreement` after (seconds, offline). The join target is the judged-run artifact
+(`run-2026-08-07-judged-artifact.json`), kept in the local eval record, not in the
+public tip.

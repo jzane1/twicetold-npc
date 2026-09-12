@@ -17,8 +17,8 @@
 
 Immediate-queue item 2's spec session. Consolidates the artifact-queue "Unity client C# API
 surface" entry, architecture's environment section (Unity 6, flatscreen 3D, `NpcMemory` root
-namespace, `Assets\Scripts\` until packaging), the audit solutions doc's choreography + engineering
-spec (`external-audit-2026-07-22-solutions.md`), and the **2026-07-27 demo-vehicle ruling**
+namespace, `Assets\Scripts\` until packaging), the July 2026 external audit's choreography +
+engineering spec (its solutions doc, in the local record), and the **2026-07-27 demo-vehicle ruling**
 (dated "Demo-vehicle ruling" entry in `decisions.md`) into one build target over the frozen
 schema (ledger 001–005 — **no migration is expected**; if a fork below rules in server work that
 needs one, it follows the numbered-migration rule as normal).
@@ -169,7 +169,7 @@ queue, no pump, ~40 lines:
 
 **No verb auto-drains, by ruling** — no hidden multi-second await inside an on-camera verb.
 Integrator guidance: **drain at scene edges** (the reflect-at-scene-edges shape); the E2 beat
-script places the actual drains (`demo-beat-script.md` beat 3: an explicit Drain before the
+script places the actual drains (beat 3: an explicit Drain before the
 scene boundary). An un-drained observe is bi-temporally safe — it lands
 with the correct world time, it is merely not yet retrievable until it arrives. Orthogonal to
 C1's server-side deferred writes: deferral shortens the round trip, fire-and-forget hides it —
@@ -206,9 +206,10 @@ thread; no blocking `.Result`/`.Wait()` anywhere), dialogue text to a world-spac
 TMP field, directive callback driving a visible acknowledgment (nameplate flash / simple move),
 reputation callback to a debug readout *(both callbacks and their driver wiring removed by the
 A1 re-shape, 2026-08-04)*, scene-boundary emission wired to the camera-cut /
-scene-change points. MCP for Unity connects at this step (`mcp-setup.md` §2) with an **early
+scene-change points. MCP for Unity connects at this step (the setup runbook lives in the
+local record) with an **early
 one-hour verification** (the bridge has never been connected; note that scene-manipulation
-operations fail during Play mode — `mcp-setup.md` §2 — so the Play-mode debug loop is partly
+operations fail during Play mode, so the Play-mode debug loop is partly
 stop/start).
 
 ### The Ledger (browser page)

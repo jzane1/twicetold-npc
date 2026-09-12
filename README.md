@@ -38,7 +38,7 @@ turn-path role), from a Windows laptop against hosted APIs.
 | The gist-pin ablation | gist precision **0.83 → 0.70** with the pin off | 2026-08-12. The drift budget stayed under threshold in both arms, which is the finding: distance alone cannot see fact damage. |
 | Cost, all-in | **$0.084 per 100 turns** | 2026-08-26. A turn is one dialogue line on the 60-turn load driver, observes included; write, escalation, dialogue and embedding calls are priced from the token counts every payload carries. At 20 turns per player-hour that is about $0.02 an hour. |
 | Perceived first word, p50 | **826–917 ms** | 2026-08-26, five runs across the day. Streamed text, time to first word, no speech in the loop. |
-| Verification | **228** tests (**213** keyless, run at the end of every working turn), **16** walkers, **33** verified floors, a **53**-check C# harness | 2026-09-11 |
+| Verification | **228** tests (**213** in the fast subset, run at the end of every working turn), **16** walkers, **33** verified floors, a **53**-check C# harness | 2026-09-11 |
 | Surface | **18** routes, **8** migrations, **2** model backends, **2** purge verbs | 2026-09-02 |
 
 ## How a turn works
@@ -212,6 +212,13 @@ this. The short version:
 
 ## How it's verified
 
+I built this solo, in logged sessions since the first commit on 2026-07-12, with an AI pair,
+and the loop is the part I'd defend first: design forks get surfaced to me as priced options,
+I rule on them, the build lands with its walker, and an independent verifier agent re-runs
+the floor before anything builds on top. The `.claude\` apparatus that enforces that loop
+(auditor agents, verification hooks, the operating rules in `CLAUDE.md`) is tracked in this
+repo on purpose. The judgment is mine; the apparatus is inspectable.
+
 - **Floors.** Every layer is verified against the one beneath it, and a row lands in an
   append-only floors ledger only after an independent verifier pass returns pass: 33
   rows, from the schema to the provider seam. Floors are re-openable; re-verifying one is the
@@ -221,17 +228,11 @@ this. The short version:
   the 213-scenario fast subset run by a repo hook at the end of every working turn; plus
   sixteen deep walkers (`tests\verify_*.py`), one per layer, that prove a layer once at build
   time.
-- **The registers.** An append-only decision register (80 dated rulings, each with what it
-  beat and why), an append-only session log, and append-only floor evidence. When a mid-build
-  redesign made a shipped subsystem wrong, it was removed whole and the floors re-verified;
-  the registers record both.
-
-I built this solo, in logged sessions since the first commit on 2026-07-12, with an AI pair,
-and the loop is the part I'd defend first: design forks get surfaced to me as priced options,
-I rule on them, the build lands with its walker, an independent verifier re-runs the floor,
-and the registers record it. The `.claude\` apparatus that enforces that loop (auditor agents,
-verification hooks, the operating rules in `CLAUDE.md`) is tracked in this repo on purpose.
-The judgment is mine; the process is inspectable.
+- **The working record.** An append-only decision register (every ruling dated, with what it
+  beat and why), a session log, and per-layer floor evidence sit behind all of this. They
+  discipline the work and stay local: this repo ships the apparatus that writes the record,
+  not the record itself. When a mid-build redesign made a shipped subsystem wrong, it was
+  removed whole and the floors re-verified; the record holds both.
 
 ## Evaluation
 
