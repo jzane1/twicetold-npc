@@ -1,7 +1,13 @@
-# Local dev database for twicetold-npc.
-# Postgres 16 + pgvector. Secrets are NOT stored here — every value is interpolated
-# from the gitignored .env at repo root (docker compose reads .env automatically).
-# Schema is applied by db\migrate.py, not by this file.
+# twicetold-npc backend stack.
+# `docker compose up -d --build` brings up Postgres+pgvector, the one-shot
+#   migration runner, and the API. That is the integrator's one command, and it
+#   needs no host Python.
+# `docker compose up -d db` brings up the database only (the maintainer's dev
+#   flow, with a host-side `python -m app.serve` beside it).
+# Secrets are NOT stored here: every value is interpolated from the gitignored
+# .env at repo root (docker compose reads .env natively). Schema is applied by
+# the one-shot `migrate` service (db\migrate.py), forward-only and idempotent.
+# Both published ports bind 127.0.0.1 only: treat the API like a database socket.
 services:
   db:
     image: pgvector/pgvector:pg16
@@ -12,7 +18,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - twicetold-pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -20,6 +26,67 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  migrate:
+    build: .
+    image: twicetold-api
+    pull_policy: build
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    # --database-uri bypasses migrate.py's own .env read (that value points at
+    # localhost, which is wrong inside a container), so no .env mount is needed.
+    command:
+      [
+        "python",
+        "db/migrate.py",
+        "--database-uri",
+        "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}",
+      ]
+
+  api:
+    build: .
+    image: twicetold-api
+    pull_policy: build
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      # Overrides the mounted .env's localhost URI (config.load_env lets the
+      # process environment win for DATABASE_URI). Every other knob still comes
+      # from the mounted file.
+      DATABASE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    volumes:
+      # app.config requires the FILE at /app/.env. create_host_path: false turns
+      # a missing .env into a loud `up` failure instead of Docker silently
+      # creating a .env DIRECTORY in the repo. Fix: Copy-Item .env.example .env
+      - type: bind
+        source: ./.env
+        target: /app/.env
+        read_only: true
+        bind:
+          create_host_path: false
+    healthcheck:
+      # No route was added for this (the route count is pinned): /openapi.json is
+      # served only after the lifespan finishes warming, so any 200 means fully
+      # warm. python, not curl (curl is absent in python:slim).
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/openapi.json', timeout=5)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 300s
 
 volumes:
   twicetold-pgdata:

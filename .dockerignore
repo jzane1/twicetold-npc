@@ -1,0 +1,19 @@
+# Whitelist the build context: ONLY what the image needs reaches the daemon.
+# Everything else is excluded by the leading `*`: .env (which must NEVER reach
+# the context or the image), .git/, .claude/, unity/, client/, docs/, tests/,
+# data/eval/, "Research Papers"/ (~117MB), media. Keeps the context small.
+*
+!app/
+!db/
+!data/lexicons/
+!ledger/index.html
+!requirements.txt
+!LICENSE
+!NOTICE
+# Re-exclude caches inside the allowed trees (later patterns win).
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+**/.ruff_cache/
+# Belt-and-braces: already excluded by `*`, restated because it must never move.
+.env
