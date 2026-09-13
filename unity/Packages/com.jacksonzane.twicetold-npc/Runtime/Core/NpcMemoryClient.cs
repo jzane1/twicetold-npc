@@ -50,12 +50,11 @@ namespace NpcMemory
         private readonly bool _ownsHttp;
         private readonly string _baseUrl;
 
-        /// <summary>Wall time in ms around the LAST completed HTTP call —
-        /// the client's half of "instrument at the seam" (CLAUDE.md). The
+        /// <summary>Wall time in ms around the LAST completed HTTP call, the
+        /// client's half of "instrument at the seam" (architecture.md §2). The
         /// server reports its own decomposition inside the payload; the gap
-        /// between that and this is transport, visible from day one. Built
-        /// 2026-07-28 (unity-client.md asserted this term before it
-        /// existed). Not on the wire: purely client-side.</summary>
+        /// between that and this is transport, visible from day one. Not on the
+        /// wire: purely client-side.</summary>
         public double ClientTotalMs { get; private set; }
 
         /// <summary>Per-call (route path, wall ms) as each call completes.
@@ -103,7 +102,7 @@ namespace NpcMemory
             SceneBoundaryEvent evt, CancellationToken ct = default) =>
             PostAsync<SceneResult>("/v1/events/scene-boundary", evt, DefaultTimeout, ct);
 
-        /// <summary>The diegetic-correction event (dissonance.md, C4): one
+        /// <summary>The diegetic-correction event (architecture.md §8): one
         /// retell model call rides it server-side, so it takes the
         /// observe-class timeout (the ReflectAsync precedent).</summary>
         public Task<DiegeticCorrectionResult> DiegeticCorrectAsync(

@@ -55,8 +55,8 @@ namespace NpcMemory
         public string? PrewarmContext { get; set; }
     }
 
-    /// <summary>The in-world confrontation event (dissonance.md, C4
-    /// 2026-08-17) — the third diegetic event. References a target memory;
+    /// <summary>The in-world confrontation event (architecture.md §8), the
+    /// third diegetic event. References a target memory;
     /// ChallengeTypology is REQUIRED by the wire contract
     /// (observed|told|inferred|reflected); a null ChallengeWeight resolves
     /// through the server-side default knob.</summary>
@@ -205,7 +205,7 @@ namespace NpcMemory
         public double TotalMs { get; set; }
     }
 
-    /// <summary>Result of the diegetic-correction event (dissonance.md, C4):
+    /// <summary>Result of the diegetic-correction event (architecture.md §8):
     /// the decided verb, the head swap + correction record IDs, and every
     /// resolved decision input (both sides recomputable client-side). The
     /// retell prose rides in Content; its spend is counted under the
@@ -538,7 +538,7 @@ namespace NpcMemory
         public DateTimeOffset CreatedAt { get; set; }
     }
 
-    /// <summary>One diegetic confrontation record (C4, dissonance.md) —
+    /// <summary>One diegetic confrontation record (architecture.md §8):
     /// the verb, the head it produced, and the client's in-world reference
     /// verbatim; the unscored chain read is its inspector surface.</summary>
     public sealed class CorrectionOut

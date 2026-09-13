@@ -425,7 +425,7 @@ namespace NpcMemory.Harness
                     && !clearedTurn.Instrumentation.SceneTypeUnknown,
                 "a bare boundary clears the session type back to the default");
 
-            // -- [14] the diegetic-correction event (dissonance.md, C4) ----
+            // -- [14] the diegetic-correction event (architecture.md §8) ----
             // Structural over the wire: verb + IDs + the echoed resolved
             // inputs (both sides recomputable client-side) + the chain read's
             // correction record + the 409 CAS. The formula extremes, anchor

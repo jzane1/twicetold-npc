@@ -344,7 +344,7 @@ namespace NpcMemory
                 ct);
 
         /// <summary>The diegetic-correction event at the session's effective
-        /// time (dissonance.md, C4; the CorrectAsync time precedent): an
+        /// time (architecture.md §8; the CorrectAsync time precedent): an
         /// in-world confrontation of a memory — the server decides defend vs
         /// fold mechanically and the reconstruction role writes the new
         /// telling. The "observed" default is caller ergonomics; the wire
