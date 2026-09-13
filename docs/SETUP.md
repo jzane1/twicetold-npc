@@ -1,7 +1,7 @@
 # twicetold-npc — setup
 
 From a fresh clone to a running system. **Windows 11 / PowerShell**; every command below is
-PowerShell with backslash paths (a project rule, not a preference — see `CLAUDE.md`).
+PowerShell with backslash paths throughout (a project rule, not a preference).
 
 Written 2026-07-28. Before it existed, the bring-up path lived only inside `requirements.txt`'s
 header comment and scattered session-log entries, and `docker compose up` appeared in no document

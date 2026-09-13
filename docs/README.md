@@ -31,7 +31,6 @@ Moved here from the README at F1 (2026-09-03) so the front page stays short.
 | `ledger\` | The Ledger, served by the API at `/ledger` |
 | `data\` | eval corpora, arms, blind gold labels, and the bundled affect lexicon |
 | `docs\` | design truth, layer specs, the integrator guides (this index) |
-| `.claude\` | the AI-pair apparatus: auditor agents, hooks, session commands |
 
 ---
 

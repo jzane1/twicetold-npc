@@ -46,9 +46,15 @@ unity/Packages/com.coplaydev.unity-mcp/
 # milestone numbers get quoted into dated doc entries instead)
 data/eval/runs/
 
-# Claude Code personal overrides
+# THE AI-PAIR APPARATUS — untracked-local by ruling (2026-09-13). The operating
+# rules (CLAUDE.md) and the .claude\ tooling (auditor agents, verification hooks,
+# session commands, settings) are internal build process, not part of the
+# published portfolio. They stay on disk and keep working locally; they only
+# leave the public tip. tests\CLAUDE.md stays TRACKED: it is the structural-test
+# discipline the suite itself cites, and reads as clean public documentation.
+/CLAUDE.md
+.claude/
 CLAUDE.local.md
-.claude/settings.local.json
 
 # The research folder is a ~117 MB store of 45 source PDFs — too big to upload,
 # and not ours to redistribute. The WRITING that came out of it (FINDINGS.md,

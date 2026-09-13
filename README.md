@@ -223,9 +223,9 @@ this. The short version:
 I built this solo, in logged sessions since the first commit on 2026-07-12, with an AI pair,
 and the loop is the part I'd defend first: design forks get surfaced to me as priced options,
 I rule on them, the build lands with its walker, and an independent verifier agent re-runs
-the floor before anything builds on top. The `.claude\` apparatus that enforces that loop
-(auditor agents, verification hooks, the operating rules in `CLAUDE.md`) is tracked in this
-repo on purpose. The judgment is mine; the apparatus is inspectable.
+the floor before anything builds on top. The judgment at each fork is mine; the auditor and
+verifier agents, the hooks, and the operating rules that run the loop live in my local
+toolchain, not the published tree.
 
 - **Floors.** Every layer is verified against the one beneath it, and a row lands in an
   append-only floors ledger only after an independent verifier pass returns pass: 33
@@ -238,9 +238,9 @@ repo on purpose. The judgment is mine; the apparatus is inspectable.
   time.
 - **The working record.** An append-only decision register (every ruling dated, with what it
   beat and why), a session log, and per-layer floor evidence sit behind all of this. They
-  discipline the work and stay local: this repo ships the apparatus that writes the record,
-  not the record itself. When a mid-build redesign made a shipped subsystem wrong, it was
-  removed whole and the floors re-verified; the record holds both.
+  discipline the work and stay local; the published repo carries the code, tests, and docs,
+  not the internal record or the tooling that writes it. When a mid-build redesign made a
+  shipped subsystem wrong, it was removed whole and the floors re-verified; the record holds both.
 
 ## Evaluation
 
