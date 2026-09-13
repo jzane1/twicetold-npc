@@ -1,5 +1,5 @@
-"""schemas.py — ingestion + retrieval API v1 wire models (docs\\write-path.md,
-docs\\read-path.md).
+"""schemas.py: ingestion and retrieval API v1 wire models (architecture.md
+§5 and §6).
 
 The FastAPI routes are pass-throughs: for one call, the route's JSON is
 exactly the serialized result the service returned (`IngestResult` /
@@ -11,9 +11,8 @@ Structural notes tied to the frozen migration-01 schema:
   (passthrough / idempotency-not-enforced per the spec); they are not stored
   and not echoed in results.
 - `location_description`, when supplied, is embed-only (no raw column).
-- `embedding_failed` reflects the 2026-07-13 ruling that an embedding-call
-  failure lands the write with a NULL embedding; since the 2026-07-18 freeze
-  ruling (fact-level-correction.md) the queryable signal is
+- `embedding_failed` reflects that an embedding-call failure lands the write
+  with a NULL embedding; the queryable signal (architecture.md §4.4) is
   `memory_fact_versions.embedding IS NULL` on the live fact head — observe
   no longer writes `memories.embedding`. This field is its payload mirror.
 """
@@ -39,7 +38,7 @@ class AffectOverride(BaseModel):
 
 
 class ObserveEvent(BaseModel):
-    """The core `observe` event (write-path.md event contract)."""
+    """The core `observe` event (architecture.md §5 event contract)."""
 
     agent_id: UUID
     observation_text: str = Field(min_length=1)
@@ -91,7 +90,7 @@ class SceneBoundaryEvent(BaseModel):
 
 class DiegeticCorrectionEvent(BaseModel):
     """The in-world confrontation event — POST /v1/events/diegetic-correction
-    (dissonance.md; the C4 rulings 2026-08-17; the third route in the
+    (architecture.md §8; the third route in the
     diegetic namespace). References a target `memory_id` by contract:
     automatic conflict discovery is CUT (2026-08-04) — the game names what
     was challenged. `challenge_typology` is REQUIRED (client declaration
@@ -128,8 +127,7 @@ class PinRequest(BaseModel):
 
 class CorrectionRequest(BaseModel):
     """Body of POST /v1/memories/{memory_id}/correction — the operator's
-    replace-model fix (authorial-correction.md, build shapes ruled
-    2026-07-18). `content` is stored byte-verbatim as the corrected head — no
+    replace-model fix (architecture.md §8). `content` is stored byte-verbatim as the corrected head — no
     model call touches it. `client_timestamp` is the correction's world time
     t_c (prior head invalid_at = corrected head valid_at — the coherent-
     chain-timeline precedent). `expected_detail_id`, when supplied, makes the
@@ -275,7 +273,7 @@ class PinResult(BaseModel):
 class CorrectionResult(BaseModel):
     """Result of the authorial correction — both chains' head swaps + IDs +
     instrumentation. v1's "no token fields — no model calls" line is
-    superseded (fact-level-correction.md, ruled 2026-07-18): one embed call
+    superseded (architecture.md §4.4): one embed call
     rides the verb, so the corrected fact basis can steer retrieval; its
     timing and tokens land here. Since the gate build (fork 3, 2026-07-19)
     the verb also re-derives entities: `entities` is the merged NER +
@@ -296,7 +294,7 @@ class CorrectionResult(BaseModel):
 
 
 class DiegeticCorrectionResult(BaseModel):
-    """Result of the diegetic-correction event (dissonance.md, C4) — flat,
+    """Result of the diegetic-correction event (architecture.md §8), flat,
     instrumentation rides the response (the CorrectionResult no-runs-table
     precedent; the `corrections` row is the persistent record). Every
     resolved decision input is exposed so a structural test recomputes both
@@ -464,8 +462,7 @@ class ReflectResult(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Read path — dialogue-init retrieval (docs\read-path.md, built rulings
-# 2026-07-14)
+# Read path: dialogue-init retrieval (architecture.md §6)
 # ---------------------------------------------------------------------------
 
 
@@ -487,7 +484,7 @@ class WeightOverrides(BaseModel):
 
 
 class DialogueInitRequest(BaseModel):
-    """Dialogue-init retrieval request (read-path.md request contract).
+    """Dialogue-init retrieval request (architecture.md §6 request contract).
 
     `query_text` is embedded AS-IS (ruled 2026-07-14: the integrator authors
     the probe; the service never composes prose — that ruling stands).
@@ -624,7 +621,7 @@ class RetrievalInstrumentation(BaseModel):
     # stage are deliberately untouched (reconstruction byte-identical).
     context_active: bool = False
     context_components: list[str] = Field(default_factory=list)
-    # Reconstruction serving stage (reconstruction.md, built 2026-07-17).
+    # Reconstruction serving stage (architecture.md §7).
     # All defaulted: pre-swap constructions and payload shapes stand. Failures
     # in the serving stage reuse degraded/degraded_reason above.
     reconstruction_ms: float = 0.0
@@ -654,8 +651,7 @@ class RetrievalResult(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Dialogue turn — the CLI-harness seam (docs\cli-harness.md, build rulings
-# 2026-07-15). Four consumers today: the REPL and the load driver call the
+# Dialogue turn: the dialogue seam (architecture.md §9). Four consumers today: the REPL and the load driver call the
 # seam in-process, and both HTTP routes serve these models — `POST
 # /v1/dialogue/turn` (2026-07-23) and its SSE twin `POST
 # /v1/dialogue/turn/stream` (2026-07-27), which the C# client mirrors
@@ -674,8 +670,7 @@ class ScoredRef(BaseModel):
 
 
 class DialogueTurnRequest(BaseModel):
-    """One dialogue turn (cli-harness.md request contract; re-shaped by A1
-    2026-08-04 — the behavior/reputation/recent-actions surface is gone).
+    """One dialogue turn (architecture.md §9 request contract).
 
     Scene state lives in the caller (identity version, scene basis time,
     loaded set, context) and rides on every request unreinterpreted.
@@ -926,8 +921,8 @@ class EnrichmentRunOut(BaseModel):
 
 
 class CorrectionOut(BaseModel):
-    """One diegetic confrontation record (corrections — schema since 001,
-    written since C4, dissonance.md): the verb, the head the confrontation
+    """One diegetic confrontation record (corrections, schema since 001;
+    architecture.md §8): the verb, the head the confrontation
     produced, and the client's in-world reference verbatim. The unscored
     chain read is its inspector surface (the enrichment-run-log
     precedent)."""
@@ -971,7 +966,7 @@ class MemoryChainResult(BaseModel):
     enrichment_pending: bool = False
     enrichment_attempts: int = 0
     enrichment_runs: list[EnrichmentRunOut] = Field(default_factory=list)
-    # Diegetic confrontation records (C4, dissonance.md) — defaulted, so
+    # Diegetic confrontation records (architecture.md §8), defaulted, so
     # every pre-C4 construction stands and the read stays additive.
     corrections: list[CorrectionOut] = Field(default_factory=list)
     details: list[DetailVersionOut]

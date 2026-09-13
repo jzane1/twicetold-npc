@@ -2,9 +2,9 @@
 
 psycopg v3 with AsyncConnectionPool (stack constant; no ORM, no query
 builder). The observe insert is ONE transaction: memories row + `original`
-memory_details head + `original` memory_fact_versions head (migration 002,
-fact-level-correction.md) + memory_gist_spans + any new identity_components
-land together or not at all (write-path.md §pipeline step d). Nothing here
+memory_details head + `original` memory_fact_versions head (migration 002)
++ memory_gist_spans + any new identity_components
+land together or not at all (architecture.md §5). Nothing here
 ever UPDATEs stored content; the in-place writes are the runtime scalar
 `set_pinned` (`memories.pinned`, write-path v1) and, since the deferred-write
 build (migration 006, ruled 2026-08-12), the ONE-SHOT NULL->value completion
@@ -18,7 +18,7 @@ system; the `agents.reputation` column stays in the schema, unwritten and
 unread.) DELETEs are of two kinds. The reconstruction-cache evictions in
 `apply_authorial_correction`, `apply_diegetic_correction`, `apply_enrichment`,
 and `apply_reflection` remove derived rows, not memory content (the standing
-eviction invariant, authorial-correction.md: any chain writer outside the
+eviction invariant, architecture.md §7: any chain writer outside the
 reconstruction path evicts). The SOLE content DELETE is the purge carve-out —
 `purge_memory` (C6, ruled 2026-08-18) and its per-agent extension
 `purge_agent_memories` (ruled 2026-09-01, contract 2026-09-02), both over the
@@ -35,22 +35,22 @@ memories.embedding; the fact head is the sole vector home for post-002 rows,
 and `memory_fact_versions.embedding IS NULL` on the live head is the
 queryable embed-degradation signal (the 2026-07-13 signal, moved homes).
 
-Read-path candidate queries (read-path.md, 2026-07-14) are read-only: live
+Read-path candidate queries (architecture.md §6) are read-only: live
 memories (`memories.invalid_at IS NULL`) joined to the unique live detail
 head (`memory_details.invalid_at IS NULL`; uniqueness guaranteed by the
 one-live-head index) — and, for the vector probe, to the unique live fact
-head, whose embedding the `<=>` distance reads (fact-level-correction.md:
+head, whose embedding the `<=>` distance reads (architecture.md §4.4:
 retrieval follows the fix through this join). Invalidation excludes rows
 here, in SQL — decay never does (the two mechanisms stay distinct).
 
-Reconstruction (reconstruction.md, built 2026-07-17) writes through
+Reconstruction (architecture.md §7) writes through
 `write_back_reconstruction`: ONE transaction that supersedes the prior head
 (sets invalid_at — ordinary non-destructive supersession, never an UPDATE of
 content), inserts the new `reconstruction` head, and inserts the cache row —
 the serve-only-persisted-text rule rides on this atomicity. The cache tables'
 only writers live in the reconstruction path (the eviction invariant's
 precondition); any other chain writer evicts — `apply_authorial_correction`
-(authorial-correction.md) supersedes the live head with the operator's text
+(architecture.md §8) supersedes the live head with the operator's text
 byte-verbatim and deletes every cache row for that memory in the same
 transaction. `upsert_identity_document` is insert-if-absent (versions are
 content-addressed and immutable once written).
@@ -95,8 +95,8 @@ def build_pool(
 
 
 async def fetch_agent(pool: AsyncConnectionPool, agent_id: UUID) -> dict | None:
-    """`rigidity` joined the SELECT with C4 (dissonance.md — the decision's
-    per-NPC scalar; NULL resolves via dissonance_rigidity_default); `name`
+    """`rigidity` is the dissonance decision's per-NPC scalar (architecture.md
+    §8; NULL resolves via dissonance_rigidity_default); `name`
     with C5 (the agent-state read echoes the stored row). Additive: every
     consumer reads this dict by key."""
     async with pool.connection() as conn, conn.cursor() as cur:
@@ -436,7 +436,7 @@ _CANDIDATE_FROM = (
     "WHERE m.agent_id = %s AND m.invalid_at IS NULL"
 )
 # The vector probe additionally joins the live FACT head — the embedding the
-# <=> distance reads (fact-level-correction.md: retrieval follows the fix).
+# <=> distance reads (architecture.md §4.4: retrieval follows the fix).
 # `fv.invalid_at IS NULL` is stated verbatim so the planner matches the
 # partial-HNSW predicate on memory_fact_versions.
 #
@@ -705,8 +705,8 @@ async def fetch_memory_chain(pool: AsyncConnectionPool, memory_id: UUID) -> dict
             (memory_id,),
         )
         runs = await cur.fetchall()
-        # Diegetic confrontation records (corrections, schema since 001 —
-        # WRITTEN since C4, dissonance.md): the unscored chain read is the
+        # Diegetic confrontation records (corrections, schema since 001;
+        # architecture.md §8): the unscored chain read is the
         # record's inspector surface (the enrichment-run-log precedent).
         await cur.execute(
             "SELECT correction_id, detail_id, verb, source_event, "
@@ -847,8 +847,7 @@ async def fetch_agent_memories(
 
 @dataclass(frozen=True)
 class DialogueAgentState:
-    """The agent facts the dialogue turn consumes (cli-harness.md; shrunk by
-    the A1 re-shape 2026-08-04 — the reputation scalars left the read): seed
+    """The agent facts the dialogue turn consumes (architecture.md §9): seed
     identity prose for the prompt prefix and config for knob resolution."""
 
     agent_id: UUID
@@ -875,7 +874,7 @@ async def fetch_dialogue_agent_state(
 
 
 # ---------------------------------------------------------------------------
-# Reconstruction (reconstruction.md, built 2026-07-17): identity documents,
+# Reconstruction (architecture.md §7): identity documents,
 # the (memory_id x composed-key) cache, retelling sources, and the write-back.
 # ---------------------------------------------------------------------------
 
@@ -989,8 +988,8 @@ class ReconstructionSource:
     gist span offsets, and the drift anchor's content and cause (the latest
     chain row whose write_cause is in the anchor set — derivable, no
     pointer). The cause drives the constraint: on `authorial_correction`-
-    anchored chains the corrected head replaces the gist constraint (ruled
-    2026-07-17, authorial-correction.md)."""
+    anchored chains the corrected head replaces the gist constraint
+    (architecture.md §7 and §8)."""
 
     observation_text: str
     spans: list[tuple[int, int]]
@@ -1124,8 +1123,8 @@ async def apply_authorial_correction(
     entities: list[str] | None = None,
     expected_detail_id: UUID | None = None,
 ) -> CorrectionApplied | Literal["unknown_memory", "stale_head"]:
-    """The operator's replace-model correction (authorial-correction.md;
-    fact-following since the fact-level build, fact-level-correction.md): ONE
+    """The operator's replace-model correction (architecture.md §8;
+    fact-following): ONE
     transaction — supersede the live telling head at the correction's world
     time, insert the corrected `authorial_correction` head (valid_at = the
     same instant; the coherent-chain-timeline precedent), supersede the live
@@ -1214,7 +1213,7 @@ async def apply_authorial_correction(
 async def fetch_memory_dissonance_inputs(
     pool: AsyncConnectionPool, memory_id: UUID
 ) -> dict | None:
-    """The dissonance decision's inputs in one read (dissonance.md, C4): the
+    """The dissonance decision's inputs in one read (architecture.md §8): the
     memories-row scalars (owner for the 404 ownership check; importance_raw /
     typology for the formula, NULLs legal in the deferred window; pinned rides
     the response) joined to the live telling head (the retell prompt's
@@ -1264,8 +1263,8 @@ async def apply_diegetic_correction(
     source_event: dict | None = None,
     expected_detail_id: UUID | None = None,
 ) -> DiegeticCorrectionApplied | Literal["unknown_memory", "stale_head"]:
-    """The in-world confrontation's chain-preserving write (dissonance.md, C4;
-    the two-verb ruling in architecture.md §8): ONE transaction — supersede
+    """The in-world confrontation's chain-preserving write (architecture.md §8,
+    the two-verb design): ONE transaction — supersede
     the live telling head at the confrontation's world time, insert the new
     head typed by the decided verb (`rationalization` |
     `update_with_resentment`; migration 001's CHECK has admitted both since
@@ -2653,9 +2652,9 @@ async def fetch_recent_compiler_runs(
 
 
 # ---------------------------------------------------------------------------
-# Purge (C6; the four rulings 2026-08-18 — per-memory scope, the DELETE verb,
-# no guard, NO migration). The release-blocker GDPR verb and the SOLE
-# sanctioned content DELETE (CLAUDE.md invariant; this module's header). One
+# Purge (per-memory scope, the DELETE verb, no guard, no migration). The
+# release-blocker GDPR verb and the SOLE sanctioned content DELETE (the
+# non-destructive invariant, architecture.md §2; this module's header). One
 # memory and every row beneath it — both chains (memory_details +
 # memory_fact_versions), gist spans, corrections, caches, enrichment runs —
 # deleted child-before-parent in ONE transaction. No FK cascades (every

@@ -1,10 +1,10 @@
-"""ingest.py — THE ingest service: the write path's single instrumented seam.
+"""ingest.py: the write path's single instrumented seam.
 
 Both callers (the FastAPI route and, later, the CLI harness) sit on this
 module; neither duplicates the timing or token accounting recorded here
-(CLAUDE.md: instrument at the seam).
+(architecture.md §2: instrument at the seam).
 
-Pipeline per observe event (write-path.md §pipeline):
+Pipeline per observe event (architecture.md §5):
   NLP pass -> single Haiku write call -> (escalation when triggered) ->
   embedding -> atomic insert -> IngestResult.
 
@@ -35,8 +35,8 @@ Degradation ladder (write):
       never cost a write.
   (The observe path has NO hard rung. Every failure above lands the row.)
 
-The authorial correction (fact-following since the fact-level build,
-fact-level-correction.md) is the deliberate CONTRAST: all-or-nothing,
+The authorial correction (fact-following, architecture.md §4.4) is the
+deliberate CONTRAST: all-or-nothing,
 fail-loud — an embed failure there writes nothing (CorrectionEmbedFailedError
 -> 502), because the operator surface has no soft paths and a NULL corrected
 embedding would make the memory vanish from the vector probe.
@@ -794,8 +794,8 @@ class IngestService:
     async def correct(
         self, memory_id: UUID, request: CorrectionRequest
     ) -> CorrectionResult:
-        """Authorial correction (authorial-correction.md; fact-following
-        since the fact-level build, fact-level-correction.md): the operator's
+        """Authorial correction (architecture.md §8; fact-following): the
+        operator's
         text byte-verbatim into BOTH chains — the corrected telling head and
         the corrected fact row with its re-derived embedding AND re-derived
         entities (fork 3, 2026-07-19: mechanical NER over the corrected text

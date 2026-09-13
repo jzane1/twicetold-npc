@@ -1,8 +1,8 @@
-"""nlp.py — the no-LLM write pass (write-path.md §pipeline step a).
+"""nlp.py: the no-LLM write pass (architecture.md §5, the NLP stage).
 
 spaCy (en_core_web_lg) + fastcoref intra-observation coreference + VADER
-valence + Warriner 2013 VAD lexicon (arousal/dominance) — the NLP stack ruled
-2026-07-13. NRC-VAD was rejected at the license gate (research-only); Warriner
+valence + Warriner 2013 VAD lexicon (arousal/dominance). NRC-VAD was rejected
+at the license gate (research-only); Warriner
 is CC-BY 4.0 and bundled under data\\lexicons\\ with attribution.
 
 Outputs:

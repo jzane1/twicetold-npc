@@ -1,7 +1,6 @@
 """dissonance.py — the dissonance path + diegetic-correction event (C4).
 
-The in-world confrontation verb (dissonance.md; the eight C4 rulings
-2026-08-17; design truth architecture.md §8): the game fires
+The in-world confrontation verb (design truth architecture.md §8): the game fires
 POST /v1/events/diegetic-correction at a target memory_id, the mechanical
 formula decides defend-vs-update (ruling 1 — no model call decides), the
 RECONSTRUCTION role writes the character's new telling in the decided

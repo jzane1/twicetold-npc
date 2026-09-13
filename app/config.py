@@ -12,8 +12,8 @@ loud config error, never a silent pick (ruled with the write-path plan,
 2026-07-15) streams PURE PROSE — the dialogue turn's only model call since
 the A1 re-shape (2026-08-04; the split-brain `behavior` role was removed by
 ruling, real mode 7 -> 6 vars). The reconstruction role
-(TWICETOLD_MODEL_RECONSTRUCTION, reconstruction build 2026-07-17) is the
-Haiku-class batched retelling call (reconstruction.md).
+(TWICETOLD_MODEL_RECONSTRUCTION) is the Haiku-class batched retelling call
+(architecture.md §7).
 
 The model BACKEND (the provider-path build, ruled 2026-09-01; shape ruled
 2026-09-02) is one explicit selector for every LLM role: TWICETOLD_MODEL_BACKEND
@@ -40,8 +40,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 ENV_PATH = REPO_ROOT / ".env"
 
-# The embedding DIMENSION is a locked constant — not a knob (decisions.md:
-# embedding dimension 1536, locked; migration 001's vector(1536) column). The
+# The embedding DIMENSION is a locked constant, not a knob (architecture.md
+# §3: embedding dimension 1536, locked; migration 001's vector(1536) column). The
 # embedding MODEL NAME became a knob with the provider-path build (ruled
 # 2026-09-01/02): TWICETOLD_EMBEDDING_MODEL, defaulting to the model the locked
 # slate was measured on. Narrower models are zero-padded to the locked width at
@@ -183,7 +183,7 @@ SERVICE_DEFAULTS: dict[str, float] = {
     # without a confidence (architecture §5: a default table exists; single
     # scalar default until the table earns per-typology entries).
     "typology_confidence_default": 0.9,
-    # --- read path (read-path.md; build rulings 2026-07-14) -----------------
+    # --- read path (architecture.md §6) -------------------------------------
     # Default top-k for dialogue-init retrieval.
     "retrieval_top_k": 8,
     # Vector over-fetch: fetch ceil(factor * k) candidates by distance, then
@@ -200,7 +200,7 @@ SERVICE_DEFAULTS: dict[str, float] = {
     # default class resolves in agents.config — a read never fails on a
     # resolvable row.
     "tau_fallback_seconds": 604800.0,
-    # --- reconstruction (reconstruction.md; build rulings 2026-07-17) -------
+    # --- reconstruction (architecture.md §7) --------------------------------
     # Reconstruct when decayed detail strength (= decay.recency at the
     # scene-frozen basis) falls below theta. Pinned rows are exempt.
     "reconstruction_theta": 0.5,
@@ -244,9 +244,9 @@ SERVICE_DEFAULTS: dict[str, float] = {
     # Whole-gate switch: 0.0 => every request is a loader turn (v1 behavior).
     # The fixture-pin shape (the reconstruction_theta = 0 precedent) and the
     # integrator kill-switch scaffold — the reserved per-signal kill-switch
-    # decision may later grow its own knobs (see decisions.md).
+    # decision may later grow its own knobs.
     "gate_enabled": 1.0,
-    # --- encoding-context read term (read-path.md; ruled 2026-07-20) --------
+    # --- encoding-context read term (architecture.md §6) --------------------
     # The formerly-reserved DialogueInitRequest context fields become a soft
     # multiplicative nudge: score *= (1 + sum(w_i * match_i)) over the
     # components the REQUEST supplies (client-supplied fields, ruled — no LLM
@@ -259,7 +259,7 @@ SERVICE_DEFAULTS: dict[str, float] = {
     "context_weight_location": 0.25,
     # Time-proximity kernel scale: match = exp(-|event_time - query|/scale).
     "context_time_scale_seconds": 86400.0,
-    # --- hybrid lexical channel (read-path.md; ruled 2026-07-20) ------------
+    # --- hybrid lexical channel (architecture.md §6) ------------------------
     # Lexical candidates unioned into the vector over-fetch before scoring
     # (dedup by memory_id; the scoring formula is untouched — lexical-only
     # hits carry their TRUE cosine relevance where the fact head has an
@@ -361,7 +361,7 @@ SERVICE_DEFAULTS: dict[str, float] = {
     # live beliefs compile AND apply — enforced at work discovery and at the
     # consume fetch alike (integer-valued, cast at the call site).
     "compiler_window_k": 8.0,
-    # --- dissonance path (dissonance.md; the C4 rulings 2026-08-17) ----------
+    # --- dissonance path (architecture.md §8) -------------------------------
     # Evidence-typology multipliers for the mechanical defend-vs-update
     # decision (ruling 1): resistance = importance_norm * mult(memory.typology)
     # * rigidity vs challenge = challenge_weight * mult(challenge.typology);
@@ -381,7 +381,7 @@ SERVICE_DEFAULTS: dict[str, float] = {
     # When the event omits challenge_weight: a full-strength confrontation.
     # Clamped [0.0, 1.0]. No dissonance_enabled kill-switch exists, consciously
     # (the event is client-invoked — not sending it is the off state; the
-    # asymmetry vs the *_worker_enabled flags is deliberate, dissonance.md).
+    # asymmetry vs the *_worker_enabled flags is deliberate).
     "dissonance_challenge_weight_default": 1.0,
 }
 
@@ -492,7 +492,7 @@ class Settings:
     model_write: str = ""  # the single write-call model (render+importance+typology)
     model_escalation: str = ""
     model_dialogue: str = ""  # the streaming prose role (the turn's only call)
-    model_reconstruction: str = ""  # the batched retelling role (reconstruction.md)
+    model_reconstruction: str = ""  # the batched retelling role (architecture.md §7)
     # Eval-runner-only judge role: loaded both modes, required by neither
     # (eval-harness.md stage 3; the runner validates on judged runs).
     model_judge: str = ""

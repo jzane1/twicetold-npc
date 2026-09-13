@@ -1,16 +1,13 @@
 """dialogue.py — THE dialogue-turn service: the streaming prose seam.
 
-All callers — the interactive REPL and the synthetic load driver (via the
-shared session-runner), and the stateless HTTP route (`POST /v1/dialogue/turn`
-in app\\api.py, 2026-07-23) — sit on this module; none duplicates the timing
-or token accounting recorded here (CLAUDE.md: instrument at the seam; specs:
-docs\\cli-harness.md 2026-07-15; re-shaped by A1 2026-08-04 — the split-brain
-behavior call, the action directive, and the reputation system were removed
-by ruling, and `weight_overrides` moved onto the prose view). The streaming
-SSE route (`POST /v1/dialogue/turn/stream`, 2026-07-27) iterates this SAME
-generator — the no-rewrite payoff of the generator shape.
+All callers (the interactive REPL and the synthetic load driver via the
+shared session-runner, and the stateless HTTP route `POST /v1/dialogue/turn`
+in app\\api.py) sit on this module; none duplicates the timing or token
+accounting recorded here (architecture.md §2: instrument at the seam). The
+streaming SSE route (`POST /v1/dialogue/turn/stream`) iterates this SAME
+generator, the no-rewrite payoff of the generator shape (architecture.md §9).
 
-Pipeline per turn (weights-on-speech, ruled 2026-08-04):
+Pipeline per turn (weights-on-speech):
   resolve agent -> retrieval ONCE (retrieve_dialogue_init, byte-untouched)
   -> re-rank the served set with the resolved per-call weights
      (exponent-form on the product score, so all-1.0 reproduces the served

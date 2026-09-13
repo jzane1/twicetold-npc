@@ -1,10 +1,8 @@
-"""retrieval.py — THE retrieval service: the read path's single instrumented seam.
+"""retrieval.py: the read path's single instrumented seam.
 
 Both callers (the FastAPI route and the CLI harness) sit on this module;
-neither duplicates the timing or token accounting recorded here (CLAUDE.md:
-instrument at the seam; surface mirrors the write path's 2026-07-13 ruling;
-spec: docs\\read-path.md, built 2026-07-14; gate stage:
-docs\\mid-dialogue-gate.md, built 2026-07-19).
+neither duplicates the timing or token accounting recorded here (the read
+path is architecture.md §6; the gate stage is mid-dialogue-gate.md).
 
 Pipeline per dialogue-init request:
   resolve agent + knobs -> embed the query probe (as-is; ONE embed per turn —
@@ -55,7 +53,7 @@ gate rows 2026-07-19 — audit ruling #3 implementation-shaped):
     unknown/foreign/dead loaded IDs are excluded by the live-head join and
     counted (loaded_missing_count).
   - empty/short store -> 0..k items, never an error (a valid young-NPC state).
-  - reconstruction-stage failures degrade soft per reconstruction.md's
+  - reconstruction-stage failures degrade soft per the architecture.md §7
     ladder: affected items serve their live heads with honest read_mode.
 """
 
@@ -216,7 +214,7 @@ class RetrievalService:
         self._pool = pool
         self._providers = providers
         self._settings = settings
-        # The serving stage (reconstruction.md): constructed here so neither
+        # The serving stage (architecture.md §7): constructed here so neither
         # caller (route, session-runner) changes its wiring. The gate stage
         # (app\gate.py) is pure functions — nothing to construct.
         self._reconstruction = ReconstructionService(pool, providers, settings)

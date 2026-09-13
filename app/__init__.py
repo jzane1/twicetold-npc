@@ -1,1 +1,1 @@
-"""twicetold-npc backend — write path v1 (see docs\\write-path.md)."""
+"""twicetold-npc backend: the FastAPI memory service (see architecture.md)."""

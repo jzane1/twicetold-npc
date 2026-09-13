@@ -112,7 +112,7 @@ async def _lifespan(app: FastAPI):
     app.state.retrieval = RetrievalService(pool, providers, settings)
     app.state.service = IngestService(pool, providers, settings, app.state.retrieval)
     app.state.dialogue = DialogueService(pool, providers, settings, app.state.retrieval)
-    # The dissonance seam (dissonance.md, the C4 rulings 2026-08-17): the
+    # The dissonance seam (architecture.md §8): the
     # diegetic-correction event's service — synchronous, no worker, nothing
     # to start or stop.
     app.state.dissonance = DissonanceService(pool, providers, settings)
@@ -151,8 +151,8 @@ app = FastAPI(title="twicetold-npc API", version="1", lifespan=_lifespan)
 
 @app.post("/v1/dialogue/init", response_model=RetrievalResult)
 async def dialogue_init(request: DialogueInitRequest) -> RetrievalResult:
-    """Dialogue-init retrieval (read-path.md wire shape, ruled 2026-07-14) —
-    since the reconstruction build (2026-07-17) this endpoint also serves the
+    """Dialogue-init retrieval (architecture.md §6 wire shape): this endpoint also
+    serves the
     pre-warm: past-theta items reconstruct (write-back + cache) before the
     response returns. An unknown caller-passed identity_version is a broken
     contract, not a flaky model -> 422 (the unknown-agent 404 precedent)."""
@@ -287,8 +287,8 @@ async def scene_boundary(event: SceneBoundaryEvent) -> SceneResult:
 async def diegetic_correction(
     event: DiegeticCorrectionEvent,
 ) -> DiegeticCorrectionResult:
-    """The in-world confrontation (dissonance.md; the C4 rulings
-    2026-08-17) — the third diegetic event: references a target memory_id
+    """The in-world confrontation (architecture.md §8), the third diegetic event:
+    references a target memory_id
     (automatic discovery is CUT), decides defend-vs-update mechanically,
     and EXTENDS the telling chain through the dissonance path — the
     chain-preserving sibling of the authorial replace-model verb.
@@ -353,8 +353,8 @@ async def purge_agent_memories(agent_id: UUID) -> AgentPurgeResult:
 
 @app.post("/v1/memories/{memory_id}/correction", response_model=CorrectionResult)
 async def correct_memory(memory_id: UUID, body: CorrectionRequest) -> CorrectionResult:
-    """Authorial correction (authorial-correction.md; fact-following since
-    the fact-level build): memory-scoped operator verb — /v1/events/* stays
+    """Authorial correction (architecture.md §8; fact-following): memory-scoped
+    operator verb — /v1/events/* stays
     diegetic. Fail-loud: 404 unknown memory, 409 stale expected_detail_id,
     422 invalid content, 502 embed or NER failure with nothing written (the
     all-or-nothing correction rulings, 2026-07-18 / 2026-07-19); nothing

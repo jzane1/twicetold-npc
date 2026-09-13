@@ -1,4 +1,4 @@
-"""reconstruction.py — the read path's reconstruction serving stage (reconstruction.md).
+"""reconstruction.py: the read path's reconstruction serving stage (architecture.md §7).
 
 Identity-conditioned reconstruction is the mandatory read path for unpinned
 memories past theta (architecture §7). This module is the serving-stage
@@ -6,7 +6,7 @@ engine the retrieval seam delegates to: theta partition -> cache batch-fetch
 -> batched retelling call for the misses -> per-item drift check -> persist
 -> serve. Retrieval and scoring are untouched by this stage.
 
-Design lines carried from the spec (built 2026-07-17):
+Design lines (architecture.md §7):
   - Every text-affecting decay evaluation (theta, band, thinning) binds to
     the SCENE-FROZEN basis (caller-passed scene_started_at, else
     as_of_effective), so read-mode and served text cannot flip mid-scene.
@@ -17,14 +17,13 @@ Design lines carried from the spec (built 2026-07-17):
     `reconstruction` head + cache row) commits before the text goes out.
   - read_mode is honest to what was actually served: a failed or refused
     reconstruction serves the live head under the head's own mode.
-  - Degradation is named per model call (the ladder in reconstruction.md):
+  - Degradation is named per model call (the ladder in architecture.md §7):
     call failure -> fail-quiet, serve heads, write nothing; drift-embed
     failure -> fail-closed on the write (refuse, serve head; NOT cached, so
     a transient embed outage never permanently pins a key); persistence
     failure -> serve the head, the next read retries the miss.
-  - CONSTRAINT FOLLOWS THE ANCHOR (authorial-correction build, ruled
-    2026-07-17; extended to `update_with_resentment` by C4 ruling 4,
-    2026-08-17 — dissonance.md): a correction-anchored chain
+  - CONSTRAINT FOLLOWS THE ANCHOR (architecture.md §7 and §8): a
+    correction-anchored chain
     (`FIXED_CONSTRAINT_ANCHORS`) retells from that head as the fixed
     constraint — no observation-derived gist or detail is re-injected (it
     may contain exactly the data the operator corrected away, or details
@@ -111,9 +110,8 @@ _SYSTEM_TASK_NO_GIST = (
 _BLOCK_IDENTITY = "[identity]\n{document}"
 
 # The anchor causes whose head IS the fixed constraint (constraint follows
-# the anchor): `authorial_correction` since the 2026-07-17 ruling;
-# `update_with_resentment` joined by C4 ruling 4 (2026-08-17, dissonance.md)
-# — an accepted in-world correction retells from the accepted account, and
+# the anchor): `authorial_correction` and `update_with_resentment`. An
+# accepted in-world correction retells from the accepted account, and
 # original observation gist cannot resurrect details the character conceded.
 FIXED_CONSTRAINT_ANCHORS = frozenset({"authorial_correction", "update_with_resentment"})
 
@@ -195,8 +193,7 @@ def build_reconstruction_item(
     gist_constraint: bool = True,
 ) -> ReconstructionItem:
     """The per-memory call inputs, anchor-cause-aware (constraint follows
-    the anchor — ruled 2026-07-17, authorial-correction.md; extended to
-    `update_with_resentment` by C4 ruling 4, dissonance.md): on a
+    the anchor, architecture.md §7 and §8): on a
     correction-anchored chain (`FIXED_CONSTRAINT_ANCHORS`) that head IS the
     fixed facts (the gist slot), with no observation-derived detail
     re-injected; original-anchored chains build byte-identically to the

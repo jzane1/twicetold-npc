@@ -1,10 +1,8 @@
 """providers.py — model provider interfaces: real implementations + deterministic fakes.
 
-Two write-path roles (write-path.md §Model provider interfaces) plus the
-escalation call ruled into v1 (2026-07-13), plus the dialogue role (the
-CLI-harness build 2026-07-15; the concurrent behavior role it was once split
-with was removed by the A1 re-shape, 2026-08-04), plus the reconstruction
-role (the reconstruction build, 2026-07-17):
+Two write-path roles (architecture.md §5) plus the escalation call, plus the
+dialogue role (the streaming prose seam, architecture.md §9), plus the
+reconstruction role (architecture.md §7):
   - the single Haiku write call (render + importance + typology-when-absent),
   - the LLM-escalation gist call (hard cases, biased loose),
   - the embedding call (the TWICETOLD_EMBEDDING_MODEL knob, default
@@ -12,7 +10,7 @@ role (the reconstruction build, 2026-07-17):
   - the streaming dialogue call — PURE PROSE, the dialogue turn's only
     model call,
   - the batched Haiku-class reconstruction call (all cache misses of one
-    retrieval in one structured call; reconstruction.md).
+    retrieval in one structured call; architecture.md §7).
 
 Every fake is deterministic: same input -> byte-identical output, offline and
 keyless, so the structural suite never asserts on prose and CI needs no keys.
@@ -210,9 +208,8 @@ class EmbedResult:
 
 @dataclass(frozen=True)
 class ProseResult:
-    """The streaming prose call's terminal accounting (split-brain-streaming.md,
-    2026-07-21; since the A1 re-shape 2026-08-04 the prose call is the turn's
-    ONLY model call). The prose call streams PURE PROSE — the chunks ARE the
+    """The streaming prose call's terminal accounting (architecture.md §9;
+    the prose call is the turn's ONLY model call). The prose call streams PURE PROSE — the chunks ARE the
     player-facing text, yielded as they arrive; this is returned from the
     stream generator (via StopIteration.value) once the stream closes, so the
     seam has token counts and the measured first-token latency."""
@@ -225,7 +222,7 @@ class ProseResult:
 @dataclass(frozen=True)
 class ReconstructionItem:
     """One cache-missed memory prepared for the batched retelling call
-    (reconstruction.md call contract): the fixed gist, the band-thinned
+    (architecture.md §7 call contract): the fixed gist, the band-thinned
     original detail, and the current live telling. memory_id is the UUID
     string — the JSON key of the batched output contract."""
 
@@ -238,7 +235,7 @@ class ReconstructionItem:
 @dataclass(frozen=True)
 class ReconstructionCallResult:
     """Parsed batched output: memory_id -> retelling. Per-item salvage
-    (reconstruction.md ladder): an entry that is missing, empty, or not a
+    (architecture.md §7 ladder): an entry that is missing, empty, or not a
     string simply has no key here, and that item alone degrades at the seam;
     the call still counts as succeeded and its spend is accounted."""
 
@@ -1542,10 +1539,10 @@ class RealDialogueProvider:
 
 
 class RealReconstructionProvider:
-    """The batched retelling call (reconstruction.md; Haiku-class on the
+    """The batched retelling call (architecture.md §7; Haiku-class on the
     locked slate), on the chat backend settings selected.
 
-    Output contract (build ruling 2026-07-17, JSON-in-text per the
+    Output contract (JSON-in-text per the
     write/escalation/dialogue precedent): ONLY a JSON object mapping each
     memory_id to its retelling string. The instructions live in the
     seam-assembled system prompt; this class enforces the parse side with

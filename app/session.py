@@ -7,9 +7,8 @@ dialogue) — one runner core, two thin callers, so the paths cannot drift
 apart (spec-time ruling 2026-07-14). No timing or token accounting happens
 here; the seams record it.
 
-Scene state lives here, per the seam contract (cli-harness.md; re-shaped by
-A1 2026-08-04 — the reputation snapshot and the recent-actions block left
-with the behavior/reputation removal). The frozen scene state carries
+Scene state lives here, per the seam contract (architecture.md §9). The
+frozen scene state carries
 `identity_version` (returned by the scene-boundary handler's server-side
 recompile — the hybrid plumbing ruling, reconstruction build 2026-07-17) and
 `scene_started_at` (the boundary's world time — the basis for every
@@ -108,7 +107,7 @@ class SessionRunner:
         # deterministic entry; the per-agent kill-switch (default 0.0) gates
         # the component entirely.
         self.compiler_worker = compiler_worker
-        # The dissonance seam (dissonance.md, C4 2026-08-17): the diegetic-
+        # The dissonance seam (architecture.md §8): the diegetic-
         # correction event's service behind `:confront` — synchronous, no
         # worker, nothing to start or stop.
         self._dissonance = dissonance
@@ -347,7 +346,7 @@ class SessionRunner:
     async def correct(self, memory_id: UUID, content: str) -> CorrectionResult:
         """Authorial correction at the session's effective time — the
         operator states t_c, and under time travel that is the session's
-        as_of (authorial-correction.md; immediate effect, mid-scene
+        as_of (architecture.md §8; immediate effect, mid-scene
         included)."""
         return await self._ingest.correct(
             memory_id,
@@ -363,7 +362,7 @@ class SessionRunner:
         challenge_weight: float | None = None,
     ) -> DiegeticCorrectionResult:
         """The diegetic-correction event at the session's effective time
-        (dissonance.md; the :correct precedent — under time travel the
+        (architecture.md §8; the :correct precedent, under time travel the
         confrontation happens at as_of). The `observed` default is REPL
         ergonomics only — the wire field stays required; the caller prints
         the decided verb and both sides of the decision (debug surface)."""

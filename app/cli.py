@@ -135,7 +135,7 @@ def render_turn(result: DialogueTurnResult) -> str:
 
 
 def render_debug(result: DialogueTurnResult) -> str:
-    """The full turn debug view (status.md requirement): retrieved memory IDs
+    """The full turn debug view: retrieved memory IDs
     with score components, the weight-ranked dialogue view, and the token +
     latency accounting — all straight off the payload."""
     ins = result.instrumentation
@@ -467,7 +467,7 @@ async def repl(agent_id: UUID, debug: bool) -> None:
                 # :reflect may be re-issued safely.
                 print(f"reflect refused: {exc}")
             except DissonanceCallError as exc:
-                # All-or-nothing (dissonance.md, the authorial precedent):
+                # All-or-nothing (the authorial precedent):
                 # nothing was written; the :confront may be re-issued safely.
                 print(f"confrontation failed: {exc}")
     finally:

@@ -2,8 +2,7 @@
 
 The render is seed prose plus the agent's live identity-relevant reflection
 contents in stable chronology, joined by blank lines — no template
-(reconstruction.md: a template would be a hidden hardcoded authorial
-artifact; the reflection build kept the rule, 2026-08-15). With zero
+(a template would be a hidden hardcoded authorial artifact). With zero
 reflections the render is the seed VERBATIM — the parity contract every
 pre-C2 hash, cache key, prompt, and floor stands on. identity_version =
 sha256 hex of the rendered text, exactly as before.
