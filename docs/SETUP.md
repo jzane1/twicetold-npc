@@ -84,13 +84,17 @@ them.
 Copy-Item .env.example .env
 ```
 
-Then edit `.env`. The template documents every key. Two things that have actually caused
+Then edit `.env`. The template documents every key. A few things that have actually caused
 failures:
 
 - **One `KEY=VALUE` per line.** No inline comments after a value, no wrapped lines. A
   consolidated multi-line price note once crashed `load_settings` on every run that read prices.
 - **`DATABASE_URI` must name the product database** (`twicetold`). Scratch databases are created
   and dropped by the fixtures; never point this at one.
+- **Use `127.0.0.1` in `DATABASE_URI`, not `localhost`.** The db container publishes IPv4
+  loopback only (`127.0.0.1:5432`); on Windows/macOS `localhost` can resolve to IPv6 (`::1`)
+  first and stall roughly 20 seconds per connection before falling back, which makes the suite
+  and the CLI crawl.
 
 Verify without printing anything:
 
@@ -261,7 +265,7 @@ Postgres unreachable ⇒ every scenario skips loudly and the run exits green, by
 **The walkers** (sixteen structural done-when scripts) need a scratch DB you create yourself:
 
 ```powershell
-$scratch = "postgresql://twicetold:change-me@localhost:5432/twicetold_test"
+$scratch = "postgresql://twicetold:change-me@127.0.0.1:5432/twicetold_test"
 docker exec twicetold-pg psql -U twicetold -d postgres -c "CREATE DATABASE twicetold_test"
 python db\migrate.py --database-uri $scratch
 python tests\verify_write_path.py --database-uri $scratch

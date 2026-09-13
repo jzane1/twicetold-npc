@@ -86,7 +86,7 @@ voice (zero em-dashes by ruling); the third of the set is `identity-authoring.md
 - **`test-suite.md`** — what the tests must and must not assert. The one rule: structural only,
   never generated prose. Also the degradation-ladder and route-contract inventories — the
   consolidated failure-behavior reference for integrators.
-- **`SETUP.md`** — bring-up, tests, C# build, DLL refresh, Unity, teardown.
+- **`SETUP.md`** — bring-up, tests, C# build, the embedded Unity package, teardown.
 
 ---
 

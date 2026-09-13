@@ -9,8 +9,8 @@ is hidden in the code; all of it was inferable from four files, and inferable is
 The service runs on a machine you control, with Postgres beside it. Your game talks HTTP to
 it, and it talks to whatever model provider you configured. One service serves as many
 agents as you like; the agent UUID is the unit, so shard by game, region or shard key when
-you need to. The Unity client is one DLL (`NpcMemory.Core`, netstandard2.1) plus a
-MonoBehaviour adapter; `first-npc.md` is the thirty lines.
+you need to. The Unity client is an embedded Unity package (`NpcMemory.Core`, netstandard2.1,
+shipped as source) plus a MonoBehaviour adapter; `first-npc.md` is the thirty lines.
 
 ## Who pays, and how much
 
