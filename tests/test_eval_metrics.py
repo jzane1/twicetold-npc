@@ -135,7 +135,7 @@ def test_metrics_route_contract(scene):
         api_module.app.state.retrieval = ctx.retrieval()
         transport = httpx.ASGITransport(app=api_module.app)
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             ok = await client.get(
                 f"/v1/memories/{seeded.memory_id}/reconstruction-metrics"
@@ -214,7 +214,7 @@ def test_metrics_follow_correction_then_reconstruction(scene):
         api_module.app.state.retrieval = ctx.retrieval()
         transport = httpx.ASGITransport(app=api_module.app)
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             ok = await client.get(f"/v1/memories/{m}/reconstruction-metrics")
             assert ok.status_code == 200
@@ -283,7 +283,7 @@ def test_metrics_read_is_zero_write(scene):
         api_module.app.state.retrieval = ctx.retrieval()
         transport = httpx.ASGITransport(app=api_module.app)
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             before = (await client.get(f"/v1/memories/{m}/chain")).json()
             counts_before = await ctx.fetchrow(counts_sql)

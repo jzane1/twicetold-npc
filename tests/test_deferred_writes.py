@@ -387,7 +387,7 @@ def test_chain_route_surfaces_pending_state_and_runs(scene):
         api_module.app.state.retrieval = ctx.retrieval()
         transport = httpx.ASGITransport(app=api_module.app)
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             body = (await client.get(f"/v1/memories/{m}/chain")).json()
             assert body["enrichment_pending"] is True

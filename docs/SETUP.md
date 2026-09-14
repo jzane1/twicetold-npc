@@ -334,9 +334,8 @@ to gate it on the dotnet side, and re-open Unity so it recompiles.
 
 ## 8. Unity
 
-Open `unity\` with Unity 6. On first open it resolves packages, including the MCP for Unity
-bridge from the git URL in `unity\Packages\manifest.json` (the resolved copy is gitignored).
-The client itself is the embedded package at `unity\Packages\com.jacksonzane.twicetold-npc`
+Open `unity\` with Unity 6. On first open it resolves packages. The client itself is the
+embedded package at `unity\Packages\com.jacksonzane.twicetold-npc`
 (asmdefs `NpcMemory.Core`, the engine-agnostic core, and `NpcMemory.Unity`, the adapter); Unity
 compiles it in place, and its `com.unity.nuget.newtonsoft-json` dependency is what pulls in
 Newtonsoft.Json.
@@ -351,15 +350,12 @@ against a fake-mode serve on a scratch DB — the beats provision their own agen
 `[npc-demo]` receipts to the console. Do that gate BEFORE pasting a demo agent id: autoRun
 replays scripted observes into whatever agent the adapter holds.
 
-Scene-manipulation calls through the MCP bridge fail while the Editor is in Play mode — stop
-play first.
-
 ---
 
 ## 9. Optional: MCP servers
 
-A read-only Postgres MCP and a Unity Editor bridge run on the development machine. Both are
-development conveniences; nothing in the service depends on them.
+A read-only Postgres MCP runs on the development machine as a convenience for inspecting the
+database. Nothing in the service depends on it.
 
 ---
 

@@ -23,9 +23,10 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse, StreamingResponse
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.compiler import CompilerWorker
-from app.config import load_settings
+from app.config import load_allowed_hosts, load_settings
 from app.db import build_pool
 from app.deferred import DeferredWriteWorker
 from app.dialogue import DialogueService
@@ -147,6 +148,14 @@ async def _lifespan(app: FastAPI):
 
 
 app = FastAPI(title="twicetold-npc API", version="1", lifespan=_lifespan)
+
+# The Ledger host guard (config.py ENV_ALLOWED_HOSTS): validate the request
+# Host header against the loopback allowlist so neither the browser inspector
+# page nor the API can be reached under an attacker-controlled hostname (the
+# DNS-rebinding / CSRF class). Middleware binds at construction -- Starlette
+# forbids adding it once the app has started -- so the allowlist is read here,
+# at import, via load_allowed_hosts, not from the lifespan-built Settings.
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(load_allowed_hosts()))
 
 
 @app.post("/v1/dialogue/init", response_model=RetrievalResult)

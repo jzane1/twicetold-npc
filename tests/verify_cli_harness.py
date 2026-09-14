@@ -638,7 +638,7 @@ async def main(database_uri: str) -> None:
     api_module.app.state.dialogue = capturing
     transport = httpx.ASGITransport(app=api_module.app)
     async with httpx.AsyncClient(
-        transport=transport, base_url="http://walker"
+        transport=transport, base_url="http://localhost"
     ) as client:
         payload = json.loads(request(agent_a).model_dump_json())
         response = await client.post("/v1/dialogue/turn", json=payload)
@@ -690,7 +690,7 @@ async def main(database_uri: str) -> None:
     capturing_sse = CapturingDialogue(dialogue)
     api_module.app.state.dialogue = capturing_sse
     async with httpx.AsyncClient(
-        transport=httpx.ASGITransport(app=api_module.app), base_url="http://walker"
+        transport=httpx.ASGITransport(app=api_module.app), base_url="http://localhost"
     ) as client:
         s_ok = await client.post(
             "/v1/dialogue/turn/stream",

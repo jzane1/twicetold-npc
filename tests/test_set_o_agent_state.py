@@ -103,7 +103,7 @@ def test_route_404_unknown_agent_and_422_bounds(scene):
         api_module.app.state.retrieval = ctx.retrieval()
         transport = httpx.ASGITransport(app=api_module.app)
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             r404 = await client.get(f"/v1/agents/{uuid4()}/state")
             assert r404.status_code == 404
@@ -132,7 +132,7 @@ def test_empty_agent_wire_baseline(scene):
         api_module.app.state.retrieval = ctx.retrieval()
         transport = httpx.ASGITransport(app=api_module.app)
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             resp = await client.get(f"/v1/agents/{agent}/state")
         assert resp.status_code == 200
@@ -477,7 +477,7 @@ def test_route_json_equals_service_json(scene):
         api_module.app.state.retrieval = capture
         transport = httpx.ASGITransport(app=api_module.app)
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             resp = await client.get(f"/v1/agents/{agent}/state?runs_limit=7")
         assert resp.status_code == 200

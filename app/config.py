@@ -97,6 +97,16 @@ MAX_CONCURRENT_MODEL_CALLS_DEFAULT = 8
 ENV_DB_POOL_MAX_SIZE = "TWICETOLD_DB_POOL_MAX_SIZE"
 DB_POOL_MAX_SIZE_DEFAULT = 8
 
+# The Ledger host guard: the API serves a browser inspector page (The Ledger)
+# on localhost, so it validates the request Host header against an allowlist
+# (Starlette's TrustedHostMiddleware) to close the DNS-rebinding / CSRF class
+# that bites localhost-only dev tools (see MCP Inspector CVE-2025-49596). The
+# allowlist is a comma-separated, integrator-tunable knob; the default is
+# loopback only. It is read at process start (the middleware binds at import,
+# not in the lifespan), so load_allowed_hosts below stays import-safe.
+ENV_ALLOWED_HOSTS = "TWICETOLD_ALLOWED_HOSTS"
+ALLOWED_HOSTS_DEFAULT = ("localhost", "127.0.0.1")
+
 # The model backend (the provider-path build, ruled 2026-09-01; the explicit
 # selector ruled 2026-09-02): ONE selector for every LLM role — the six product
 # roles and the three judge-shaped ones. "anthropic" (the default) is today's
@@ -481,6 +491,32 @@ def load_env(path: Path = ENV_PATH) -> dict[str, str]:
         if key in os.environ:
             values[key] = os.environ[key]
     return values
+
+
+def _parse_allowed_hosts(raw: str) -> tuple[str, ...]:
+    hosts = tuple(h.strip() for h in raw.split(",") if h.strip())
+    return hosts or ALLOWED_HOSTS_DEFAULT
+
+
+def load_allowed_hosts(env: dict[str, str] | None = None) -> tuple[str, ...]:
+    """The Ledger host-guard allowlist (TWICETOLD_ALLOWED_HOSTS).
+
+    Resolved import-safely, because the TrustedHostMiddleware that consumes it
+    binds at app construction (before any lifespan builds Settings): an explicit
+    env dict, else the process environment, else a best-effort .env read (whose
+    missing-file sys.exit is swallowed here so importing app.api never depends
+    on a .env), else the loopback default. Unlike the lifespan-loaded knobs this
+    one is read once, at process start.
+    """
+    if env is not None:
+        return _parse_allowed_hosts(env.get(ENV_ALLOWED_HOSTS, ""))
+    raw = os.environ.get(ENV_ALLOWED_HOSTS)
+    if raw is None:
+        try:
+            raw = load_env().get(ENV_ALLOWED_HOSTS, "")
+        except SystemExit:
+            raw = ""
+    return _parse_allowed_hosts(raw or "")
 
 
 @dataclass(frozen=True)

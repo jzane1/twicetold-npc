@@ -544,7 +544,7 @@ async def run(uri: str) -> None:
         api_module.app.state.retrieval = capture
         transport = httpx.ASGITransport(app=api_module.app)
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://walker"
+            transport=transport, base_url="http://localhost"
         ) as client:
             r404 = await client.get(f"/v1/agents/{uuid4()}/state")
             check(r404.status_code == 404, "E1 unknown agent -> 404")

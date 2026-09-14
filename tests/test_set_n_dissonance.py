@@ -714,7 +714,7 @@ def test_route_pass_through_and_ladder(scene):
             "source_event": {"scene": "tavern"},
         }
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             ok = await client.post("/v1/events/diegetic-correction", json=body)
             assert ok.status_code == 200

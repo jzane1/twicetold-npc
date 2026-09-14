@@ -15,5 +15,4 @@ published dataset (1–9 rating-scale means; the write path normalizes to 0–1)
   Modifications here: column subset only; no value changes.
 - **Why not NRC-VAD:** the NRC VAD lexicon is licensed for non-commercial
   research only (commercial use requires a separate NRC license), which fails
-  this repository's Apache-2.0 compatibility gate (ruling 2026-07-13, see
-  `docs\decisions.md`).
+  this repository's Apache-2.0 compatibility gate.

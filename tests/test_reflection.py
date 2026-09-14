@@ -850,7 +850,7 @@ def test_reflect_route_contracts(scene):
         transport = httpx.ASGITransport(app=api_module.app)
         body = {"client_timestamp": NOW.isoformat()}
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             ok = await client.post(f"/v1/agents/{agent}/reflect", json=body)
             assert ok.status_code == 200

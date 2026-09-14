@@ -356,7 +356,7 @@ async def run(uri: str) -> None:
         await add_children(pool, wired, component)
         transport = httpx.ASGITransport(app=api_module.app)
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://walker"
+            transport=transport, base_url="http://localhost"
         ) as client:
             resp = await client.delete(f"/v1/memories/{wired}")
             body = resp.json()
@@ -538,7 +538,7 @@ async def run(uri: str) -> None:
         wired_memory = await seed_memory(pool, wired_agent, "a wired bulk memory")
         await add_children(pool, wired_memory, wired_component)
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://walker"
+            transport=transport, base_url="http://localhost"
         ) as client:
             resp = await client.delete(f"/v1/agents/{wired_agent}/memories")
             body = resp.json()

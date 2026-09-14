@@ -210,7 +210,8 @@ this. The short version:
 - **Not hosted, not authenticated.** Anyone who reaches the port can read, write and purge
   every agent's memories, so treat it like a database socket. It binds `127.0.0.1:8000` by
   default; if you must expose it, put a reverse proxy with auth and TLS in front. A Host-header
-  guard for the inspector page lands in the release-hygiene pass.
+  guard restricts the inspector page and API to a configurable localhost allowlist
+  (`TWICETOLD_ALLOWED_HOSTS`).
 - **Not benchmark-scored.** LoCoMo and LongMemEval grade verbatim recall; past the decay
   threshold this system deliberately paraphrases, so they would score the feature as a
   failure. The judge-free metrics and the published agreement statistics stand in.

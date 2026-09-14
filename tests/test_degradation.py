@@ -538,7 +538,7 @@ def test_correction_nlp_failure_all_or_nothing(scene, monkeypatch):
         api_module.app.state.service = ctx.ingest()
         transport = httpx.ASGITransport(app=api_module.app)
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             resp = await client.post(
                 f"/v1/memories/{m}/correction",

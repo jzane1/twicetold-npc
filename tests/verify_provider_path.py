@@ -1029,7 +1029,7 @@ async def section_g_served_beat(pool, uri: str) -> None:
     )
     transport = httpx.ASGITransport(app=api_module.app)
     async with httpx.AsyncClient(
-        transport=transport, base_url="http://walker"
+        transport=transport, base_url="http://localhost"
     ) as client:
         response = await client.post(
             "/v1/dialogue/turn",

@@ -465,7 +465,7 @@ def test_dialogue_turn_route_contract(scene):
             return json.loads(DialogueTurnRequest(**base).model_dump_json())
 
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             ok = await client.post("/v1/dialogue/turn", json=payload())
             assert ok.status_code == 200
@@ -608,7 +608,7 @@ def test_turn_stream_route_contract(scene):
             return json.loads(DialogueTurnRequest(**base).model_dump_json())
 
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             ok = await client.post("/v1/dialogue/turn/stream", json=payload())
             assert ok.status_code == 200
@@ -657,7 +657,7 @@ def test_create_agent_route(scene):
         transport = httpx.ASGITransport(app=api_module.app)
 
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             minimal = await client.post("/v1/agents", json={"name": "prov-min"})
             assert minimal.status_code == 200
@@ -751,7 +751,7 @@ def test_memory_chain_route_follows_correction(scene):
         api_module.app.state.retrieval = ctx.retrieval()
         transport = httpx.ASGITransport(app=api_module.app)
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             ok = await client.get(f"/v1/memories/{m}/chain")
             assert ok.status_code == 200
@@ -803,7 +803,7 @@ def test_agent_memories_route(scene):
         api_module.app.state.retrieval = ctx.retrieval()
         transport = httpx.ASGITransport(app=api_module.app)
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             ok = await client.get(f"/v1/agents/{agent}/memories")
             assert ok.status_code == 200
@@ -847,7 +847,7 @@ def test_ledger_page_served(scene):
 
         transport = httpx.ASGITransport(app=api_module.app)
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             page = await client.get("/ledger")
             assert page.status_code == 200
@@ -932,7 +932,7 @@ def test_pin_route_contract(scene):
         api_module.app.state.service = ctx.ingest()
         transport = httpx.ASGITransport(app=api_module.app)
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             for wanted in (True, False, True):
                 resp = await client.put(
@@ -974,7 +974,7 @@ def test_scene_boundary_route_contract(scene):
         api_module.app.state.service = ctx.ingest()
         transport = httpx.ASGITransport(app=api_module.app)
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             body = {
                 "agent_id": str(agent),
@@ -1065,7 +1065,7 @@ def test_turn_stream_reconstructing_and_error_events(scene):
         )
 
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             resp = await client.post("/v1/dialogue/turn/stream", json=body)
             assert resp.status_code == 200
@@ -1090,7 +1090,7 @@ def test_turn_stream_reconstructing_and_error_events(scene):
 
         api_module.app.state.dialogue = ExplodesMidStream()
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             resp = await client.post("/v1/dialogue/turn/stream", json=body)
             # Already committed to 200 before it failed — that IS the

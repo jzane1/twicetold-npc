@@ -68,7 +68,7 @@ def test_ledger_turn_feed_contract(scene):
             )
 
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             # Empty feed: no entries, cursor 0.
             empty = await client.get("/v1/ledger/turns")

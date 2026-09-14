@@ -70,11 +70,6 @@ confined to app/db.py, with no ORM in the way.
 DEVELOPMENT-TIME TOOLS (not dependencies of the running service)
 --------------------------------------------------------------------------------
 
-MCP for Unity (CoplayDev/unity-mcp)
-  Referenced by unity/Packages/manifest.json and resolved into
-  unity/Packages/ by Unity's package manager. Gitignored, never committed.
-  Editor-only: it is not part of a build and ships with nothing.
-
 Postgres MCP Pro (crystaldba/postgres-mcp)
   Run from its own isolated uv-managed venv; not in requirements.txt.
   A development-machine convenience; nothing in the service depends on it.

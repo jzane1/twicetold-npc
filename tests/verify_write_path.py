@@ -580,7 +580,7 @@ async def main(database_uri: str) -> None:
     api_module.app.state.service = capturing
     transport = httpx.ASGITransport(app=api_module.app)
     async with httpx.AsyncClient(
-        transport=transport, base_url="http://walker"
+        transport=transport, base_url="http://localhost"
     ) as client:
         payload = json.loads(observe_event(agent_id=agent_id).model_dump_json())
         response = await client.post("/v1/events/observe", json=payload)
@@ -613,7 +613,7 @@ async def main(database_uri: str) -> None:
 
     api_module.app.state.service = service
     async with httpx.AsyncClient(
-        transport=httpx.ASGITransport(app=api_module.app), base_url="http://walker"
+        transport=httpx.ASGITransport(app=api_module.app), base_url="http://localhost"
     ) as client:
         created = await client.post(
             "/v1/agents",

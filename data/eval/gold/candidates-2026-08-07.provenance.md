@@ -1,9 +1,8 @@
 # Provenance — candidates-2026-08-07.jsonl labels
 
 **Labeled:** 2026-08-12, by a single blind reference pass of **Claude Fable 5**
-(`claude-fable-5`), per the dated "Gold-label workaround + measurement-line rulings —
-2026-08-12" entry in `docs\decisions.md` (Jack ruled the single model pass over a
-three-rater panel; hand-labeling was unavailable).
+(`claude-fable-5`): a single model pass in place of a three-rater panel, since
+hand-labeling was unavailable.
 
 **Blindness protocol:** the labeler was a fresh-context subagent whose prompt contained
 ONLY the three rubric criteria (sf-v1 / abst-v1 / rf-v1, verbatim from

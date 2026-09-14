@@ -2,7 +2,7 @@
 # Install (PowerShell):  python -m pip install -r requirements.txt
 #
 # The Postgres MCP server runs from its own isolated uv-managed Python 3.13 tool
-# venv and is NOT listed here — see docs\mcp-setup.md and decisions.md.
+# venv and is not listed here; it is a development-machine convenience only.
 #
 # NOTE (2026-07-13): spaCy model downloads must go through pip URLs below, NOT
 # `python -m spacy download ...` — spaCy's downloader shells out to uv on this
@@ -33,7 +33,7 @@ uvicorn==0.51.0
 anthropic==0.116.0
 openai==2.45.0
 
-# write-time NLP stack (ruled 2026-07-13; see decisions.md)
+# write-time NLP stack
 spacy==3.8.13
 fastcoref==2.1.6
 vaderSentiment==3.3.2

@@ -378,7 +378,7 @@ def test_service_agent_purge_result_and_route_contract(scene):
         first, second = await _seed_two(ctx, wired)
         api_module.app.state.service = svc
         transport = httpx.ASGITransport(app=api_module.app)
-        async with httpx.AsyncClient(transport=transport, base_url="http://suite") as c:
+        async with httpx.AsyncClient(transport=transport, base_url="http://localhost") as c:
             ok = await c.delete(f"/v1/agents/{wired}/memories")
             assert ok.status_code == 200
             body = ok.json()

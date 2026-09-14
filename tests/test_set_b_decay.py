@@ -166,7 +166,7 @@ def test_ids_and_scores_ride_the_wire(scene):
         api_module.app.state.retrieval = ctx.retrieval()
         transport = httpx.ASGITransport(app=api_module.app)
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             payload = json.loads(request(agent).model_dump_json())
             first = await client.post("/v1/dialogue/init", json=payload)
@@ -209,7 +209,7 @@ def test_init_route_error_contract(scene):
         api_module.app.state.retrieval = ctx.retrieval()
         transport = httpx.ASGITransport(app=api_module.app)
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             ghost = json.loads(request(uuid4()).model_dump_json())
             not_found = await client.post("/v1/dialogue/init", json=ghost)

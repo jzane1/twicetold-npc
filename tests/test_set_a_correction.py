@@ -380,7 +380,7 @@ def test_correction_route_contract(scene):
         api_module.app.state.service = capturing
         transport = httpx.ASGITransport(app=api_module.app)
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://suite"
+            transport=transport, base_url="http://localhost"
         ) as client:
             payload = json.loads(
                 CorrectionRequest(

@@ -679,7 +679,7 @@ async def main(database_uri: str) -> None:
     api_module.app.state.retrieval = capturing
     transport = httpx.ASGITransport(app=api_module.app)
     async with httpx.AsyncClient(
-        transport=transport, base_url="http://walker"
+        transport=transport, base_url="http://localhost"
     ) as client:
         payload = json.loads(request(agent_a, k=3).model_dump_json())
         response = await client.post("/v1/dialogue/init", json=payload)
@@ -718,7 +718,7 @@ async def main(database_uri: str) -> None:
 
     api_module.app.state.retrieval = retrieval
     async with httpx.AsyncClient(
-        transport=httpx.ASGITransport(app=api_module.app), base_url="http://walker"
+        transport=httpx.ASGITransport(app=api_module.app), base_url="http://localhost"
     ) as client:
         chain_ok = await client.get(f"/v1/memories/{led_old}/chain")
         chain_404 = await client.get(f"/v1/memories/{_uuid4()}/chain")
