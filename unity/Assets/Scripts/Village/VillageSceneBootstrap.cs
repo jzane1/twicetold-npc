@@ -14,7 +14,19 @@ namespace Twicetold.Village
         private readonly Dictionary<string, Material> _materials = new();
         private readonly Dictionary<int, Mesh> _cylinderMeshes = new();
         private Transform _villageRoot;
+        private Transform _riversideHome;
+        private Transform _market;
+        private Transform _eventBench;
         private Mesh _polySphereMesh;
+
+        private enum VillagerStyle
+        {
+            Merchant,
+            Homeowner,
+            Fisherman,
+            Baker,
+            Worker,
+        }
 
         private static readonly Vector3[] MainRoad =
         {
@@ -55,6 +67,7 @@ namespace Twicetold.Village
             BuildVegetation();
             BuildVillageDressing();
             BuildPlayer();
+            BuildVillagersAndEvent();
         }
 
         private void BuildLighting()
@@ -152,7 +165,7 @@ namespace Twicetold.Village
         {
             CreateHouse("Ochre Roof Cottage", HouseSites[0], 1.08f, new Color(0.77f, 0.68f, 0.51f), new Color(0.78f, 0.49f, 0.14f), 0);
             CreateHouse("Village Inn", HouseSites[1], 1.42f, new Color(0.72f, 0.59f, 0.42f), new Color(0.88f, 0.61f, 0.16f), 1);
-            CreateHouse("Riverside Home", HouseSites[2], 1.08f, new Color(0.70f, 0.64f, 0.50f), new Color(0.42f, 0.26f, 0.15f), 2);
+            _riversideHome = CreateHouse("Riverside Home", HouseSites[2], 1.08f, new Color(0.70f, 0.64f, 0.50f), new Color(0.42f, 0.26f, 0.15f), 2);
             CreateHouse("Green Roof Cottage", HouseSites[3], 1.04f, new Color(0.78f, 0.70f, 0.54f), new Color(0.39f, 0.51f, 0.18f), 3);
             CreateHouse("North Lane House", HouseSites[4], 0.98f, new Color(0.81f, 0.71f, 0.52f), new Color(0.64f, 0.39f, 0.13f), 4);
             CreateHouse("Riverwatch Cottage", HouseSites[5], 0.92f, new Color(0.74f, 0.66f, 0.50f), new Color(0.56f, 0.33f, 0.14f), 5);
@@ -165,12 +178,12 @@ namespace Twicetold.Village
             var canvasA = MaterialFor("Sage Market Canvas", new Color(0.60f, 0.68f, 0.39f), 0.03f);
             var canvasB = MaterialFor("Cream Market Canvas", new Color(0.84f, 0.75f, 0.52f), 0.03f);
             var crate = MaterialFor("Market Crates", new Color(0.49f, 0.31f, 0.13f), 0.04f);
-            var market = new GameObject("Riverside Market Square").transform;
-            market.SetParent(_villageRoot, false);
-            market.localPosition = new Vector3(19f, TerrainHeight(19f, 3f), 3f);
-            market.localRotation = RotationFacingRoad(market.localPosition);
-            CreateMarketStall("Produce Stall", new Vector3(0f, 0f, 0f), 0f, canvasA, wood, crate, market);
-            CreateMarketStall("Dry Goods Stall", new Vector3(-0.5f, 0f, 6.2f), 12f, canvasB, wood, crate, market);
+            _market = new GameObject("Riverside Market Square").transform;
+            _market.SetParent(_villageRoot, false);
+            _market.localPosition = new Vector3(19f, TerrainHeight(19f, 3f), 3f);
+            _market.localRotation = RotationFacingRoad(_market.localPosition);
+            CreateMarketStall("Produce Stall", new Vector3(0f, 0f, 0f), 0f, canvasA, wood, crate, _market);
+            CreateMarketStall("Dry Goods Stall", new Vector3(-0.5f, 0f, 6.2f), 12f, canvasB, wood, crate, _market);
 
             var red = MaterialFor("Red Produce", new Color(0.66f, 0.16f, 0.10f), 0.08f);
             var gold = MaterialFor("Golden Produce", new Color(0.90f, 0.57f, 0.13f), 0.08f);
@@ -180,10 +193,10 @@ namespace Twicetold.Village
                 var row = i / 5;
                 var column = i % 5;
                 var material = i % 3 == 0 ? red : i % 3 == 1 ? gold : green;
-                CreatePolyObject("Market Produce", new Vector3(-2f + column, 1.46f, -0.45f + row * 0.43f), Vector3.one * 0.24f, material, market, false, i * 37f);
+                CreatePolyObject("Market Produce", new Vector3(-2f + column, 1.46f, -0.45f + row * 0.43f), Vector3.one * 0.24f, material, _market, false, i * 37f);
             }
-            CreateBarrel(new Vector3(4.1f, 0.7f, 1.5f), 0.75f, market);
-            CreateCrateStack(new Vector3(-4.2f, 0f, 4.7f), market, woodLight);
+            CreateBarrel(new Vector3(4.1f, 0.7f, 1.5f), 0.75f, _market);
+            CreateCrateStack(new Vector3(-4.2f, 0f, 4.7f), _market, woodLight);
         }
 
         private void BuildRiverfront()
@@ -221,7 +234,7 @@ namespace Twicetold.Village
 
             var featureTrees = new[]
             {
-                new Vector3(-6.5f, 0f, -6f), new Vector3(7f, 0f, 7f), new Vector3(-25f, 0f, 17f),
+                new Vector3(-6.5f, 0f, -6f), new Vector3(-27f, 0f, -2f), new Vector3(-25f, 0f, 17f),
                 new Vector3(27f, 0f, -7f), new Vector3(-25f, 0f, -35f), new Vector3(24f, 0f, 31f),
             };
             for (var i = 0; i < featureTrees.Length; i++)
@@ -256,7 +269,7 @@ namespace Twicetold.Village
             CreateLantern(new Vector3(3.7f, TerrainHeight(3.7f, 20f), 20f), wood, glow);
             CreateLantern(new Vector3(-2.8f, TerrainHeight(-2.8f, 39f), 39f), wood, glow);
             CreateBench(new Vector3(-5.6f, TerrainHeight(-5.6f, 13f), 13f), warmWood);
-            CreateBench(new Vector3(7.1f, TerrainHeight(7.1f, -2f), -2f), warmWood);
+            _eventBench = CreateBench(new Vector3(7.4f, TerrainHeight(7.4f, 7.6f), 7.6f), warmWood);
             CreateCart(new Vector3(18f, TerrainHeight(18f, -31f), -31f), 18f, warmWood, wood);
             CreateHaystack(new Vector3(-23f, TerrainHeight(-23f, -16f), -16f), 1.15f, straw);
             CreateHaystack(new Vector3(-21f, TerrainHeight(-21f, -13.5f), -13.5f), 0.82f, straw);
@@ -301,9 +314,237 @@ namespace Twicetold.Village
             movement.cameraTransform = cameraObject.transform;
             movement.playerCamera = camera;
             player.AddComponent<VillageHud>();
+            var dialogue = player.AddComponent<VillageDialogueInteractor>();
+            dialogue.playerCamera = camera;
         }
 
-        private void CreateHouse(string name, Vector3 position, float scale, Color wallColor, Color roofColor, int variant)
+        private void BuildVillagersAndEvent()
+        {
+            var henryPosition = _market.TransformPoint(new Vector3(0f, 0f, 2.18f));
+            var henry = CreateVillager(
+                "NPC Henry — Market Merchant", "henry", "Henry", "produce merchant", true, true,
+                henryPosition, _market.rotation, new Color(0.22f, 0.42f, 0.20f), new Color(0.30f, 0.20f, 0.12f),
+                new Color(0.78f, 0.55f, 0.18f), new Color(0.22f, 0.12f, 0.07f), VillagerStyle.Merchant);
+
+            var joanPosition = _riversideHome.TransformPoint(new Vector3(1.22f, 0.62f, -3.55f));
+            var joan = CreateVillager(
+                "NPC Joan — Riverside Resident", "joan", "Joan", "riverside resident", true, true,
+                joanPosition, _riversideHome.rotation, new Color(0.25f, 0.39f, 0.62f), new Color(0.20f, 0.29f, 0.48f),
+                new Color(0.83f, 0.72f, 0.52f), new Color(0.43f, 0.20f, 0.10f), VillagerStyle.Homeowner);
+
+            var approachRoute = new[]
+            {
+                GroundPoint(RoadCenterAt(-17f) + 0.45f, -17f),
+                GroundPoint(RoadCenterAt(-9f) + 0.25f, -9f),
+                GroundPoint(RoadCenterAt(1f) + 0.55f, 1f),
+                GroundPoint(3.7f, 5.2f),
+                GroundPoint(6.8f, 7.25f),
+            };
+            var fishermanFacing = Quaternion.LookRotation(-(approachRoute[1] - approachRoute[0]).normalized, Vector3.up);
+            var fisherman = CreateVillager(
+                "NPC Fisherman — Gold Event Actor", "fisherman", "Fisherman", "river fisherman", false, false,
+                approachRoute[0], fishermanFacing, new Color(0.16f, 0.43f, 0.46f), new Color(0.29f, 0.30f, 0.24f),
+                new Color(0.58f, 0.43f, 0.21f), new Color(0.29f, 0.20f, 0.13f), VillagerStyle.Fisherman);
+            CreateFishingGear(fisherman);
+            var goldBag = CreateGoldBag(fisherman.LeftHand, out var coinSpill);
+
+            var maraRoute = new[]
+            {
+                GroundPoint(-22f, 3.5f), GroundPoint(-16.5f, 4.8f),
+                GroundPoint(-9.5f, 5.1f), GroundPoint(-15f, 1.5f),
+            };
+            var mara = CreateVillager(
+                "NPC Mara — Baker", "mara", "Mara", "village baker", false, false,
+                maraRoute[0], Quaternion.LookRotation(-(maraRoute[1] - maraRoute[0]).normalized),
+                new Color(0.63f, 0.28f, 0.19f), new Color(0.46f, 0.19f, 0.16f),
+                new Color(0.88f, 0.76f, 0.56f), new Color(0.18f, 0.12f, 0.07f), VillagerStyle.Baker);
+            var maraWalker = mara.gameObject.AddComponent<VillageAmbientWalker>();
+            maraWalker.Configure(mara.Motion, maraRoute, 1.05f, 2.2f);
+
+            var rowanRoute = new[]
+            {
+                GroundPoint(-3f, 29f), GroundPoint(-9.5f, 31f),
+                GroundPoint(-8f, 38f), GroundPoint(0.5f, 37f),
+            };
+            var rowan = CreateVillager(
+                "NPC Rowan — Woodworker", "rowan", "Rowan", "village woodworker", false, false,
+                rowanRoute[0], Quaternion.LookRotation(-(rowanRoute[1] - rowanRoute[0]).normalized),
+                new Color(0.54f, 0.43f, 0.25f), new Color(0.25f, 0.35f, 0.18f),
+                new Color(0.39f, 0.27f, 0.14f), new Color(0.12f, 0.08f, 0.05f), VillagerStyle.Worker);
+            var rowanWalker = rowan.gameObject.AddComponent<VillageAmbientWalker>();
+            rowanWalker.Configure(rowan.Motion, rowanRoute, 0.92f, 3f);
+
+            var exitRoute = new[]
+            {
+                GroundPoint(7.4f, 7.6f), GroundPoint(3.2f, 10.4f),
+                GroundPoint(RoadCenterAt(15f), 15f), GroundPoint(RoadCenterAt(25f), 25f),
+                GroundPoint(RoadCenterAt(35f), 35f),
+            };
+            var eventObject = new GameObject("EVENT — Forgotten Gold at the Market Bench");
+            eventObject.transform.SetParent(_villageRoot, false);
+            var director = eventObject.AddComponent<VillageGoldEventDirector>();
+            director.Configure(fisherman, henry, joan, _eventBench, goldBag, coinSpill, approachRoute, exitRoute);
+        }
+
+        private VillageNpcAnchor CreateVillager(
+            string objectName,
+            string stableId,
+            string displayName,
+            string role,
+            bool demoFocus,
+            bool dialogueEnabled,
+            Vector3 position,
+            Quaternion rotation,
+            Color tunicColor,
+            Color lowerColor,
+            Color accentColor,
+            Color hairColor,
+            VillagerStyle style)
+        {
+            var root = new GameObject(objectName);
+            root.transform.SetParent(_villageRoot, false);
+            root.transform.position = position;
+            root.transform.rotation = rotation;
+
+            var collider = root.AddComponent<CapsuleCollider>();
+            collider.radius = 0.38f;
+            collider.height = 2.08f;
+            collider.center = new Vector3(0f, 1.04f, 0f);
+            var body = root.AddComponent<Rigidbody>();
+            body.isKinematic = true;
+            body.useGravity = false;
+            body.interpolation = RigidbodyInterpolation.Interpolate;
+
+            var visual = new GameObject("Animated Low-Poly Body").transform;
+            visual.SetParent(root.transform, false);
+            var attachmentPoint = new GameObject("Backend Attachment Point [" + stableId + "]").transform;
+            attachmentPoint.SetParent(root.transform, false);
+            attachmentPoint.localPosition = new Vector3(0f, 1.35f, 0.18f);
+
+            var skin = MaterialFor("Villager Skin", new Color(0.72f, 0.50f, 0.34f), 0.04f);
+            var tunic = MaterialFor(displayName + " Tunic", tunicColor, 0.025f);
+            var lower = MaterialFor(displayName + " Lower Clothing", lowerColor, 0.02f);
+            var accent = MaterialFor(displayName + " Accent", accentColor, 0.03f);
+            var hair = MaterialFor(displayName + " Hair", hairColor, 0.02f);
+            var boot = MaterialFor("Villager Boots", new Color(0.17f, 0.105f, 0.055f), 0.05f);
+            var eye = MaterialFor("Villager Eyes", new Color(0.06f, 0.055f, 0.045f), 0.12f);
+
+            var leftLeg = new GameObject("Left Leg Pivot").transform;
+            leftLeg.SetParent(visual, false);
+            leftLeg.localPosition = new Vector3(-0.20f, 0.91f, 0f);
+            var rightLeg = new GameObject("Right Leg Pivot").transform;
+            rightLeg.SetParent(visual, false);
+            rightLeg.localPosition = new Vector3(0.20f, 0.91f, 0f);
+            Primitive("Left Trouser Leg", PrimitiveType.Cube, new Vector3(0f, -0.40f, 0f), new Vector3(0.27f, 0.80f, 0.29f), lower, leftLeg, false);
+            Primitive("Right Trouser Leg", PrimitiveType.Cube, new Vector3(0f, -0.40f, 0f), new Vector3(0.27f, 0.80f, 0.29f), lower, rightLeg, false);
+            Primitive("Left Boot", PrimitiveType.Cube, new Vector3(0f, -0.83f, -0.07f), new Vector3(0.30f, 0.18f, 0.42f), boot, leftLeg, false);
+            Primitive("Right Boot", PrimitiveType.Cube, new Vector3(0f, -0.83f, -0.07f), new Vector3(0.30f, 0.18f, 0.42f), boot, rightLeg, false);
+
+            var wearsSkirt = style == VillagerStyle.Homeowner || style == VillagerStyle.Baker;
+            if (wearsSkirt) CreateCone("Low-Poly Skirt", new Vector3(0f, 0.73f, 0f), 0.53f, 0.92f, 10, lower, visual);
+            Primitive("Tunic", PrimitiveType.Cube, new Vector3(0f, 1.28f, 0f), new Vector3(0.82f, 0.88f, 0.47f), tunic, visual, false);
+            Primitive("Belt", PrimitiveType.Cube, new Vector3(0f, 0.94f, -0.01f), new Vector3(0.88f, 0.12f, 0.51f), accent, visual, false);
+
+            if (style == VillagerStyle.Merchant || style == VillagerStyle.Homeowner || style == VillagerStyle.Baker)
+            {
+                Primitive("Work Apron", PrimitiveType.Cube, new Vector3(0f, 1.17f, -0.255f), new Vector3(0.58f, 0.72f, 0.055f), accent, visual, false);
+                Primitive("Apron Tie", PrimitiveType.Cube, new Vector3(0f, 1.48f, -0.285f), new Vector3(0.72f, 0.09f, 0.06f), accent, visual, false);
+            }
+
+            var leftArm = CreateArm("Left", -0.54f, skin, tunic, visual);
+            var rightArm = CreateArm("Right", 0.54f, skin, tunic, visual);
+            var leftHand = leftArm.Find("Left Hand Grip");
+            var rightHand = rightArm.Find("Right Hand Grip");
+
+            var headPivot = new GameObject("Head Pivot").transform;
+            headPivot.SetParent(visual, false);
+            headPivot.localPosition = new Vector3(0f, 1.92f, 0f);
+            CreatePolyObject("Head", Vector3.zero, new Vector3(0.34f, 0.38f, 0.33f), skin, headPivot, false, 0f);
+            CreatePolyObject("Nose", new Vector3(0f, -0.01f, -0.325f), new Vector3(0.075f, 0.09f, 0.08f), skin, headPivot, false, 0f);
+            foreach (var x in new[] { -0.12f, 0.12f }) CreatePolyObject("Eye", new Vector3(x, 0.07f, -0.315f), Vector3.one * 0.035f, eye, headPivot, false, 0f);
+            CreatePolyObject("Hair", new Vector3(0f, 0.20f, 0.035f), new Vector3(0.36f, 0.21f, 0.34f), hair, headPivot, false, 17f);
+
+            if (style == VillagerStyle.Homeowner)
+            {
+                CreatePolyObject("Hair Bun", new Vector3(0f, 0.12f, 0.33f), Vector3.one * 0.19f, hair, headPivot, false, 41f);
+                Primitive("Shoulder Shawl", PrimitiveType.Cube, new Vector3(0f, 1.55f, 0.02f), new Vector3(1.08f, 0.20f, 0.52f), accent, visual, false);
+            }
+            else if (style == VillagerStyle.Baker)
+            {
+                CreateCone("Baker Head Scarf", new Vector3(0f, 0.21f, 0f), 0.39f, 0.30f, 9, accent, headPivot);
+            }
+            else
+            {
+                Primitive("Cap Brim", PrimitiveType.Cube, new Vector3(0f, 0.25f, -0.13f), new Vector3(0.62f, 0.07f, 0.46f), accent, headPivot, false);
+                CreateCylinder("Cap Crown", new Vector3(0f, 0.36f, 0.01f), new Vector3(0.31f, 0.13f, 0.31f), accent, headPivot, false, 9);
+            }
+
+            if (style == VillagerStyle.Fisherman)
+            {
+                CreatePolyObject("Short Beard", new Vector3(0f, -0.20f, -0.275f), new Vector3(0.24f, 0.18f, 0.10f), hair, headPivot, false, 9f);
+            }
+
+            var motion = root.AddComponent<VillageNpcMotion>();
+            motion.Configure(visual, headPivot, leftArm, rightArm, leftLeg, rightLeg);
+            var anchor = root.AddComponent<VillageNpcAnchor>();
+            anchor.Configure(stableId, displayName, role, demoFocus, dialogueEnabled, attachmentPoint, leftHand, rightHand, motion);
+            return anchor;
+        }
+
+        private Transform CreateArm(string sideName, float x, Material skin, Material sleeve, Transform parent)
+        {
+            var arm = new GameObject(sideName + " Arm Pivot").transform;
+            arm.SetParent(parent, false);
+            arm.localPosition = new Vector3(x, 1.58f, 0f);
+            Primitive(sideName + " Sleeve", PrimitiveType.Cube, new Vector3(0f, -0.22f, 0f), new Vector3(0.25f, 0.48f, 0.28f), sleeve, arm, false);
+            Primitive(sideName + " Forearm", PrimitiveType.Cube, new Vector3(0f, -0.59f, 0f), new Vector3(0.20f, 0.42f, 0.22f), skin, arm, false);
+            var hand = new GameObject(sideName + " Hand Grip").transform;
+            hand.SetParent(arm, false);
+            hand.localPosition = new Vector3(0f, -0.84f, 0f);
+            CreatePolyObject(sideName + " Hand", Vector3.zero, Vector3.one * 0.14f, skin, hand, false, 0f);
+            return arm;
+        }
+
+        private void CreateFishingGear(VillageNpcAnchor fisherman)
+        {
+            var rod = MaterialFor("Fishing Rod", new Color(0.28f, 0.16f, 0.07f), 0.04f);
+            var line = MaterialFor("Fishing Line", new Color(0.72f, 0.76f, 0.68f), 0.16f);
+            var tackle = MaterialFor("Tackle Box", new Color(0.39f, 0.24f, 0.10f), 0.06f);
+            var metal = MaterialFor("Tackle Metal", new Color(0.22f, 0.24f, 0.22f), 0.42f);
+            CreateCylinder("Fishing Rod", new Vector3(0f, 0.92f, 0f), new Vector3(0.035f, 1.28f, 0.035f), rod, fisherman.RightHand, false, 8, Quaternion.Euler(0f, 0f, -8f));
+            Primitive("Fishing Line", PrimitiveType.Cube, new Vector3(-0.10f, 1.82f, -0.46f), new Vector3(0.012f, 1.05f, 0.012f), line, fisherman.RightHand, false, Quaternion.Euler(24f, 0f, 0f));
+            Primitive("Tackle Box", PrimitiveType.Cube, new Vector3(0f, 0.72f, 0.43f), new Vector3(0.72f, 0.52f, 0.34f), tackle, fisherman.transform, false);
+            Primitive("Tackle Latch", PrimitiveType.Cube, new Vector3(0f, 0.76f, 0.245f), new Vector3(0.15f, 0.14f, 0.035f), metal, fisherman.transform, false);
+        }
+
+        private Transform CreateGoldBag(Transform parent, out GameObject coinSpill)
+        {
+            var bagCloth = MaterialFor("Gold Bag Cloth", new Color(0.62f, 0.39f, 0.10f), 0.04f);
+            var tie = MaterialFor("Gold Bag Tie", new Color(0.27f, 0.15f, 0.06f), 0.05f);
+            var gold = MaterialFor("Gold Coins", new Color(1f, 0.66f, 0.08f), 0.58f, true);
+            var bag = new GameObject("Forgotten Gold Coin Bag").transform;
+            bag.SetParent(parent, false);
+            CreatePolyObject("Coin Bag", Vector3.zero, new Vector3(0.38f, 0.44f, 0.31f), bagCloth, bag, false, 13f);
+            CreateCylinder("Drawstring", new Vector3(0f, 0.33f, 0f), new Vector3(0.22f, 0.055f, 0.22f), tie, bag, false, 10);
+            CreateCylinder("Gold Coin Mark", new Vector3(0f, 0.03f, -0.30f), new Vector3(0.14f, 0.035f, 0.14f), gold, bag, false, 12, Quaternion.Euler(90f, 0f, 0f));
+
+            coinSpill = new GameObject("Visible Gold Coin Spill");
+            coinSpill.transform.SetParent(bag, false);
+            var coinPositions = new[]
+            {
+                new Vector3(0.42f, -0.42f, -0.12f), new Vector3(0.62f, -0.41f, 0.03f),
+                new Vector3(0.50f, -0.37f, 0.22f), new Vector3(-0.42f, -0.42f, 0.04f),
+                new Vector3(-0.56f, -0.39f, -0.18f),
+            };
+            for (var i = 0; i < coinPositions.Length; i++)
+                CreateCylinder("Loose Gold Coin", coinPositions[i], new Vector3(0.13f, 0.025f, 0.13f), gold, coinSpill.transform, false, 12, Quaternion.Euler(0f, i * 19f, i % 2 == 0 ? 0f : 7f));
+            coinSpill.SetActive(false);
+            return bag;
+        }
+
+        private static Vector3 GroundPoint(float x, float z) => new(x, TerrainHeight(x, z), z);
+
+        private Transform CreateHouse(string name, Vector3 position, float scale, Color wallColor, Color roofColor, int variant)
         {
             var house = new GameObject(name).transform;
             house.SetParent(_villageRoot, false);
@@ -334,8 +575,25 @@ namespace Twicetold.Village
             Primitive("Stone Chimney", PrimitiveType.Cube, new Vector3(chimneyX * scale, 5.15f * scale, 0.62f * scale), new Vector3(0.72f * scale, 2.45f * scale, 0.72f * scale), stone, house, true);
             Primitive("Chimney Cap", PrimitiveType.Cube, new Vector3(chimneyX * scale, 6.35f * scale, 0.62f * scale), new Vector3(0.92f * scale, 0.18f * scale, 0.92f * scale), stone, house, false);
             Primitive("Front Step", PrimitiveType.Cube, new Vector3(0f, 0.18f * scale, -3.35f * scale), new Vector3(2.15f * scale, 0.28f * scale, 1.1f * scale), stone, house, true);
-            CreateFence(house, new Vector3(-4.8f * scale, 0f, -4.35f * scale), new Vector3(-1.5f * scale, 0f, -4.35f * scale), beam);
-            CreateFence(house, new Vector3(1.5f * scale, 0f, -4.35f * scale), new Vector3(4.8f * scale, 0f, -4.35f * scale), beam);
+            if (variant == 2) CreateHousePorch(house, scale, beam, roof, stone);
+            else
+            {
+                CreateFence(house, new Vector3(-4.8f * scale, 0f, -4.35f * scale), new Vector3(-1.5f * scale, 0f, -4.35f * scale), beam);
+                CreateFence(house, new Vector3(1.5f * scale, 0f, -4.35f * scale), new Vector3(4.8f * scale, 0f, -4.35f * scale), beam);
+            }
+            return house;
+        }
+
+        private void CreateHousePorch(Transform house, float scale, Material wood, Material roof, Material stone)
+        {
+            Primitive("Porch Deck", PrimitiveType.Cube, new Vector3(0f, 0.47f * scale, -3.62f * scale), new Vector3(5.25f * scale, 0.26f * scale, 1.95f * scale), wood, house, true);
+            Primitive("Porch Step", PrimitiveType.Cube, new Vector3(0f, 0.18f * scale, -4.78f * scale), new Vector3(2.15f * scale, 0.28f * scale, 0.72f * scale), stone, house, true);
+            foreach (var x in new[] { -2.28f, 2.28f })
+            {
+                CreateCylinder("Porch Post", new Vector3(x * scale, 1.85f * scale, -4.28f * scale), new Vector3(0.12f * scale, 1.45f * scale, 0.12f * scale), wood, house, true, 8);
+                Primitive("Porch Side Rail", PrimitiveType.Cube, new Vector3(x * scale, 1.0f * scale, -3.62f * scale), new Vector3(0.12f * scale, 0.12f * scale, 1.28f * scale), wood, house, false);
+            }
+            CreateGabledRoof(house, new Vector3(0f, 3.32f * scale, -3.65f * scale), 5.85f * scale, 2.45f * scale, 0.78f * scale, roof, false);
         }
 
         private void CreateWindow(Vector3 position, float scale, Material glass, Material frame, Material flowers, Transform parent)
@@ -491,7 +749,7 @@ namespace Twicetold.Village
             light.shadows = LightShadows.None;
         }
 
-        private void CreateBench(Vector3 position, Material material)
+        private Transform CreateBench(Vector3 position, Material material)
         {
             var bench = new GameObject("Village Bench").transform;
             bench.SetParent(_villageRoot, false);
@@ -500,6 +758,7 @@ namespace Twicetold.Village
             Primitive("Seat", PrimitiveType.Cube, new Vector3(0f, 0.72f, 0f), new Vector3(3.2f, 0.18f, 0.72f), material, bench, true);
             Primitive("Back", PrimitiveType.Cube, new Vector3(0f, 1.3f, 0.31f), new Vector3(3.2f, 0.72f, 0.14f), material, bench, true, Quaternion.Euler(-8f, 0f, 0f));
             foreach (var x in new[] { -1.2f, 1.2f }) Primitive("Bench Leg", PrimitiveType.Cube, new Vector3(x, 0.36f, 0f), new Vector3(0.18f, 0.72f, 0.6f), material, bench, true);
+            return bench;
         }
 
         private void CreateCart(Vector3 position, float yaw, Material wood, Material darkWood)
@@ -1054,7 +1313,7 @@ namespace Twicetold.Village
                 normal = { textColor = new Color(0.94f, 0.93f, 0.85f, alpha) },
             };
             GUI.Label(new Rect(22f, 18f, 420f, 28f), "RIVERSIDE VILLAGE", titleStyle);
-            GUI.Label(new Rect(22f, 45f, 560f, 26f), "WASD move   •   mouse look   •   Shift sprint   •   Esc release cursor", helpStyle);
+            GUI.Label(new Rect(22f, 45f, 820f, 26f), "WASD move   •   mouse look   •   Shift sprint   •   E talk   •   R replay event   •   Esc release cursor", helpStyle);
         }
     }
 
