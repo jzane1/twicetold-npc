@@ -38,6 +38,17 @@ That same beat calls `ReportObservation` on both anchors and raises `Observation
 The event ID is stable across replays so an adapter can deduplicate recording attempts. Press `R`
 after completion to reset and replay the scene choreography.
 
+Presentation pacing: the trigger radius is 17 metres from the bench; the sequence takes about
+13 seconds after it starts. The witnesses react once the fisherman is 4.5 metres away, while
+he continues along his departure route. Their callbacks follow the start of the visible turn
+by 0.35 seconds. Reset clears `LastObservation` on both focus anchors, but does not undo or
+delete anything recorded by an external adapter.
+
+Characters are now approximately 1.8 metres tall with articulated elbows and knees. Treat
+the visual rig as replaceable: use the stable anchor, hand transforms, and attachment point,
+not clothing mesh names or body dimensions. Presentation movement is local choreography;
+it does not call a backend or write a memory database.
+
 ## Minimal adapter pattern
 
 ```csharp

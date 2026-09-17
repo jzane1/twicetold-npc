@@ -88,119 +88,141 @@ namespace Twicetold.Village
             ObservationReported?.Invoke(this, observation);
         }
 
+        public void ClearPresentationObservation() => LastObservation = null;
+
         public void LookAtFor(Vector3 worldPosition, float seconds) => motion.BeginLookAt(worldPosition, seconds);
     }
 
     public sealed class VillageNpcMotion : MonoBehaviour
     {
-        private Transform _visualRoot;
-        private Transform _headPivot;
-        private Transform _leftArm;
-        private Transform _rightArm;
-        private Transform _leftLeg;
-        private Transform _rightLeg;
-        private Vector3 _visualRestPosition;
-        private Quaternion _headRestRotation;
-        private bool _walking;
-        private bool _sitting;
-        private bool _inspecting;
-        private bool _happy;
-        private bool _looking;
-        private float _lookEndsAt;
+        private Transform _visualRoot, _headPivot, _leftArm, _rightArm, _leftLeg, _rightLeg;
+        private Transform _leftElbow, _rightElbow, _leftKnee, _rightKnee;
+        private Transform _leftAnkle, _rightAnkle;
+        private Vector3 _lastPosition, _lookPoint;
         private Quaternion _lookStartRotation;
-        private Quaternion _lookTargetRotation;
+        private bool _walking, _sitting, _inspecting, _happy, _looking;
+        private float _phase, _walkBlend, _sitBlend, _lookEndsAt;
+        public bool IsInspecting => _inspecting;
 
-        public void Configure(
-            Transform visualRoot,
-            Transform headPivot,
-            Transform leftArm,
-            Transform rightArm,
-            Transform leftLeg,
-            Transform rightLeg)
+        public void Configure(Transform visualRoot, Transform headPivot, Transform leftArm,
+            Transform rightArm, Transform leftLeg, Transform rightLeg)
         {
-            _visualRoot = visualRoot;
-            _headPivot = headPivot;
-            _leftArm = leftArm;
-            _rightArm = rightArm;
-            _leftLeg = leftLeg;
-            _rightLeg = rightLeg;
-            _visualRestPosition = visualRoot.localPosition;
-            _headRestRotation = headPivot.localRotation;
+            _visualRoot = visualRoot; _headPivot = headPivot;
+            _leftArm = leftArm; _rightArm = rightArm; _leftLeg = leftLeg; _rightLeg = rightLeg;
+            _leftElbow = leftArm.Find("Elbow"); _rightElbow = rightArm.Find("Elbow");
+            _leftKnee = leftLeg.Find("Knee"); _rightKnee = rightLeg.Find("Knee");
+            _leftAnkle = _leftKnee.Find("Ankle"); _rightAnkle = _rightKnee.Find("Ankle");
+            _lastPosition = transform.position;
         }
 
-        public void SetWalking(bool walking, bool happy = false)
-        {
-            _walking = walking;
-            _happy = happy;
-        }
-
+        public void SetWalking(bool walking, bool happy = false) { _walking = walking; _happy = happy; }
         public void SetSitting(bool sitting) => _sitting = sitting;
         public void SetInspecting(bool inspecting) => _inspecting = inspecting;
-
         public void BeginLookAt(Vector3 worldPosition, float seconds)
         {
-            var flatDirection = worldPosition - transform.position;
-            flatDirection.y = 0f;
-            if (flatDirection.sqrMagnitude < 0.01f) return;
-            _lookStartRotation = transform.rotation;
-            _lookTargetRotation = Quaternion.LookRotation(-flatDirection.normalized, Vector3.up);
-            _lookEndsAt = Time.time + Mathf.Max(0.5f, seconds);
+            if (!_looking) _lookStartRotation = transform.rotation;
+            _lookPoint = worldPosition;
+            _lookEndsAt = Time.time + Mathf.Max(.5f, seconds);
             _looking = true;
         }
 
         public void ResetMotion()
         {
-            _walking = false;
-            _sitting = false;
-            _inspecting = false;
-            _happy = false;
-            _looking = false;
-            if (_visualRoot != null) _visualRoot.localPosition = _visualRestPosition;
-            if (_headPivot != null) _headPivot.localRotation = _headRestRotation;
-            if (_leftArm != null) _leftArm.localRotation = Quaternion.identity;
-            if (_rightArm != null) _rightArm.localRotation = Quaternion.identity;
-            if (_leftLeg != null) _leftLeg.localRotation = Quaternion.identity;
-            if (_rightLeg != null) _rightLeg.localRotation = Quaternion.identity;
+            _walking = _sitting = _inspecting = _happy = false;
+            if (_looking) transform.rotation = _lookStartRotation;
+            _looking = false; _phase = _walkBlend = _sitBlend = 0;
+            _lastPosition = transform.position;
+            if (_visualRoot == null) return;
+            _visualRoot.localPosition = Vector3.zero;
+            _visualRoot.localRotation = Quaternion.identity;
+            foreach (var joint in new[] { _headPivot, _leftArm, _rightArm, _leftLeg, _rightLeg, _leftElbow, _rightElbow, _leftKnee, _rightKnee, _leftAnkle, _rightAnkle })
+                if (joint != null) joint.localRotation = Quaternion.identity;
         }
 
-        private void Update()
+        private void LateUpdate()
         {
             if (_visualRoot == null) return;
-
-            var pace = _happy ? 9.2f : 7.2f;
-            var stride = _walking ? Mathf.Sin(Time.time * pace) : 0f;
-            var armSwing = _walking ? stride * (_happy ? 34f : 27f) : 0f;
-            var legSwing = _walking ? stride * (_happy ? 31f : 24f) : 0f;
-            if (_sitting)
+            var dt = Time.deltaTime;
+            var travel = transform.position - _lastPosition; travel.y = 0;
+            _lastPosition = transform.position;
+            // Cadence follows distance travelled, not an unrelated wall-clock oscillator.
+            _phase += Mathf.Min(travel.magnitude, .2f) * 5.8f;
+            _walkBlend = Mathf.MoveTowards(_walkBlend, _walking && travel.sqrMagnitude > .000001f ? 1 : 0, dt * 7);
+            _sitBlend = Mathf.MoveTowards(_sitBlend, _sitting ? 1 : 0, dt * 2.6f);
+            var left = Mathf.Sin(_phase); var right = -left;
+            Pose(_leftLeg, Mathf.Lerp(left * 31 * _walkBlend, 87, _sitBlend), 0, 0, dt);
+            Pose(_rightLeg, Mathf.Lerp(right * 31 * _walkBlend, 84, _sitBlend), 0, 0, dt);
+            Pose(_leftKnee, Mathf.Lerp(-Mathf.Max(0, left) * 53 * _walkBlend, -88, _sitBlend), 0, 0, dt);
+            Pose(_rightKnee, Mathf.Lerp(-Mathf.Max(0, right) * 53 * _walkBlend, -87, _sitBlend), 0, 0, dt);
+            // Keep soles level and lower the pelvis onto the support leg, rather than floating
+            // both feet whenever the legs rotate. The other leg retains its swing clearance.
+            if (_leftAnkle != null) _leftAnkle.localRotation = Quaternion.Inverse(_leftLeg.localRotation * _leftKnee.localRotation);
+            if (_rightAnkle != null) _rightAnkle.localRotation = Quaternion.Inverse(_rightLeg.localRotation * _rightKnee.localRotation);
+            var leftSole = _leftLeg.localPosition + _leftLeg.localRotation * (Vector3.down * .41f + _leftKnee.localRotation * Vector3.down * .41f);
+            var rightSole = _rightLeg.localPosition + _rightLeg.localRotation * (Vector3.down * .41f + _rightKnee.localRotation * Vector3.down * .41f);
+            var supportOffset = -(Mathf.Min(leftSole.y, rightSole.y) - .075f);
+            var inspect = _inspecting ? 1f : 0f;
+            Pose(_leftArm, -left * 22 * _walkBlend + _sitBlend * 22 + inspect * 18, inspect * 15, -5 - inspect * 8, dt);
+            Pose(_rightArm, -right * 22 * _walkBlend + _sitBlend * 18 + inspect * 12, -inspect * 12, 5 + inspect * 8, dt);
+            Pose(_leftElbow, 12 + inspect * 58 + (_happy ? 8 : 0), 0, 0, dt);
+            Pose(_rightElbow, 16 + inspect * 54, 0, 0, dt);
+            var breathing = Mathf.Sin(Time.time * 1.8f + transform.position.x) * .003f;
+            _visualRoot.localPosition = Vector3.up * (breathing + Mathf.Lerp(supportOffset, -.335f, _sitBlend));
+            _visualRoot.localRotation = Quaternion.Euler(-_sitBlend * 5, 0, left * 1.5f * _walkBlend);
+            var headPitch = _inspecting ? -25f : 0;
+            if (_looking)
             {
-                armSwing = _inspecting ? -38f : 8f;
-                legSwing = -63f;
+                var direction = _lookPoint - (transform.position + Vector3.up * 1.55f);
+                var flat = direction; flat.y = 0;
+                var target = Time.time < _lookEndsAt && flat.sqrMagnitude > .01f
+                    ? Quaternion.LookRotation(-flat.normalized) : _lookStartRotation;
+                transform.rotation = Quaternion.Slerp(transform.rotation, target, 1 - Mathf.Exp(-dt * 5));
+                if (Time.time < _lookEndsAt) headPitch = Mathf.Clamp(Mathf.Atan2(direction.y, flat.magnitude) * Mathf.Rad2Deg, -32, 20);
+                else if (Quaternion.Angle(transform.rotation, _lookStartRotation) < .5f) _looking = false;
             }
+            Pose(_headPivot, headPitch, 0, _happy && _walking ? -3 : 0, dt);
+        }
 
-            _leftArm.localRotation = Quaternion.Slerp(_leftArm.localRotation, Quaternion.Euler(armSwing, 0f, _inspecting ? -10f : 0f), Time.deltaTime * 9f);
-            _rightArm.localRotation = Quaternion.Slerp(_rightArm.localRotation, Quaternion.Euler(-armSwing - (_inspecting ? 24f : 0f), 0f, _inspecting ? 13f : 0f), Time.deltaTime * 9f);
-            _leftLeg.localRotation = Quaternion.Slerp(_leftLeg.localRotation, Quaternion.Euler(legSwing, 0f, 0f), Time.deltaTime * 10f);
-            _rightLeg.localRotation = Quaternion.Slerp(_rightLeg.localRotation, Quaternion.Euler(_sitting ? legSwing : -legSwing, 0f, 0f), Time.deltaTime * 10f);
+        private static void Pose(Transform joint, float x, float y, float z, float dt)
+        {
+            if (joint != null) joint.localRotation = Quaternion.Slerp(joint.localRotation, Quaternion.Euler(x, y, z), 1 - Mathf.Exp(-dt * 15));
+        }
+    }
 
-            var bob = _walking ? Mathf.Abs(Mathf.Sin(Time.time * pace)) * (_happy ? 0.075f : 0.045f) : Mathf.Sin(Time.time * 1.7f) * 0.012f;
-            var poseOffset = _sitting ? -0.27f : 0f;
-            _visualRoot.localPosition = Vector3.Lerp(_visualRoot.localPosition, _visualRestPosition + Vector3.up * (poseOffset + bob), Time.deltaTime * 10f);
-            var headTarget = _inspecting ? Quaternion.Euler(24f, 0f, 0f) : _headRestRotation;
-            _headPivot.localRotation = Quaternion.Slerp(_headPivot.localRotation, headTarget, Time.deltaTime * 7f);
+    [DefaultExecutionOrder(100)]
+    public sealed class VillageHeldFishingRod : MonoBehaviour
+    {
+        private VillageNpcMotion _motion;
+        private Transform _actor;
+        public void Configure(VillageNpcMotion motion, Transform actor) { _motion = motion; _actor = actor; }
+        private void LateUpdate()
+        {
+            if (_actor == null) return;
+            var target = _actor.rotation * Quaternion.Euler(_motion.IsInspecting ? -52 : -12, 0, -6);
+            transform.rotation = Quaternion.Slerp(transform.rotation, target, 1 - Mathf.Exp(-Time.deltaTime * 8));
+        }
+    }
 
-            if (!_looking) return;
-            var remaining = _lookEndsAt - Time.time;
-            if (remaining <= 0f)
+    internal static class VillageNpcNavigation
+    {
+        private static readonly RaycastHit[] Hits = new RaycastHit[24];
+
+        public static bool Step(Transform actor, Vector3 target, float distance)
+        {
+            var next = Vector3.MoveTowards(actor.position, target, distance);
+            var delta = next - actor.position; delta.y = 0;
+            if (delta.sqrMagnitude < .000001f) return false;
+            var count = Physics.CapsuleCastNonAlloc(actor.position + Vector3.up * .38f,
+                actor.position + Vector3.up * 1.48f, .23f, delta.normalized, Hits,
+                delta.magnitude + .035f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+            for (var i = 0; i < count; i++)
             {
-                transform.rotation = Quaternion.Slerp(transform.rotation, _lookStartRotation, Time.deltaTime * 12f);
-                if (Quaternion.Angle(transform.rotation, _lookStartRotation) < 0.8f)
-                {
-                    transform.rotation = _lookStartRotation;
-                    _looking = false;
-                }
-                return;
+                if (Hits[i].transform.IsChildOf(actor)) continue;
+                return false;
             }
-            transform.rotation = Quaternion.Slerp(transform.rotation, _lookTargetRotation, Time.deltaTime * 4.5f);
+            next.y = VillageSceneBootstrap.GroundHeight(next.x, next.z) + .10f;
+            actor.position = next;
+            return true;
         }
     }
 
@@ -243,8 +265,7 @@ namespace Twicetold.Village
                 return;
             }
 
-            _motion.SetWalking(true);
-            transform.position = Vector3.MoveTowards(transform.position, target, _speed * Time.deltaTime);
+            _motion.SetWalking(VillageNpcNavigation.Step(transform, target, _speed * Time.deltaTime));
             var facing = Quaternion.LookRotation(-direction.normalized, Vector3.up);
             transform.rotation = Quaternion.Slerp(transform.rotation, facing, Time.deltaTime * 7f);
         }
@@ -280,6 +301,8 @@ namespace Twicetold.Village
         private int _routeIndex;
         private float _stateStartedAt;
         private Vector3 _bagPlacementStart;
+        private Vector3 _sitStartPosition;
+        private bool _departureFinished;
         private bool _observationsSent;
 
         public VillageGoldEventState State { get; private set; } = VillageGoldEventState.WaitingForPlayer;
@@ -304,7 +327,7 @@ namespace Twicetold.Village
             _approachRoute = approachRoute;
             _exitRoute = exitRoute;
             _seatPosition = bench.TransformPoint(new Vector3(0.35f, 0f, -0.08f));
-            _bagGroundPosition = bench.TransformPoint(new Vector3(2.05f, 0.46f, -0.02f));
+            _bagGroundPosition = bench.TransformPoint(new Vector3(1.92f, 0.35f, -0.30f));
             ResetEvent();
         }
 
@@ -322,11 +345,16 @@ namespace Twicetold.Village
             _fisherman.transform.rotation = Quaternion.LookRotation(-(_approachRoute[1] - _approachRoute[0]).normalized, Vector3.up);
             _fisherman.Motion.ResetMotion();
             _goldBag.SetParent(_fisherman.LeftHand, false);
-            _goldBag.localPosition = new Vector3(0f, -0.08f, -0.05f);
+            _goldBag.localPosition = new Vector3(0f, -0.27f, -0.05f);
             _goldBag.localRotation = Quaternion.Euler(0f, 0f, -8f);
             _coinSpill.SetActive(false);
             _routeIndex = 1;
             _observationsSent = false;
+            _departureFinished = false;
+            _henry.Motion.ResetMotion();
+            _joan.Motion.ResetMotion();
+            _henry.ClearPresentationObservation();
+            _joan.ClearPresentationObservation();
             SetState(VillageGoldEventState.WaitingForPlayer);
         }
 
@@ -339,6 +367,11 @@ namespace Twicetold.Village
         private void Update()
         {
             if (_fisherman == null) return;
+            if ((State == VillageGoldEventState.WitnessesNotice || State == VillageGoldEventState.Complete) && !_departureFinished)
+            {
+                _departureFinished = WalkRoute(_exitRoute, 2.7f, true);
+                if (_departureFinished) _fisherman.Motion.SetWalking(false);
+            }
             if (State == VillageGoldEventState.Complete && Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame)
             {
                 ResetEvent();
@@ -349,12 +382,12 @@ namespace Twicetold.Village
             switch (State)
             {
                 case VillageGoldEventState.WaitingForPlayer:
-                    if (_player != null && Vector3.Distance(_player.position, _bench.position) < 29f) BeginEvent();
+                    if (_player != null && Vector3.Distance(_player.position, _bench.position) < 17f) BeginEvent();
                     break;
                 case VillageGoldEventState.WalkingToBench:
-                    if (WalkRoute(_approachRoute, 1.65f, false))
+                    if (WalkRoute(_approachRoute, 2.35f, false))
                     {
-                        _fisherman.transform.position = _seatPosition;
+                        _sitStartPosition = _fisherman.transform.position;
                         _fisherman.transform.rotation = _bench.rotation;
                         _fisherman.Motion.SetWalking(false);
                         _fisherman.Motion.SetSitting(true);
@@ -362,7 +395,8 @@ namespace Twicetold.Village
                     }
                     break;
                 case VillageGoldEventState.SittingDown:
-                    if (StateAge > 1.35f)
+                    _fisherman.transform.position = Vector3.Lerp(_sitStartPosition, _seatPosition, Mathf.SmoothStep(0, 1, StateAge / .65f));
+                    if (StateAge > .7f)
                     {
                         _bagPlacementStart = _goldBag.position;
                         _goldBag.SetParent(transform, true);
@@ -370,7 +404,7 @@ namespace Twicetold.Village
                     }
                     break;
                 case VillageGoldEventState.PlacingGold:
-                    var placement = Mathf.Clamp01(StateAge / 1.15f);
+                    var placement = Mathf.Clamp01(StateAge / .7f);
                     var arc = Mathf.Sin(placement * Mathf.PI) * 0.28f;
                     _goldBag.position = Vector3.Lerp(_bagPlacementStart, _bagGroundPosition, Mathf.SmoothStep(0f, 1f, placement)) + Vector3.up * arc;
                     _goldBag.rotation = Quaternion.Slerp(_goldBag.rotation, _bench.rotation, Time.deltaTime * 5f);
@@ -383,7 +417,7 @@ namespace Twicetold.Village
                     }
                     break;
                 case VillageGoldEventState.CheckingTackle:
-                    if (StateAge > 3.1f)
+                    if (StateAge > 1.65f)
                     {
                         _fisherman.Motion.SetInspecting(false);
                         _fisherman.Motion.SetSitting(false);
@@ -391,7 +425,8 @@ namespace Twicetold.Village
                     }
                     break;
                 case VillageGoldEventState.StandingUp:
-                    if (StateAge > 1.15f)
+                    _fisherman.transform.position = Vector3.Lerp(_seatPosition, _sitStartPosition, Mathf.SmoothStep(0, 1, StateAge / .6f));
+                    if (StateAge > .65f)
                     {
                         _routeIndex = 1;
                         _fisherman.Motion.SetWalking(true, true);
@@ -399,15 +434,16 @@ namespace Twicetold.Village
                     }
                     break;
                 case VillageGoldEventState.WalkingAway:
-                    if (WalkRoute(_exitRoute, 1.85f, true))
+                    if (WalkRoute(_exitRoute, 2.7f, true) || Vector3.Distance(_fisherman.transform.position, _bench.position) > 4.5f)
                     {
-                        _fisherman.Motion.SetWalking(false);
-                        NotifyWitnesses();
+                        _henry.LookAtFor(_goldBag.position, 2.2f);
+                        _joan.LookAtFor(_goldBag.position, 2.2f);
                         SetState(VillageGoldEventState.WitnessesNotice);
                     }
                     break;
                 case VillageGoldEventState.WitnessesNotice:
-                    if (StateAge > 3.6f) SetState(VillageGoldEventState.Complete);
+                    if (StateAge > .35f) NotifyWitnesses();
+                    if (StateAge > 2.2f) SetState(VillageGoldEventState.Complete);
                     break;
             }
         }
@@ -427,8 +463,7 @@ namespace Twicetold.Village
                 return _routeIndex >= route.Length;
             }
 
-            _fisherman.Motion.SetWalking(true, happy);
-            _fisherman.transform.position = Vector3.MoveTowards(_fisherman.transform.position, target, speed * Time.deltaTime);
+            _fisherman.Motion.SetWalking(VillageNpcNavigation.Step(_fisherman.transform, target, speed * Time.deltaTime), happy);
             var facing = Quaternion.LookRotation(-direction.normalized, Vector3.up);
             _fisherman.transform.rotation = Quaternion.Slerp(_fisherman.transform.rotation, facing, Time.deltaTime * 7f);
             return false;
@@ -438,8 +473,6 @@ namespace Twicetold.Village
         {
             if (_observationsSent) return;
             _observationsSent = true;
-            _henry.LookAtFor(_goldBag.position, 2.9f);
-            _joan.LookAtFor(_goldBag.position, 2.9f);
             _henry.ReportObservation(new VillageObservation(
                 EventId,
                 "Henry saw the fisherman leave the market bench and forget a bag of gold coins beside it.",
@@ -475,7 +508,7 @@ namespace Twicetold.Village
             _target = FindBestTarget();
             if (_target == null || Keyboard.current == null || !Keyboard.current.eKey.wasPressedThisFrame) return;
             _target.RequestDialogue();
-            _statusMessage = $"Dialogue requested with {_target.DisplayName}. Backend attachment hook fired.";
+            _statusMessage = $"{_target.DisplayName} is ready to talk.";
             _statusEndsAt = Time.unscaledTime + 3.2f;
         }
 
@@ -493,6 +526,8 @@ namespace Twicetold.Village
                 if (distance > interactionDistance) continue;
                 var angle = Vector3.Angle(playerCamera.transform.forward, offset);
                 if (angle > 36f) continue;
+                if (Physics.Raycast(playerCamera.transform.position, offset.normalized, out var hit, distance,
+                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore) && !hit.transform.IsChildOf(candidate.transform)) continue;
                 var score = distance + angle * 0.075f;
                 if (score >= bestScore) continue;
                 best = candidate;
