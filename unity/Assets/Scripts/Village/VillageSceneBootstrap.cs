@@ -79,10 +79,29 @@ namespace Twicetold.Village
             sun.shadowStrength = 0.58f;
             sun.transform.rotation = Quaternion.Euler(46f, -38f, 0f);
             RenderSettings.sun = sun;
+
+            var skyShader = Shader.Find("Skybox/Procedural");
+            if (skyShader != null)
+            {
+                var sky = new Material(skyShader) { name = "Riverside Valley Sky" };
+                sky.SetColor("_SkyTint", new Color(0.43f, 0.68f, 0.92f));
+                sky.SetColor("_GroundColor", new Color(0.46f, 0.55f, 0.39f));
+                sky.SetFloat("_AtmosphereThickness", 0.78f);
+                sky.SetFloat("_SunSize", 0.035f);
+                sky.SetFloat("_SunSizeConvergence", 4.5f);
+                sky.SetFloat("_Exposure", 1.15f);
+                RenderSettings.skybox = sky;
+                _materials.Add("Riverside Valley Sky", sky);
+            }
         }
 
         private void BuildTerrainAndRiver()
         {
+            var distantMeadow = MaterialFor("Distant Meadow", new Color(0.28f, 0.50f, 0.23f), 0f);
+            var distantFloor = Primitive("Distant Valley Floor", PrimitiveType.Cube, new Vector3(0f, -1.45f, 8f), new Vector3(290f, 1.5f, 290f), distantMeadow, _villageRoot, false);
+            distantFloor.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            distantFloor.GetComponent<Renderer>().receiveShadows = false;
+
             var meadow = MaterialFor("Meadow", new Color(0.36f, 0.64f, 0.24f), 0.03f);
             CreateMeshObject("Rolling Meadow", TerrainMesh(112f, 108f, 28, 27), Vector3.zero, Vector3.one, meadow, _villageRoot, true);
 
@@ -100,6 +119,11 @@ namespace Twicetold.Village
             CreateMountainRange(new Vector3(64f, -0.2f, 40f), 21f, 29f, rock, rockLight, 903);
             var farGrass = MaterialFor("Far Hills", new Color(0.25f, 0.48f, 0.25f), 0f);
             CreateMountainRange(new Vector3(17f, -1f, 72f), 26f, 14f, farGrass, farGrass, 554);
+
+            CreateHorizonBand("Distant Mountain Horizon", 165f, -24f, 28f, 27f, 56, 0.55f,
+                UnlitMaterialFor("Distant Mountain Horizon", new Color(0.34f, 0.45f, 0.57f)));
+            CreateHorizonBand("Distant Valley Rim", 112f, -8f, 7f, 8f, 48, 1.7f,
+                UnlitMaterialFor("Distant Valley Rim", new Color(0.22f, 0.42f, 0.24f)));
         }
 
         private void BuildRoads()
@@ -126,12 +150,12 @@ namespace Twicetold.Village
 
         private void BuildHomes()
         {
-            CreateHouse("Ochre Roof Cottage", HouseSites[0], 13f, 1.08f, new Color(0.77f, 0.68f, 0.51f), new Color(0.78f, 0.49f, 0.14f), 0);
-            CreateHouse("Village Inn", HouseSites[1], -8f, 1.42f, new Color(0.72f, 0.59f, 0.42f), new Color(0.88f, 0.61f, 0.16f), 1);
-            CreateHouse("Riverside Home", HouseSites[2], 20f, 1.08f, new Color(0.70f, 0.64f, 0.50f), new Color(0.42f, 0.26f, 0.15f), 2);
-            CreateHouse("Green Roof Cottage", HouseSites[3], -24f, 1.04f, new Color(0.78f, 0.70f, 0.54f), new Color(0.39f, 0.51f, 0.18f), 3);
-            CreateHouse("North Lane House", HouseSites[4], 17f, 0.98f, new Color(0.81f, 0.71f, 0.52f), new Color(0.64f, 0.39f, 0.13f), 4);
-            CreateHouse("Riverwatch Cottage", HouseSites[5], -12f, 0.92f, new Color(0.74f, 0.66f, 0.50f), new Color(0.56f, 0.33f, 0.14f), 5);
+            CreateHouse("Ochre Roof Cottage", HouseSites[0], 1.08f, new Color(0.77f, 0.68f, 0.51f), new Color(0.78f, 0.49f, 0.14f), 0);
+            CreateHouse("Village Inn", HouseSites[1], 1.42f, new Color(0.72f, 0.59f, 0.42f), new Color(0.88f, 0.61f, 0.16f), 1);
+            CreateHouse("Riverside Home", HouseSites[2], 1.08f, new Color(0.70f, 0.64f, 0.50f), new Color(0.42f, 0.26f, 0.15f), 2);
+            CreateHouse("Green Roof Cottage", HouseSites[3], 1.04f, new Color(0.78f, 0.70f, 0.54f), new Color(0.39f, 0.51f, 0.18f), 3);
+            CreateHouse("North Lane House", HouseSites[4], 0.98f, new Color(0.81f, 0.71f, 0.52f), new Color(0.64f, 0.39f, 0.13f), 4);
+            CreateHouse("Riverwatch Cottage", HouseSites[5], 0.92f, new Color(0.74f, 0.66f, 0.50f), new Color(0.56f, 0.33f, 0.14f), 5);
         }
 
         private void BuildMarketSquare()
@@ -144,7 +168,7 @@ namespace Twicetold.Village
             var market = new GameObject("Riverside Market Square").transform;
             market.SetParent(_villageRoot, false);
             market.localPosition = new Vector3(19f, TerrainHeight(19f, 3f), 3f);
-            market.localRotation = Quaternion.Euler(0f, -8f, 0f);
+            market.localRotation = RotationFacingRoad(market.localPosition);
             CreateMarketStall("Produce Stall", new Vector3(0f, 0f, 0f), 0f, canvasA, wood, crate, market);
             CreateMarketStall("Dry Goods Stall", new Vector3(-0.5f, 0f, 6.2f), 12f, canvasB, wood, crate, market);
 
@@ -156,7 +180,7 @@ namespace Twicetold.Village
                 var row = i / 5;
                 var column = i % 5;
                 var material = i % 3 == 0 ? red : i % 3 == 1 ? gold : green;
-                CreatePolyObject("Market Produce", new Vector3(-2f + column, 1.95f, -0.45f + row * 0.43f), Vector3.one * 0.24f, material, market, false, i * 37f);
+                CreatePolyObject("Market Produce", new Vector3(-2f + column, 1.46f, -0.45f + row * 0.43f), Vector3.one * 0.24f, material, market, false, i * 37f);
             }
             CreateBarrel(new Vector3(4.1f, 0.7f, 1.5f), 0.75f, market);
             CreateCrateStack(new Vector3(-4.2f, 0f, 4.7f), market, woodLight);
@@ -231,8 +255,8 @@ namespace Twicetold.Village
             CreateLantern(new Vector3(-3.5f, TerrainHeight(-3.5f, -4f), -4f), wood, glow);
             CreateLantern(new Vector3(3.7f, TerrainHeight(3.7f, 20f), 20f), wood, glow);
             CreateLantern(new Vector3(-2.8f, TerrainHeight(-2.8f, 39f), 39f), wood, glow);
-            CreateBench(new Vector3(-5.6f, TerrainHeight(-5.6f, 13f), 13f), 102f, warmWood);
-            CreateBench(new Vector3(7.1f, TerrainHeight(7.1f, -2f), -2f), -82f, warmWood);
+            CreateBench(new Vector3(-5.6f, TerrainHeight(-5.6f, 13f), 13f), warmWood);
+            CreateBench(new Vector3(7.1f, TerrainHeight(7.1f, -2f), -2f), warmWood);
             CreateCart(new Vector3(18f, TerrainHeight(18f, -31f), -31f), 18f, warmWood, wood);
             CreateHaystack(new Vector3(-23f, TerrainHeight(-23f, -16f), -16f), 1.15f, straw);
             CreateHaystack(new Vector3(-21f, TerrainHeight(-21f, -13.5f), -13.5f), 0.82f, straw);
@@ -270,7 +294,7 @@ namespace Twicetold.Village
             camera.farClipPlane = 220f;
             camera.allowHDR = true;
             camera.allowMSAA = true;
-            camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.clearFlags = CameraClearFlags.Skybox;
             camera.backgroundColor = new Color(0.56f, 0.75f, 0.92f);
             cameraObject.AddComponent<AudioListener>();
             var movement = player.AddComponent<VillagePlayerController>();
@@ -279,12 +303,12 @@ namespace Twicetold.Village
             player.AddComponent<VillageHud>();
         }
 
-        private void CreateHouse(string name, Vector3 position, float yaw, float scale, Color wallColor, Color roofColor, int variant)
+        private void CreateHouse(string name, Vector3 position, float scale, Color wallColor, Color roofColor, int variant)
         {
             var house = new GameObject(name).transform;
             house.SetParent(_villageRoot, false);
             house.localPosition = new Vector3(position.x, TerrainHeight(position.x, position.z), position.z);
-            house.localRotation = Quaternion.Euler(0f, yaw, 0f);
+            house.localRotation = RotationFacingRoad(house.localPosition);
             var plaster = MaterialFor(name + " Plaster", wallColor, 0.03f);
             var roof = MaterialFor(name + " Roof", roofColor, 0.02f);
             var beam = MaterialFor("House Timber", new Color(0.23f, 0.13f, 0.065f), 0.07f);
@@ -330,39 +354,53 @@ namespace Twicetold.Village
             stall.SetParent(parent, false);
             stall.localPosition = position;
             stall.localRotation = Quaternion.Euler(0f, yaw, 0f);
-            Primitive("Counter", PrimitiveType.Cube, new Vector3(0f, 1.15f, 0f), new Vector3(6f, 1.35f, 2.15f), crate, stall, true);
-            Primitive("Counter Lip", PrimitiveType.Cube, new Vector3(0f, 1.9f, -0.2f), new Vector3(6.5f, 0.18f, 2.45f), wood, stall, false);
+            Primitive("Market Tabletop", PrimitiveType.Cube, new Vector3(0f, 1.18f, 0f), new Vector3(6f, 0.22f, 2.15f), crate, stall, true);
+            Primitive("Market Display Rim", PrimitiveType.Cube, new Vector3(0f, 1.33f, 0f), new Vector3(6.35f, 0.10f, 2.4f), wood, stall, false);
+            Primitive("Lower Shelf", PrimitiveType.Cube, new Vector3(0f, 0.38f, 0f), new Vector3(5.15f, 0.14f, 1.45f), crate, stall, false);
+            for (var i = 0; i < 4; i++)
+            {
+                var x = i < 2 ? -2.55f : 2.55f;
+                var z = i % 2 == 0 ? -0.78f : 0.78f;
+                Primitive("Table Leg", PrimitiveType.Cube, new Vector3(x, 0.57f, z), new Vector3(0.20f, 1.14f, 0.20f), wood, stall, true);
+            }
             for (var i = 0; i < 4; i++)
             {
                 var x = i < 2 ? -3.05f : 3.05f;
                 var z = i % 2 == 0 ? -1.65f : 1.65f;
-                CreateCylinder("Canopy Pole", new Vector3(x, 3.15f, z), new Vector3(0.12f, 2.2f, 0.12f), wood, stall, true, 8);
+                CreateCylinder("Canopy Pole", new Vector3(x, 2.35f, z), new Vector3(0.12f, 2.35f, 0.12f), wood, stall, true, 8);
             }
-            CreateGabledRoof(stall, new Vector3(0f, 4.8f, 0f), 7.35f, 4.25f, 1.25f, canvas, false);
-            Primitive("Canopy Ridge", PrimitiveType.Cube, new Vector3(0f, 6.04f, 0f), new Vector3(0.16f, 0.16f, 4.5f), wood, stall, false);
+            CreateGabledRoof(stall, new Vector3(0f, 4.62f, 0f), 7.35f, 4.25f, 1.25f, canvas, false);
+            Primitive("Canopy Ridge", PrimitiveType.Cube, new Vector3(0f, 5.86f, 0f), new Vector3(0.16f, 0.16f, 4.5f), wood, stall, false);
         }
 
         private void BuildBridge(Vector3 center, Material wood)
         {
+            const float bridgeLength = 20.5f;
+            const int plankCount = 23;
+            var leftBank = TerrainHeight(center.x - bridgeLength * 0.5f, center.z);
+            var rightBank = TerrainHeight(center.x + bridgeLength * 0.5f, center.z);
+            var bankSlope = Mathf.Atan2(rightBank - leftBank, bridgeLength) * Mathf.Rad2Deg;
             var bridge = new GameObject("Timber Footbridge").transform;
             bridge.SetParent(_villageRoot, false);
-            bridge.localPosition = new Vector3(center.x, 0.35f, center.z);
-            const float bridgeLength = 23f;
-            for (var i = 0; i < 25; i++)
+            bridge.localPosition = new Vector3(center.x, 0f, center.z);
+            for (var i = 0; i < plankCount; i++)
             {
-                var x = -bridgeLength * 0.5f + i * bridgeLength / 24f;
-                var arch = 0.35f + Mathf.Sin(i / 24f * Mathf.PI) * 0.65f;
-                Primitive("Bridge Plank", PrimitiveType.Cube, new Vector3(x, arch, 0f), new Vector3(0.9f, 0.19f, 3.3f), wood, bridge, true, Quaternion.Euler(0f, 0f, Mathf.Cos(i / 24f * Mathf.PI) * 4.5f));
+                var progress = i / (float)(plankCount - 1);
+                var x = -bridgeLength * 0.5f + progress * bridgeLength;
+                var deckHeight = Mathf.Lerp(leftBank, rightBank, progress) + 0.10f + Mathf.Sin(progress * Mathf.PI) * 0.58f;
+                var archSlope = Mathf.Cos(progress * Mathf.PI) * 4.2f;
+                Primitive("Bridge Plank", PrimitiveType.Cube, new Vector3(x, deckHeight, 0f), new Vector3(0.86f, 0.19f, 3.3f), wood, bridge, true, Quaternion.Euler(0f, 0f, bankSlope + archSlope));
             }
             for (var side = -1; side <= 1; side += 2)
             {
                 for (var i = 0; i < 7; i++)
                 {
-                    var x = -10.8f + i * 3.6f;
-                    var arch = 1.05f + Mathf.Sin(i / 6f * Mathf.PI) * 0.65f;
-                    CreateCylinder("Bridge Rail Post", new Vector3(x, arch, side * 1.55f), new Vector3(0.10f, 0.75f, 0.10f), wood, bridge, true, 8);
+                    var progress = i / 6f;
+                    var x = -9.6f + i * 3.2f;
+                    var deckHeight = Mathf.Lerp(leftBank, rightBank, progress) + 0.10f + Mathf.Sin(progress * Mathf.PI) * 0.58f;
+                    CreateCylinder("Bridge Rail Post", new Vector3(x, deckHeight + 0.72f, side * 1.55f), new Vector3(0.10f, 0.75f, 0.10f), wood, bridge, true, 8);
                 }
-                Primitive("Bridge Handrail", PrimitiveType.Cube, new Vector3(0f, 2.05f, side * 1.55f), new Vector3(22.5f, 0.13f, 0.13f), wood, bridge, false);
+                Primitive("Bridge Handrail", PrimitiveType.Cube, new Vector3(0f, (leftBank + rightBank) * 0.5f + 1.77f, side * 1.55f), new Vector3(19.9f, 0.13f, 0.13f), wood, bridge, false, Quaternion.Euler(0f, 0f, bankSlope));
             }
         }
 
@@ -444,22 +482,21 @@ namespace Twicetold.Village
             post.localPosition = position;
             CreateCylinder("Lantern Post", new Vector3(0f, 2.15f, 0f), new Vector3(0.11f, 2.15f, 0.11f), wood, post, true, 8);
             Primitive("Lamp Hook", PrimitiveType.Cube, new Vector3(0.3f, 4.05f, 0f), new Vector3(0.65f, 0.09f, 0.09f), wood, post, false);
-            CreatePolyObject("Lantern Glass", new Vector3(0.58f, 3.72f, 0f), new Vector3(0.28f, 0.36f, 0.28f), glow, post, false, 0f);
-            var light = post.gameObject.AddComponent<Light>();
+            var lantern = CreatePolyObject("Lantern Glass", new Vector3(0.58f, 3.72f, 0f), new Vector3(0.28f, 0.36f, 0.28f), glow, post, false, 0f);
+            var light = lantern.AddComponent<Light>();
             light.type = LightType.Point;
             light.range = 6.5f;
             light.intensity = 0.75f;
             light.color = new Color(1f, 0.65f, 0.25f);
             light.shadows = LightShadows.None;
-            light.transform.localPosition = new Vector3(0.58f, 3.72f, 0f);
         }
 
-        private void CreateBench(Vector3 position, float yaw, Material material)
+        private void CreateBench(Vector3 position, Material material)
         {
             var bench = new GameObject("Village Bench").transform;
             bench.SetParent(_villageRoot, false);
             bench.localPosition = position;
-            bench.localRotation = Quaternion.Euler(0f, yaw, 0f);
+            bench.localRotation = RotationFacingRoad(position);
             Primitive("Seat", PrimitiveType.Cube, new Vector3(0f, 0.72f, 0f), new Vector3(3.2f, 0.18f, 0.72f), material, bench, true);
             Primitive("Back", PrimitiveType.Cube, new Vector3(0f, 1.3f, 0.31f), new Vector3(3.2f, 0.72f, 0.14f), material, bench, true, Quaternion.Euler(-8f, 0f, 0f));
             foreach (var x in new[] { -1.2f, 1.2f }) Primitive("Bench Leg", PrimitiveType.Cube, new Vector3(x, 0.36f, 0f), new Vector3(0.18f, 0.72f, 0.6f), material, bench, true);
@@ -534,6 +571,14 @@ namespace Twicetold.Village
             mountain.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             var cap = CreateMeshObject("Mountain Sun Cap", MountainMesh(radius * 0.43f, height * 0.38f, 9, seed + 51), position + new Vector3(-radius * 0.04f, height * 0.62f, 0f), Vector3.one, highlight, _villageRoot, false);
             cap.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        }
+
+        private void CreateHorizonBand(string name, float radius, float bottom, float height, float amplitude, int segments, float phase, Material material)
+        {
+            var band = CreateMeshObject(name, HorizonBandMesh(radius, bottom, height, amplitude, segments, phase), Vector3.zero, Vector3.one, material, _villageRoot, false);
+            var renderer = band.GetComponent<MeshRenderer>();
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
         }
 
         private void CreateFence(Transform parent, Vector3 start, Vector3 end, Material material)
@@ -674,6 +719,24 @@ namespace Twicetold.Village
             return material;
         }
 
+        private Material UnlitMaterialFor(string name, Color color)
+        {
+            if (_materials.TryGetValue(name, out var existing)) return existing;
+            var shader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color");
+            var material = new Material(shader) { name = name, color = color };
+            if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
+            _materials.Add(name, material);
+            return material;
+        }
+
+        private static Quaternion RotationFacingRoad(Vector3 position)
+        {
+            var roadPosition = new Vector3(RoadCenterAt(position.z), position.y, position.z);
+            var directionToRoad = roadPosition - position;
+            if (directionToRoad.sqrMagnitude < 0.01f) directionToRoad = Vector3.back;
+            return Quaternion.LookRotation(-directionToRoad.normalized, Vector3.up);
+        }
+
         private bool TreePlacementIsClear(float x, float z)
         {
             if (Mathf.Abs(x - RoadCenterAt(z)) < 8f) return false;
@@ -715,6 +778,35 @@ namespace Twicetold.Village
             var riverDistance = Mathf.Abs(x - RiverCenter(z));
             var riverCarve = riverDistance < 12f ? Mathf.Pow(1f - riverDistance / 12f, 1.35f) * 1.35f : 0f;
             return rolling - riverCarve;
+        }
+
+        private static Mesh HorizonBandMesh(float radius, float bottom, float height, float amplitude, int segments, float phase)
+        {
+            var vertices = new Vector3[(segments + 1) * 2];
+            var triangles = new int[segments * 6];
+            for (var i = 0; i <= segments; i++)
+            {
+                var angle = i / (float)segments * Mathf.PI * 2f;
+                var profile = Mathf.Pow(Mathf.Abs(Mathf.Sin(angle * 2f + phase)), 3.2f) * amplitude;
+                profile += Mathf.Sin(angle * 5f + phase * 0.7f) * amplitude * 0.13f;
+                var x = Mathf.Cos(angle) * radius;
+                var z = Mathf.Sin(angle) * radius;
+                vertices[i * 2] = new Vector3(x, bottom, z);
+                vertices[i * 2 + 1] = new Vector3(x, height + profile, z);
+                if (i == segments) continue;
+                var vertex = i * 2;
+                var triangle = i * 6;
+                triangles[triangle] = vertex;
+                triangles[triangle + 1] = vertex + 2;
+                triangles[triangle + 2] = vertex + 1;
+                triangles[triangle + 3] = vertex + 2;
+                triangles[triangle + 4] = vertex + 3;
+                triangles[triangle + 5] = vertex + 1;
+            }
+            var mesh = new Mesh { name = "Low Cost Horizon Band", vertices = vertices, triangles = triangles };
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            return mesh;
         }
 
         private static Mesh TerrainMesh(float width, float depth, int xSegments, int zSegments)
