@@ -159,6 +159,3 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Twicetold.Village.VillageSceneBootstrap
   buildOnStart: 1
-  enableLiveNpcBridge: 0
-  npcServiceUrl: http://127.0.0.1:8000
-  npcAgentId:
