@@ -221,6 +221,9 @@ namespace Twicetold.Village
             {
                 var renderer = filter.GetComponent<MeshRenderer>();
                 if (renderer == null || !renderer.enabled || filter.GetComponent<RiverSurfaceAnimator>() != null || renderer.bounds.size.magnitude > 65f) continue;
+                // Imported modular models retain their submeshes/materials and GPU-resident meshes.
+                // Only the readable single-material scenery we authored is combined here.
+                if (filter.sharedMesh == null || !filter.sharedMesh.isReadable || filter.sharedMesh.subMeshCount != 1 || renderer.sharedMaterials.Length != 1) continue;
                 var p = renderer.bounds.center;
                 var key = (renderer.sharedMaterial, Mathf.FloorToInt(p.x / 16), Mathf.FloorToInt(p.z / 16), renderer.shadowCastingMode);
                 if (!groups.TryGetValue(key, out var list)) groups[key] = list = new List<MeshFilter>();

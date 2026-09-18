@@ -4,6 +4,11 @@
 should discover them in `Start` (or later) through `VillageNpcAnchor`; the scene has no dependency on
 the NPC package or on `SampleScene`.
 
+The environment is now saved prefab scenery. The bootstrap's serialized market,
+riverside-home and event-bench landmarks determine the same actor/event positions;
+do not replace those references when swapping only artwork. NPC construction timing,
+stable IDs, hand sockets and callbacks are unchanged by the environment migration.
+
 ## Stable characters
 
 | Stable ID | Character | Demo focus | Dialogue enabled | Role |

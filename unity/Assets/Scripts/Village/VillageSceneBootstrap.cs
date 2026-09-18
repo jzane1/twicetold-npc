@@ -10,6 +10,12 @@ namespace Twicetold.Village
     {
         [Header("Village")]
         public bool buildOnStart = true;
+        [Header("Authored scenery (leave empty only for the procedural reference)")]
+        public Transform authoredScenery;
+        public Transform authoredMarket;
+        public Transform authoredRiversideHome;
+        public Transform authoredEventBench;
+        private bool _started;
 
         private readonly Dictionary<string, Material> _materials = new();
         private readonly Dictionary<int, Mesh> _cylinderMeshes = new();
@@ -54,7 +60,30 @@ namespace Twicetold.Village
 
         private void BuildVillage()
         {
+            if (_started) return;
+            _started = true;
+            if (authoredScenery != null)
+            {
+                if (authoredMarket == null || authoredRiversideHome == null || authoredEventBench == null)
+                    throw new InvalidOperationException("Authored village is missing its market, porch, or event-bench landmark.");
+                _villageRoot = authoredScenery;
+                _market = authoredMarket;
+                _riversideHome = authoredRiversideHome;
+                _eventBench = authoredEventBench;
+                CombineStaticScenery();
+                BuildPlayer();
+                BuildVillagersAndEvent();
+                return;
+            }
             if (transform.Find("Generated Village") != null) return;
+            BuildScenery();
+            CombineStaticScenery();
+            BuildPlayer();
+            BuildVillagersAndEvent();
+        }
+
+        private void BuildScenery()
+        {
             _villageRoot = new GameObject("Generated Village").transform;
             _villageRoot.SetParent(transform, false);
 
@@ -67,10 +96,29 @@ namespace Twicetold.Village
             BuildVegetation();
             BuildVillageDressing();
             BuildLandscapeDetails();
-            CombineStaticScenery();
-            BuildPlayer();
-            BuildVillagersAndEvent();
         }
+
+#if UNITY_EDITOR
+        // Explicit migration only. The shipped scene loads saved scenery; never regenerates it.
+        public Transform CreateSceneryForAuthoring()
+        {
+            if (Application.isPlaying || authoredScenery != null || transform.childCount != 0)
+                throw new InvalidOperationException("Author only into an empty, stopped bootstrap.");
+            BuildScenery();
+            authoredScenery = _villageRoot;
+            authoredMarket = _market;
+            authoredRiversideHome = _riversideHome;
+            authoredEventBench = _eventBench;
+            return _villageRoot;
+        }
+
+        public void ReleaseAuthoringResources()
+        {
+            foreach (var mesh in _ownedMeshes) if (mesh != null && !UnityEditor.EditorUtility.IsPersistent(mesh)) DestroyImmediate(mesh);
+            foreach (var material in _materials.Values) if (material != null && !UnityEditor.EditorUtility.IsPersistent(material)) DestroyImmediate(material);
+            _ownedMeshes.Clear(); _materials.Clear(); _cylinderMeshes.Clear(); _polySphereMesh = null;
+        }
+#endif
 
         private void BuildLighting()
         {
@@ -799,7 +847,11 @@ namespace Twicetold.Village
             if (!keepCollider)
             {
                 var primitiveCollider = instance.GetComponent<Collider>();
-                if (primitiveCollider != null) { primitiveCollider.enabled = false; Destroy(primitiveCollider); }
+                if (primitiveCollider != null)
+                {
+                    primitiveCollider.enabled = false;
+                    if (Application.isPlaying) Destroy(primitiveCollider); else DestroyImmediate(primitiveCollider);
+                }
             }
             return instance;
         }

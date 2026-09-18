@@ -1,5 +1,27 @@
 # Village asset workflow
 
+## Playable village: the audition style is now promoted
+
+Open **Tools > Village > Open Playable Village**. The production scene now uses
+`Assets/Art/VillageProduction/Prefabs/VillageScenery.prefab`, with nested prefabs for
+six houses, the market, two benches and the wagon. This is saved Edit Mode scenery,
+not geometry recreated on every Play. Production material variations live alongside
+it; the original audition remains available for comparison.
+
+Move/place objects in Edit Mode, and apply intentional prefab overrides. Do not edit
+the runtime `Scenery Batch` objects: those are rebuilt from the saved source geometry
+at the next Play. Imported FBXs retain their own material slots and axis-correction
+wrappers. Preserve all `.meta` files when moving assets.
+
+The bootstrap's authored scenery/market/home/bench references are required. These
+landmarks preserve Henry, Joan, the bench event and the gold-bag coordinates. If you
+move the event area, retest dialogue sightlines and routes. Ambient routes and terrain
+height sampling still live in code; arbitrary terrain sculpting requires updating
+those, not only moving the terrain mesh. Scenery editing does not grant backend writes.
+
+The promotion tool is a one-time migration and refuses existing output. The saved
+prefabs and scene, not that migration recipe, are now the production source of truth.
+
 ## Open and review
 
 Use **Tools > Village > Assets > Open Asset Audition**, or open
@@ -55,13 +77,10 @@ villagers. This proves the skeletal-animation workflow but does not settle costu
 faces, or the final five-character art direction. Do not promote that body to Henry
 or Joan solely because its rig works.
 
-## Promotion into the demo
+## Future character promotion
 
-First judge the cottage/stall in this scene at player-eye height. A wholesale bake
-or art swap is not automatic: current village geometry is spatially combined at
-runtime, so moving its disabled source renderers cannot update those baked batches.
-The next conversion should make scenery an authored scene/prefab layer and retain
-the gameplay roots as a separate layer, with explicitly serialized landmark refs.
+The environment conversion is complete. The anatomical sample still does not replace
+the five clothed production villagers; it is a retargeting test, not final character art.
 
 Replace only the visual child of each eventual NPC prefab; keep stable identity,
 colliders, hand sockets, attachment point, and dialogue/observation callbacks. Adapt

@@ -96,15 +96,26 @@ public static class VillagePresentationValidation
                 States.Add(_director.State);
                 _director.BeginEvent();
                 var builder = Object.FindFirstObjectByType<VillageSceneBootstrap>();
+                Check(builder.authoredScenery != null, "Playable village uses saved, editable scenery");
+                Check(builder.authoredScenery.GetComponentsInChildren<Transform>().Count(t => t.name == "Modular cottage exterior") == 6, "All six homes use the imported modular exterior");
+                Check(builder.authoredRiversideHome.GetComponentsInChildren<Transform>().First(t => t.name == "Striped Porch Awning").childCount == 8, "Joan's porch awning preserves all eight canvas panels");
+                Check(builder.authoredMarket != null && builder.authoredRiversideHome != null && builder.authoredEventBench != null, "All choreography landmark references survived serialization");
+                Check(builder.authoredScenery.GetComponentsInChildren<Transform>().All(t => GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(t.gameObject) == 0), "Authored scenery has no missing scripts");
+                Check(builder.authoredScenery.GetComponentsInChildren<MeshFilter>().All(f => f.sharedMesh != null), "All saved scenery meshes reload");
+                Check(builder.authoredScenery.GetComponentsInChildren<Renderer>().All(r => r.sharedMaterials.All(m => m != null && m.shader != null && m.shader.name != "Hidden/InternalErrorShader")), "Authored scenery has valid materials");
+                Check(builder.authoredScenery.GetComponentsInChildren<MeshFilter>().Where(f => f.sharedMesh.subMeshCount > 1).All(f => f.GetComponent<Renderer>().enabled && f.GetComponent<Renderer>().sharedMaterials.Length == f.sharedMesh.subMeshCount), "Imported multi-material submeshes remain intact after runtime batching");
                 Results.Add("BATCHES " + builder.CombinedSourceRenderers + " source renderers -> " + builder.SceneryBatches + " spatial batches");
                 Check(_camera.farClipPlane >= 900, "Long-range camera");
                 Check(_camera.GetUniversalAdditionalCameraData().antialiasing == AntialiasingMode.SubpixelMorphologicalAntiAliasing, "SMAA enabled");
+                Capture("00-arrival", new Vector3(0, 1.85f, -40), new Vector3(-2, 2, -18));
                 Capture("01-village", new Vector3(-9, 11, -10), new Vector3(8, 1.5f, 12));
                 Capture("02-horizon", new Vector3(0, 3, -25), new Vector3(0, 14, 130));
                 var henry = _actors.First(a => a.StableId == "henry");
                 Capture("03-henry", henry.transform.position + new Vector3(-4.6f, 1.7f, -.5f), henry.transform.position + Vector3.up * 1.35f);
                 var joan = _actors.First(a => a.StableId == "joan");
                 Capture("04-joan", joan.transform.position + new Vector3(-3.5f, 1.4f, -1), joan.transform.position + Vector3.up);
+                Capture("07-market-street", new Vector3(-1.8f, 2, 2), new Vector3(15, 1.6f, 10));
+                Capture("08-river-bridge", new Vector3(32, 2.3f, 17), new Vector3(41, 1.1f, 25));
                 TestDialogueTarget(player.GetComponent<VillageDialogueInteractor>(), henry);
                 TestDialogueTarget(player.GetComponent<VillageDialogueInteractor>(), joan);
             }
@@ -114,7 +125,7 @@ public static class VillagePresentationValidation
                 Distances[actor.StableId] += Vector3.Distance(p, LastPositions[actor.StableId]);
                 LastPositions[actor.StableId] = p;
                 foreach (var hit in Physics.OverlapCapsule(p + Vector3.up * .4f, p + Vector3.up * 1.45f, .22f))
-                    if (!hit.transform.IsChildOf(actor.transform) && hit.name.Contains("Wall")) Failures.Add(actor.StableId + " intersects " + hit.name);
+                    if (!hit.transform.IsChildOf(actor.transform) && !hit.isTrigger && hit.bounds.max.y > p.y + .5f) Failures.Add(actor.StableId + " intersects scenery: " + hit.name);
             }
             if (_director.State == VillageGoldEventState.WalkingToBench)
             {
@@ -143,6 +154,16 @@ public static class VillagePresentationValidation
                 Results.Add("EVENT_DURATION " + (Time.time - _cycleStarted).ToString("F2") + " seconds");
                 Check(Time.time - _cycleStarted < 18, "Event completes in under 18 seconds");
                 Check(Observations["henry"] == 1 && Observations["joan"] == 1, "One observation per focus character");
+                foreach (var witness in _actors.Where(a => a.IsDemoFocus))
+                {
+                    var eyes = witness.GetComponentsInChildren<Transform>().Where(t => t.name == "Eye").ToArray();
+                    Check(eyes.Length == 2, witness.StableId + " has two authored eye landmarks");
+                    var start = eyes.Aggregate(Vector3.zero, (sum, eye) => sum + eye.position) / Mathf.Max(1, eyes.Length);
+                    var vector = witness.LastObservation.worldPosition - start;
+                    var blocked = Physics.RaycastAll(start, vector.normalized, vector.magnitude, ~0, QueryTriggerInteraction.Ignore)
+                        .Any(hit => hit.collider.GetComponentInParent<VillageNpcAnchor>() == null);
+                    Check(!blocked, witness.StableId + " has an unobstructed view of the forgotten gold");
+                }
                 Capture("06-gold-left-behind", new Vector3(2, 2.8f, 3), new Vector3(12, 1.1f, 10));
                 _secondCycle = true;
                 _director.ResetEvent();
