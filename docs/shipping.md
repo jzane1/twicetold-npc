@@ -104,9 +104,10 @@ line is simply never shown; nothing has to be unwritten.
 
 The Unity client ships as an embedded Unity Package Manager package at
 `unity\Packages\com.jacksonzane.twicetold-npc` (install by git URL with `?path=`, or copy the
-folder into your project's `Packages`); the `unity\` project itself is the gray-box reference
-scene that consumes it. The one-command backend spin-up (`docker compose up -d --build`) is the
-other half of the packaging pass.
+folder into your project's `Packages`). The bundled `unity\` project is a playable low-poly
+VillageScene that consumes the package through documented integration seams; the package itself
+remains reusable and scene-agnostic. The one-command backend spin-up (`docker compose up -d
+--build`) is the other half of the packaging pass.
 
 ## Erasing a player
 

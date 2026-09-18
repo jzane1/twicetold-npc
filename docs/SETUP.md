@@ -340,15 +340,22 @@ embedded package at `unity\Packages\com.jacksonzane.twicetold-npc`
 compiles it in place, and its `com.unity.nuget.newtonsoft-json` dependency is what pulls in
 Newtonsoft.Json.
 
-The gray-box scene holds the Branwen capsule (nameplate `Branwen` since E2, 2026-08-19) with
-`NpcMemoryNpc` (the adapter) and `NpcDemoDriver` (the IMGUI dev-tool overlay). The committed
-scene is attach-mode (`autoProvision` off): load the demo database first
-(`python -m app.demo_loader --fresh` — it prints the agent id), paste that id into the
-adapter's `agentIdOverride`, and set `baseUrl` to the running service. To play the scripted
-Play-mode verification beats instead, temporarily flip `autoProvision` AND `autoRun` on
-against a fake-mode serve on a scratch DB — the beats provision their own agent and log
-`[npc-demo]` receipts to the console. Do that gate BEFORE pasting a demo agent id: autoRun
-replays scripted observes into whatever agent the adapter holds.
+`Assets/Scenes/VillageScene.unity` is the only scene in player Build Settings. It is the
+playable low-poly village presentation: five dressed skinned Humanoids, the replayable
+forgotten-gold event, and stable dialogue/observation anchors for Henry and Joan. Open that
+scene for presentation work. The scene deliberately has no direct backend transport; its
+integration seam, stable IDs, callbacks, and hand/socket anchors are documented in
+`unity/Assets/Scripts/Village/NPC_INTEGRATION.md`.
+
+`SampleScene` remains on disk only as the old adapter/dev-tool rig. It is not a source of
+VillageScene content and is not in Build Settings. If the embedded client package needs a
+live-backend smoke test, use its `NpcMemoryNpc` / `NpcDemoDriver` rig in attach mode
+(`autoProvision` off): load the demo database first (`python -m app.demo_loader --fresh` — it
+prints the agent id), paste that id into `agentIdOverride`, and set `baseUrl` to the running
+service. To run its scripted Play-mode verification beats instead, temporarily flip
+`autoProvision` AND `autoRun` on against a fake-mode serve on a scratch DB. Do that gate
+before pasting a demo agent id: autoRun replays scripted observes into whichever agent the
+adapter holds.
 
 ---
 

@@ -27,7 +27,7 @@ Moved here from the README at F1 (2026-09-03) so the front page stays short.
 | `db\` | migrations 001–008 and the transactional migration runner |
 | `tests\` | the pytest suite and the sixteen walkers |
 | `client\` | `NpcMemory.Core`, the engine-agnostic C# client, and its console harness |
-| `unity\` | the Unity 6 gray-box project: a thin adapter over the client, plus the set |
+| `unity\` | the Unity 6 playable low-poly village: five skinned NPCs, a replayable gold-bag event, dialogue anchors, and the embedded client adapter |
 | `ledger\` | The Ledger, served by the API at `/ledger` |
 | `data\` | eval corpora, arms, blind gold labels, and the bundled affect lexicon |
 | `docs\` | design truth, layer specs, the integrator guides (this index) |
