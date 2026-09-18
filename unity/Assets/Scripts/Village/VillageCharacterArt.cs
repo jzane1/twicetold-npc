@@ -12,6 +12,9 @@ namespace Twicetold.Village
             string role, bool demoFocus, bool dialogueEnabled, Vector3 position, Quaternion rotation,
             Color tunicColor, Color lowerColor, Color accentColor, Color hairColor, VillagerStyle style)
         {
+            if (villagerVisualPrefabs != null && villagerVisualPrefabs.Length == 5 && villagerVisualPrefabs[(int)style] != null)
+                return CreateRiggedVillager(objectName, stableId, displayName, role, demoFocus, dialogueEnabled,
+                    position, rotation, villagerVisualPrefabs[(int)style]);
             var root = Joint(objectName, _villageRoot, position);
             root.rotation = rotation;
             var collider = root.gameObject.AddComponent<CapsuleCollider>();

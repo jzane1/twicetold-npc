@@ -49,7 +49,9 @@ he continues along his departure route. Their callbacks follow the start of the 
 by 0.35 seconds. Reset clears `LastObservation` on both focus anchors, but does not undo or
 delete anything recorded by an external adapter.
 
-Characters are now approximately 1.8 metres tall with articulated elbows and knees. Treat
+Characters are approximately 1.7–1.8 metres tall, using real skinned Humanoid rigs and
+imported animations. `VillageRigPresentation` is an art-only adapter beneath the
+stable root; it neither records memories nor handles dialogue. Treat
 the visual rig as replaceable: use the stable anchor, hand transforms, and attachment point,
 not clothing mesh names or body dimensions. Presentation movement is local choreography;
 it does not call a backend or write a memory database.

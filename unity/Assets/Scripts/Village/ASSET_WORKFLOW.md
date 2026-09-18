@@ -3,7 +3,7 @@
 ## Playable village: the audition style is now promoted
 
 Open **Tools > Village > Open Playable Village**. The production scene now uses
-`Assets/Art/VillageProduction/Prefabs/VillageScenery.prefab`, with nested prefabs for
+`Assets/Art/VillageRefinement/VillageScenery.prefab`, with nested prefabs for
 six houses, the market, two benches and the wagon. This is saved Edit Mode scenery,
 not geometry recreated on every Play. Production material variations live alongside
 it; the original audition remains available for comparison.
@@ -13,7 +13,7 @@ the runtime `Scenery Batch` objects: those are rebuilt from the saved source geo
 at the next Play. Imported FBXs retain their own material slots and axis-correction
 wrappers. Preserve all `.meta` files when moving assets.
 
-The bootstrap's authored scenery/market/home/bench references are required. These
+The bootstrap's authored scenery/market/home/bench references and five visual prefabs are required. These
 landmarks preserve Henry, Joan, the bench event and the gold-bag coordinates. If you
 move the event area, retest dialogue sightlines and routes. Ambient routes and terrain
 height sampling still live in code; arbitrary terrain sculpting requires updating
@@ -77,16 +77,42 @@ villagers. This proves the skeletal-animation workflow but does not settle costu
 faces, or the final five-character art direction. Do not promote that body to Henry
 or Joan solely because its rig works.
 
-## Future character promotion
+## Production villagers and landscape (2026-09-18 refinement)
 
-The environment conversion is complete. The anatomical sample still does not replace
-the five clothed production villagers; it is a retargeting test, not final character art.
+All five production characters now use dressed Humanoid prefabs in
+`Assets/Art/VillageRefinement/Characters`. These combine peasant/ranger clothing,
+extracted male/female faces, hair and beards on a shared skeleton. The anatomical
+audition body is not visible in production. Edit clothing materials, hair, and scale
+in these prefabs, not in the backend anchor. Their Animator controller uses imported
+idle, walk, sitting entry/idle/exit and seated hand-gesture clips. World root motion
+is disabled; the local event director owns positions and pacing. Hand sockets and
+eye landmarks follow bones. The tackle box follows the hip through sitting.
 
-Replace only the visual child of each eventual NPC prefab; keep stable identity,
-colliders, hand sockets, attachment point, and dialogue/observation callbacks. Adapt
-the choreography's motion interface to Animator rather than moving memory logic into
-Unity. Retest the gold bag, hands, bench alignment, gaze, timings, and both witnesses.
-Do not copy anything from SampleScene or modify the external backend.
+The production scenery contains a LANDSCAPE group. Select a `VillageLandscapePath`
+object, move its Scene-view handles, and click **Rebuild saved path mesh** in the
+Inspector. Both knot movement and rebuilding support Undo. This explicitly updates
+the saved mesh; Play does not rebuild paths. End fades and blended margins avoid
+hard rectangular ends and coplanar road-intersection artifacts. If duplicating a
+path, duplicate its mesh and material assets too before editing, to avoid changing
+the original's shared assets.
+
+Ready-coloured tree, grass, flower, shrub and fern prefabs live in
+`Assets/Art/VillageRefinement/Nature`. Drag these into the scene for manual planting;
+their materials are already mapped to URP. Distant trees have distance culling.
+Keep the market/bench/porch witness triangle and the two ambient walking corridors
+clear. Decorative ground cover has no collision. Do not add tall planting where it
+hides the coins or the two focus characters.
+
+The landscape uses saved heightfield meshes and the locally authored ground, water,
+and sky shaders. It is not a Unity Terrain asset, and does not require Terrain Tools,
+ProBuilder, a paid foliage shader, or a live MCP connection. The path tool samples
+`VillageLandscapeProfile.Height`; change that profile along with any deliberate
+terrain-height redesign, then revalidate actor grounding and routes. This pass keeps
+the original core village heights to preserve the proven choreography.
+
+The old VillageProduction prefab and separate audition are retained as references;
+VillageScene points to the refined prefab. Never regenerate over artist edits.
+No SampleScene content or backend code is part of this workflow.
 
 ## Verification
 

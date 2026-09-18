@@ -15,18 +15,18 @@ RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 10
   m_Fog: 1
-  m_FogColor: {r: 0.64, g: 0.77, b: 0.88, a: 1}
+  m_FogColor: {r: 0.68, g: 0.79, b: 0.85, a: 1}
   m_FogMode: 1
   m_FogDensity: 0.01
-  m_LinearFogStart: 145
-  m_LinearFogEnd: 680
-  m_AmbientSkyColor: {r: 0.61, g: 0.76, b: 0.91, a: 1}
-  m_AmbientEquatorColor: {r: 0.6, g: 0.68, b: 0.57, a: 1}
-  m_AmbientGroundColor: {r: 0.37, g: 0.42, b: 0.3, a: 1}
+  m_LinearFogStart: 150
+  m_LinearFogEnd: 900
+  m_AmbientSkyColor: {r: 0.61, g: 0.73, b: 0.83, a: 1}
+  m_AmbientEquatorColor: {r: 0.56, g: 0.61, b: 0.47, a: 1}
+  m_AmbientGroundColor: {r: 0.27, g: 0.32, b: 0.21, a: 1}
   m_AmbientIntensity: 1.18
   m_AmbientMode: 1
   m_SubtractiveShadowColor: {r: 0.42, g: 0.47, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 2100000, guid: 847c869fe88c83c4bbfa925d0ae87396, type: 2}
+  m_SkyboxMaterial: {fileID: 2100000, guid: ed32d15f178f99c4596243cd3b9b8f40, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -37,7 +37,7 @@ RenderSettings:
   m_ReflectionBounces: 1
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
-  m_Sun: {fileID: 2121768563071428156}
+  m_Sun: {fileID: 2148367752283933042}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -149,7 +149,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 2121768563071428155}
+  - {fileID: 4253409083254167442}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1102
@@ -165,11 +165,42 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Twicetold.Village.VillageSceneBootstrap
   buildOnStart: 1
-  authoredScenery: {fileID: 2121768563071428155}
+  authoredScenery: {fileID: 4253409083254167442}
   authoredMarket: {fileID: 2121768563071428154}
   authoredRiversideHome: {fileID: 2121768563071428153}
   authoredEventBench: {fileID: 2121768563071428152}
---- !u!1001 &2121768563071428151
+  villagerVisualPrefabs:
+  - {fileID: 7557057946802800659, guid: 8d3b6881cb8a57743a2df95dcdf5173a, type: 3}
+  - {fileID: 4974742506550019740, guid: a715aff1eba13e04e8c282bfbcd9f39b, type: 3}
+  - {fileID: 1691090499325716856, guid: 1d1aafe9084b04848876a6281742f761, type: 3}
+  - {fileID: 6085324437061473901, guid: 78f1b15af814cb1478e91b4cb68d21ce, type: 3}
+  - {fileID: 3793085545800096451, guid: b27e385466ee6064bb2ab43bb13b6661, type: 3}
+--- !u!4 &2121768563071428152 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1757371809521586485, guid: 3eaedd62c3d843949bd9e05d8b196411, type: 3}
+  m_PrefabInstance: {fileID: 9221517053509638870}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &2121768563071428153 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2813829911584286697, guid: 3eaedd62c3d843949bd9e05d8b196411, type: 3}
+  m_PrefabInstance: {fileID: 9221517053509638870}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &2121768563071428154 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1627685948568110376, guid: 3eaedd62c3d843949bd9e05d8b196411, type: 3}
+  m_PrefabInstance: {fileID: 9221517053509638870}
+  m_PrefabAsset: {fileID: 0}
+--- !u!108 &2148367752283933042 stripped
+Light:
+  m_CorrespondingSourceObject: {fileID: 6999944030879723457, guid: 3eaedd62c3d843949bd9e05d8b196411, type: 3}
+  m_PrefabInstance: {fileID: 9221517053509638870}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &4253409083254167442 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6110082404096122743, guid: 3eaedd62c3d843949bd9e05d8b196411, type: 3}
+  m_PrefabInstance: {fileID: 9221517053509638870}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &9221517053509638870
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -177,80 +208,55 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1101}
     m_Modifications:
-    - target: {fileID: 2366252839509960791, guid: ccc809bb6ab664744b52884d61b8fa4a, type: 3}
-      propertyPath: m_Name
-      value: Village Scenery - EDIT THESE PREFABS
-      objectReference: {fileID: 0}
-    - target: {fileID: 2771169810560479653, guid: ccc809bb6ab664744b52884d61b8fa4a, type: 3}
+    - target: {fileID: 6110082404096122743, guid: 3eaedd62c3d843949bd9e05d8b196411, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2771169810560479653, guid: ccc809bb6ab664744b52884d61b8fa4a, type: 3}
+    - target: {fileID: 6110082404096122743, guid: 3eaedd62c3d843949bd9e05d8b196411, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2771169810560479653, guid: ccc809bb6ab664744b52884d61b8fa4a, type: 3}
+    - target: {fileID: 6110082404096122743, guid: 3eaedd62c3d843949bd9e05d8b196411, type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2771169810560479653, guid: ccc809bb6ab664744b52884d61b8fa4a, type: 3}
+    - target: {fileID: 6110082404096122743, guid: 3eaedd62c3d843949bd9e05d8b196411, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 2771169810560479653, guid: ccc809bb6ab664744b52884d61b8fa4a, type: 3}
+    - target: {fileID: 6110082404096122743, guid: 3eaedd62c3d843949bd9e05d8b196411, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2771169810560479653, guid: ccc809bb6ab664744b52884d61b8fa4a, type: 3}
+    - target: {fileID: 6110082404096122743, guid: 3eaedd62c3d843949bd9e05d8b196411, type: 3}
       propertyPath: m_LocalRotation.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2771169810560479653, guid: ccc809bb6ab664744b52884d61b8fa4a, type: 3}
+    - target: {fileID: 6110082404096122743, guid: 3eaedd62c3d843949bd9e05d8b196411, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2771169810560479653, guid: ccc809bb6ab664744b52884d61b8fa4a, type: 3}
+    - target: {fileID: 6110082404096122743, guid: 3eaedd62c3d843949bd9e05d8b196411, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2771169810560479653, guid: ccc809bb6ab664744b52884d61b8fa4a, type: 3}
+    - target: {fileID: 6110082404096122743, guid: 3eaedd62c3d843949bd9e05d8b196411, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2771169810560479653, guid: ccc809bb6ab664744b52884d61b8fa4a, type: 3}
+    - target: {fileID: 6110082404096122743, guid: 3eaedd62c3d843949bd9e05d8b196411, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6729526295539068205, guid: 3eaedd62c3d843949bd9e05d8b196411, type: 3}
+      propertyPath: m_Name
+      value: Village - Authored Landscape and Architecture
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: ccc809bb6ab664744b52884d61b8fa4a, type: 3}
---- !u!4 &2121768563071428152 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 3926856259635443737, guid: ccc809bb6ab664744b52884d61b8fa4a, type: 3}
-  m_PrefabInstance: {fileID: 2121768563071428151}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &2121768563071428153 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 5335386544583509955, guid: ccc809bb6ab664744b52884d61b8fa4a, type: 3}
-  m_PrefabInstance: {fileID: 2121768563071428151}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &2121768563071428154 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 5633595027221139669, guid: ccc809bb6ab664744b52884d61b8fa4a, type: 3}
-  m_PrefabInstance: {fileID: 2121768563071428151}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &2121768563071428155 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2771169810560479653, guid: ccc809bb6ab664744b52884d61b8fa4a, type: 3}
-  m_PrefabInstance: {fileID: 2121768563071428151}
-  m_PrefabAsset: {fileID: 0}
---- !u!108 &2121768563071428156 stripped
-Light:
-  m_CorrespondingSourceObject: {fileID: 45740038733918021, guid: ccc809bb6ab664744b52884d61b8fa4a, type: 3}
-  m_PrefabInstance: {fileID: 2121768563071428151}
-  m_PrefabAsset: {fileID: 0}
+  m_SourcePrefab: {fileID: 100100000, guid: 3eaedd62c3d843949bd9e05d8b196411, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

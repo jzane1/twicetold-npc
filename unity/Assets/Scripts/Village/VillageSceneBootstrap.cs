@@ -15,6 +15,8 @@ namespace Twicetold.Village
         public Transform authoredMarket;
         public Transform authoredRiversideHome;
         public Transform authoredEventBench;
+        [Tooltip("Merchant, homeowner, fisherman, baker, woodworker. Presentation only; identity stays on the runtime anchor.")]
+        public GameObject[] villagerVisualPrefabs = new GameObject[5];
         private bool _started;
 
         private readonly Dictionary<string, Material> _materials = new();
@@ -66,6 +68,8 @@ namespace Twicetold.Village
             {
                 if (authoredMarket == null || authoredRiversideHome == null || authoredEventBench == null)
                     throw new InvalidOperationException("Authored village is missing its market, porch, or event-bench landmark.");
+                if (villagerVisualPrefabs == null || villagerVisualPrefabs.Length != 5 || Array.Exists(villagerVisualPrefabs, p => p == null))
+                    throw new InvalidOperationException("Authored village requires all five skinned villager visual prefabs.");
                 _villageRoot = authoredScenery;
                 _market = authoredMarket;
                 _riversideHome = authoredRiversideHome;
@@ -415,12 +419,15 @@ namespace Twicetold.Village
             var tackle = MaterialFor("Tackle Box", new Color(0.39f, 0.24f, 0.10f), 0.06f);
             var metal = MaterialFor("Tackle Metal", new Color(0.22f, 0.24f, 0.22f), 0.42f);
             var heldRod = Joint("Held Fishing Rod", fisherman.RightHand, Vector3.zero);
+            heldRod.localScale = Vector3.one * .82f;
             heldRod.gameObject.AddComponent<VillageHeldFishingRod>().Configure(fisherman.Motion, fisherman.transform);
             CreateCylinder("Fishing Rod", new Vector3(0f, 0.92f, 0f), new Vector3(0.035f, 1.28f, 0.035f), rod, heldRod, false, 8, Quaternion.Euler(0f, 0f, -8f));
             Primitive("Fishing Line", PrimitiveType.Cube, new Vector3(-0.10f, 1.82f, -0.46f), new Vector3(0.012f, 1.05f, 0.012f), line, heldRod, false, Quaternion.Euler(24f, 0f, 0f));
             CreateCylinder("Fishing Reel", new Vector3(0, .13f, -.045f), new Vector3(.07f, .035f, .07f), metal, heldRod, false, 12, Quaternion.Euler(90, 0, 0));
-            Primitive("Tackle Box", PrimitiveType.Cube, new Vector3(0.24f, 0.88f, 0.24f), new Vector3(0.34f, 0.30f, 0.20f), tackle, fisherman.transform, false);
-            Primitive("Tackle Latch", PrimitiveType.Cube, new Vector3(0.24f, 0.9f, 0.12f), new Vector3(0.07f, 0.07f, 0.025f), metal, fisherman.transform, false);
+            var box=Primitive("Tackle Box", PrimitiveType.Cube, new Vector3(0.25f, 0.88f, 0.16f), new Vector3(0.26f, 0.23f, 0.16f), tackle, fisherman.transform, false);
+            var latch=Primitive("Tackle Latch", PrimitiveType.Cube, new Vector3(0.25f, 0.9f, 0.07f), new Vector3(0.055f, 0.055f, 0.02f), metal, fisherman.transform, false);
+            var animator=fisherman.GetComponentInChildren<Animator>();
+            if(animator!=null) { var hips=animator.GetBoneTransform(HumanBodyBones.Hips);box.transform.SetParent(hips,true);latch.transform.SetParent(hips,true); }
         }
 
         private Transform CreateGoldBag(Transform parent, out GameObject coinSpill)

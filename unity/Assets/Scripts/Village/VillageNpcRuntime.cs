@@ -95,6 +95,8 @@ namespace Twicetold.Village
 
     public sealed class VillageNpcMotion : MonoBehaviour
     {
+        private VillageRigPresentation _rig;
+        public void ConfigureRig(VillageRigPresentation rig) { _rig = rig; _lastPosition = transform.position; }
         private Transform _visualRoot, _headPivot, _leftArm, _rightArm, _leftLeg, _rightLeg;
         private Transform _leftElbow, _rightElbow, _leftKnee, _rightKnee;
         private Transform _leftAnkle, _rightAnkle;
@@ -132,6 +134,7 @@ namespace Twicetold.Village
             if (_looking) transform.rotation = _lookStartRotation;
             _looking = false; _phase = _walkBlend = _sitBlend = 0;
             _lastPosition = transform.position;
+            if (_rig != null) { _rig.ResetPose(); return; }
             if (_visualRoot == null) return;
             _visualRoot.localPosition = Vector3.zero;
             _visualRoot.localRotation = Quaternion.identity;
@@ -141,6 +144,21 @@ namespace Twicetold.Village
 
         private void LateUpdate()
         {
+            if (_rig != null)
+            {
+                Vector3? look = null;
+                if (_looking)
+                {
+                    var flat = _lookPoint - transform.position; flat.y = 0;
+                    var active = Time.time < _lookEndsAt;
+                    var target = active && flat.sqrMagnitude > .01f ? Quaternion.LookRotation(-flat.normalized) : _lookStartRotation;
+                    transform.rotation = Quaternion.Slerp(transform.rotation, target, 1 - Mathf.Exp(-Time.deltaTime * 5));
+                    if (active) look = _lookPoint;
+                    else if (Quaternion.Angle(transform.rotation, _lookStartRotation) < .5f) _looking = false;
+                }
+                _rig.Tick(_walking, _sitting, _inspecting, _happy, look);
+                return;
+            }
             if (_visualRoot == null) return;
             var dt = Time.deltaTime;
             var travel = transform.position - _lastPosition; travel.y = 0;

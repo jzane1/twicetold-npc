@@ -41,6 +41,7 @@ namespace Twicetold.Village
             data.antialiasing = AntialiasingMode.SubpixelMorphologicalAntiAliasing;
             data.antialiasingQuality = AntialiasingQuality.High;
             data.renderPostProcessing = true;
+            data.requiresDepthTexture = true;
             var volume = new GameObject("Village Colour Grade").AddComponent<Volume>();
             volume.transform.SetParent(_villageRoot, false);
             volume.isGlobal = true;
@@ -220,7 +221,7 @@ namespace Twicetold.Village
             foreach (var filter in _villageRoot.GetComponentsInChildren<MeshFilter>())
             {
                 var renderer = filter.GetComponent<MeshRenderer>();
-                if (renderer == null || !renderer.enabled || filter.GetComponent<RiverSurfaceAnimator>() != null || renderer.bounds.size.magnitude > 65f) continue;
+                if (renderer == null || !renderer.enabled || filter.GetComponent<RiverSurfaceAnimator>() != null || renderer.bounds.size.magnitude > 65f || filter.GetComponentInParent<LODGroup>() != null) continue;
                 // Imported modular models retain their submeshes/materials and GPU-resident meshes.
                 // Only the readable single-material scenery we authored is combined here.
                 if (filter.sharedMesh == null || !filter.sharedMesh.isReadable || filter.sharedMesh.subMeshCount != 1 || renderer.sharedMaterials.Length != 1) continue;

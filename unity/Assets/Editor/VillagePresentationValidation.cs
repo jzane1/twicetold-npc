@@ -45,6 +45,7 @@ public static class VillagePresentationValidation
         if (!Application.isBatchMode) throw new InvalidOperationException("Run this verifier only in an isolated batch-mode Unity project.");
         SessionState.SetBool(Key, true);
         EditorSceneManager.OpenScene("Assets/Scenes/VillageScene.unity", OpenSceneMode.Single);
+        ValidatePathAuthoring();
         _deadline = EditorApplication.timeSinceStartup + 120;
         EditorApplication.update -= Tick;
         EditorApplication.update += Tick;
@@ -78,6 +79,12 @@ public static class VillagePresentationValidation
                         Check(o.eventId == "forgotten-gold-at-market-bench", "Stable observation contract");
                     };
                     Check(actor.GetComponent<CapsuleCollider>().height < 1.9f, actor.StableId + " human scale");
+                    var rig=actor.GetComponentInChildren<VillageRigPresentation>();
+                    Check(rig!=null && rig.animator.avatar.isValid && rig.animator.avatar.isHuman,actor.StableId+" uses a valid skinned Humanoid");
+                    Check(actor.GetComponentsInChildren<SkinnedMeshRenderer>().Length>=6,actor.StableId+" uses authored face, hair and clothing meshes");
+                    Check(actor.GetComponentsInChildren<SkinnedMeshRenderer>().All(r=>r.bones.All(b=>b!=null)),actor.StableId+" clothing and hair share valid bone references");
+                    var eyesForward=Vector3.ProjectOnPlane((rig.leftEye.position+rig.rightEye.position)*.5f-rig.animator.GetBoneTransform(HumanBodyBones.Head).position,Vector3.up);
+                    Check(Vector3.Dot(eyesForward.normalized,-actor.transform.forward)>.75f,actor.StableId+" visual faces the actor's travel/interaction direction");
                     if (actor.IsDemoFocus)
                     {
                         var called = false;
@@ -130,10 +137,10 @@ public static class VillagePresentationValidation
             if (_director.State == VillageGoldEventState.WalkingToBench)
             {
                 var fisher = _actors.First(a => a.StableId == "fisherman");
-                var knee = fisher.GetComponentsInChildren<Transform>().First(t => t.name == "Knee");
-                var angle = Quaternion.Angle(knee.localRotation, Quaternion.identity);
+                var animator=fisher.GetComponentInChildren<Animator>();
+                var angle = KneeAngle(animator);
                 _minimumKnee = Mathf.Min(_minimumKnee, angle); _maximumKnee = Mathf.Max(_maximumKnee, angle);
-                var soles = fisher.GetComponentsInChildren<MeshRenderer>().Where(r => r.name == "Leather Shoe").Select(r => r.bounds.min.y).ToArray();
+                var soles = new[]{HumanBodyBones.LeftToes,HumanBodyBones.RightToes}.Select(b=>animator.GetBoneTransform(b).position.y-.015f).ToArray();
                 var ground = VillageSceneBootstrap.GroundHeight(fisher.transform.position.x, fisher.transform.position.z);
                 _maximumSupportGap = Mathf.Max(_maximumSupportGap, soles.Min() - ground);
                 if (!_secondCycle && _walkingCaptures < 3 && Time.time - _cycleStarted > 2.5f + _walkingCaptures * .22f)
@@ -146,8 +153,10 @@ public static class VillagePresentationValidation
                 _sittingCaptured = true;
                 var fisher = _actors.First(a => a.StableId == "fisherman");
                 Capture("05-seated-tackle", fisher.transform.position + new Vector3(-3.5f, 1.7f, -2.5f), fisher.transform.position + Vector3.up * .8f);
-                var knee = fisher.GetComponentsInChildren<Transform>().First(t => t.name == "Knee");
-                Check(Quaternion.Angle(knee.localRotation, Quaternion.identity) > 65, "Sitting has bent knees");
+                Check(KneeAngle(fisher.GetComponentInChildren<Animator>()) > 65, "Sitting has bent knees");
+                Results.Add("SEATED HIP "+fisher.GetComponentInChildren<Animator>().GetBoneTransform(HumanBodyBones.Hips).position);
+                var seatHeight=Object.FindFirstObjectByType<VillageSceneBootstrap>().authoredEventBench.position.y+.53f;
+                Check(Mathf.Abs(fisher.GetComponentInChildren<Animator>().GetBoneTransform(HumanBodyBones.Hips).position.y-seatHeight)<.16f,"Seated pelvis aligns with the bench support");
             }
             if (_director.State == VillageGoldEventState.Complete && !_secondCycle)
             {
@@ -203,8 +212,29 @@ public static class VillagePresentationValidation
         _camera.transform.LookAt(target.transform.position + Vector3.up * 1.45f);
         Physics.SyncTransforms();
         var method = typeof(VillageDialogueInteractor).GetMethod("FindBestTarget", BindingFlags.NonPublic | BindingFlags.Instance);
-        Check(method.Invoke(interactor, null) == target, target.StableId + " reachable through actual interaction targeting");
+        Check(ReferenceEquals(method.Invoke(interactor, null), target), target.StableId + " reachable through actual interaction targeting");
         _camera.transform.SetPositionAndRotation(position, rotation);
+    }
+
+    private static float KneeAngle(Animator animator)
+    {
+        var hip=animator.GetBoneTransform(HumanBodyBones.LeftUpperLeg).position;
+        var knee=animator.GetBoneTransform(HumanBodyBones.LeftLowerLeg).position;
+        var foot=animator.GetBoneTransform(HumanBodyBones.LeftFoot).position;
+        return Vector3.Angle(knee-hip,foot-knee);
+    }
+
+    private static void ValidatePathAuthoring()
+    {
+        var go=new GameObject("Temporary path authoring test");go.AddComponent<MeshFilter>();
+        var mat=new Material(Shader.Find("Twicetold/Painterly Village Ground"));go.AddComponent<MeshRenderer>().sharedMaterial=mat;
+        var path=go.AddComponent<VillageLandscapePath>();path.points=new[]{new Vector3(-2,0,-30),new Vector3(1,0,-20),new Vector3(0,0,-10)};
+        VillageLandscapePathEditor.Rebuild(path);var before=path.authoredMesh.bounds;
+        path.width=8;path.points[1]+=Vector3.right*2;VillageLandscapePathEditor.Rebuild(path);
+        if(path.authoredMesh.bounds.size.x<=before.size.x || path.authoredMesh.vertexCount<100 || path.authoredMesh.normals.Any(n=>n.y<.95f))
+            throw new InvalidOperationException("Editable spline path rebuilding failed.");
+        Debug.Log("PATH AUTHORING PASS: knot/width changes rebuild a valid upward-facing mesh.");
+        Object.DestroyImmediate(path.authoredMesh);Object.DestroyImmediate(mat);Object.DestroyImmediate(go);
     }
 
     private static void Capture(string name, Vector3 position, Vector3 target)
