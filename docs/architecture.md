@@ -50,8 +50,9 @@ telling of a memory can drift and be defended, while the ground-truth record und
   a NULL embedding on the live fact head (`memory_fact_versions.embedding IS NULL` is the queryable
   signal); a write is never lost because a model was flaky, and correcting an embed-degraded memory
   re-embeds it. The authorial-correction verb is the deliberate contrast: all-or-nothing, fail-loud
-  on embed failure. A gist-escalation call that fails twice soft-degrades: the write lands with the
-  base NLP-pass gist and `escalation_failed = true` (migration 005). The retrieval gate degrades per
+  on embed failure. When the write call returns no locatable gist substring, the ingest floor supplies
+  one (the first evidence span, else the first sentence) so reconstruction always has a constraint; the
+  `escalation_failed` column (migration 005) is retired and stays false. The retrieval gate degrades per
   its ladder (section 6), fail-quiet. Malformed-model-response cases live in the test suite.
 
 ## 3. Environment & stack
@@ -69,27 +70,28 @@ PostgreSQL 16 + pgvector in Docker (the `pgvector/pgvector` image); UUID primary
 server-side; HNSW vector index (a cheaply reversible choice).
 
 **Models.** A Haiku-class slate serves importance scoring, description rendering, typology
-classification, gist escalation, reflection, reconstruction, and streaming dialogue prose. That
+classification and gist selection, reflection, reconstruction, and streaming dialogue prose. That
 choice is measured, not assumed: a larger model's prose is judge-preferred, but perceived first word
 is the decisive axis and only the Haiku-class slate sits under the sub-second bar. Every model role
-is an integrator knob with its own env var, and nothing is hardcoded. **Six vars exist and real mode
-requires all six:** `TWICETOLD_MODEL_` + `IMPORTANCE`, `RENDER`, `TYPOLOGY`, `ESCALATION`,
-`DIALOGUE`, `RECONSTRUCTION`. A seventh, `TWICETOLD_MODEL_JUDGE`, is eval-runner-only: loaded in both
+is an integrator knob with its own env var, and nothing is hardcoded. **Five vars exist and real mode
+requires all five:** `TWICETOLD_MODEL_` + `IMPORTANCE`, `RENDER`, `TYPOLOGY`, `DIALOGUE`,
+`RECONSTRUCTION`. (The separate `ESCALATION` gist role was retired 2026-09-27: gist is now selected by
+the write call, not a second pass.) A further var, `TWICETOLD_MODEL_JUDGE`, is eval-runner-only: loaded in both
 modes, required by neither, since the server never carries a judge and the eval runner validates it
 itself on judged runs (`eval-harness.md`).
 
-One honest limit on "each role upgrades independently": v1 serves importance, render, and typology
-from **one** write call, so those three vars must name the same model (`load_settings` raises rather
-than silently picking one). Two more vars are judge-shaped, loaded in both modes and required by
+One honest limit on "each role upgrades independently": v1 serves importance, render, typology, and
+gist selection from **one** write call, so the importance/render/typology vars must name the same
+model (`load_settings` raises rather than silently picking one). Two more vars are judge-shaped, loaded in both modes and required by
 neither, loud at first real use: `TWICETOLD_MODEL_REFLECTION` (the reflect verb) and
 `TWICETOLD_MODEL_COMPILER` (the compiler worker, which has no endpoint, so its first real call is
 always the worker's). The retrieval gate is **non-LLM**: there is no gate model and no gate env var.
 
 **The model backend.** One explicit selector, `TWICETOLD_MODEL_BACKEND`, carries every LLM role (the
-six product roles and the judge-shaped ones): `anthropic` (the default; the locked slate's
+five product roles and the judge-shaped ones): `anthropic` (the default; the locked slate's
 Messages-API requests byte-for-byte) or `openai` (any OpenAI-compatible chat-completions server
 behind `TWICETOLD_MODEL_BASE_URL`: OpenAI, Ollama, vLLM, LM Studio, llama.cpp server, OpenRouter,
-LiteLLM; an optional `TWICETOLD_MODEL_API_KEY`, a placeholder when blank). The same six role vars
+LiteLLM; an optional `TWICETOLD_MODEL_API_KEY`, a placeholder when blank). The same five role vars
 name the models on either backend. In code it is one seam: every real role keeps its prompt, its
 parse, and its error wrapper and asks a `ChatBackend` for the completion (`AnthropicChatBackend` or
 `OpenAIChatBackend`), so no role logic is duplicated (`app\providers.py`). On the openai backend the
@@ -128,20 +130,21 @@ with attribution).
 
 ### 4.1 Gist and detail
 
-Gist is a **span pointer into the immutable on-disk observation text**, not a rewritten summary. At
-write time, the NLP pass matches tokens, entities, and noun-chunks against the NPC's **identity
-components table** (canonical name + aliases + category, e.g. friend names, job title; a category hit
-counts even without a named entity). Hits become gist spans; everything else is detail.
+Gist is a **span pointer into the immutable on-disk observation text**, not a rewritten summary. The
+single write call **selects the minimal gist**: at most a few exact substrings (the `gist_max_spans`
+cap, default 3, with a floor of one) that are the irreducible facts a listener must retain for the
+event to stay the same event, the core action and the key thing done. Manner, sensory detail, and
+setting are **not** gist: they stay detail and are free to drift. Selecting few, essential spans is
+the point (ruled 2026-09-27): a memory whose every clause froze could never drift, which would defeat
+reconstruction.
 
-An LLM escalation pass exists for hard cases, **biased loose** (a wasted call is cheap; a lost gist
-breaks the product). Six triggers, any one fires, all integrator-tunable via `agents.config` with
-defaults in `app\config.py`: (1) importance above threshold; (2) an identity/category hit co-occurring
-with |valence| above threshold; (3) a **novel entity**, which is also how the identity components
-table grows; (4) an unresolved pronoun/noun-chunk co-occurring with an identity/category hit; (5) low
-NLP confidence on an already-flagged span (confidence only ever adds calls, never suppresses one);
-(6) **thin gist**, where the base NLP pass yielded fewer spans than the `escalation_min_base_spans`
-floor (default 1: fire on zero), protecting the gist floor directly (0.0 disables). Cross-observation
-coreference misses are accepted as graceful failure: the detail just decays.
+Separately, the NLP pass matches tokens, entities, and noun-chunks against the NPC's **identity
+components table** (canonical name + aliases + category; a category hit counts even without a named
+entity), and a **novel entity** grows that table. Those hits are stored as **component-evidence
+spans** (`is_gist=false`, migration 009): they feed component tracking, coreference, and the
+reflection trim, but are **never** a reconstruction constraint. Splitting evidence from gist is what
+lets gist stay minimal without blinding trim. (Before 2026-09-27 the NLP hits were themselves gist and
+a separate escalation LLM pass added more, biased loose; that over-froze memories.)
 
 ### 4.2 Decay
 

@@ -55,7 +55,6 @@ from app.providers import (
     FakeReconstructionProvider,
     FakeWriteProvider,
     FlakyWriteProvider,
-    NoveltyEscalationProvider,
     Providers,
 )
 from app.schemas import ObserveEvent
@@ -388,15 +387,13 @@ async def run(uri: str) -> None:
             "B8 embedding stays inline (ruling 1): the fact head carries it",
         )
         check(
-            len(def_result.gist_span_ids) >= 1,
-            "B9 the NLP pass ran inline: gist spans exist at insert",
+            len(def_result.gist_span_ids) == 0,
+            "B9 gist is deferred to the worker (2026-09-27): no gist at insert",
             f"{len(def_result.gist_span_ids)} spans",
         )
         check(
-            d_row[8] is not None
-            and "importance_threshold" not in d_row[8]
-            and len(d_row[8]) >= 1,
-            "B10 persisted triggers: non-importance members only",
+            d_row[8] is None,
+            "B10 no triggers persisted (2026-09-27): gist is the worker's write call",
             str(d_row[8]),
         )
         decl_result = await ingest.ingest_observation(
@@ -438,6 +435,16 @@ async def run(uri: str) -> None:
             and c_row[7] == 1,
             "C2 one-shot completion: scalars filled, pending cleared, 1 attempt",
         )
+        c_gist = await fetchrow(
+            pool,
+            "SELECT count(*) FROM memory_gist_spans WHERE memory_id = %s AND is_gist",
+            def_result.memory_id,
+        )
+        check(
+            c_gist[0] >= 1,
+            "C2b the worker filled the minimal gist (is_gist spans appear)",
+            f"{c_gist[0]} gist span(s)",
+        )
         c_chain = await chain(pool, def_result.memory_id)
         check(
             [(c[0], c[3] is None) for c in c_chain]
@@ -468,49 +475,11 @@ async def run(uri: str) -> None:
             "C8 the chain is byte-stable across the re-drain",
         )
 
-        # Escalation novelty: component + add-only span, fact chain untouched.
-        nov_agent, _ = await make_agent(pool, "walker-novel", AGENT_CONFIG)
-        nov_text = "Bram hid the ledger stone beneath the forge gate."
-        nov = await seed_pending(
-            pool,
-            nov_agent,
-            nov_text,
-            triggers=("thin_gist",),
-            spans=((0, 4),),
-            entities=["Bram"],
-        )
-        nov_worker = worker_for(pool, settings, escalation=NoveltyEscalationProvider())
-        check(await nov_worker.drain() == 1, "C9 novelty drain handles the row")
-        comp = await fetchrow(
-            pool,
-            "SELECT component_id FROM identity_components "
-            "WHERE agent_id = %s AND canonical = 'ledger stone'",
-            nov_agent,
-        )
-        check(comp is not None, "C10 the escalation novel grew identity_components")
-        nov_spans = await fetchall(
-            pool,
-            "SELECT start_char, end_char, matched_component_id "
-            "FROM memory_gist_spans WHERE memory_id = %s ORDER BY start_char",
-            nov.memory_id,
-        )
-        start = nov_text.index("ledger stone")
-        check(
-            [(s[0], s[1]) for s in nov_spans if s[2] == comp[0]]
-            == [(start, start + len("ledger stone"))],
-            "C11 the novel mention appended as an add-only span",
-        )
-        nov_facts = await fetchall(
-            pool,
-            "SELECT write_cause, invalid_at IS NULL, entities "
-            "FROM memory_fact_versions WHERE memory_id = %s ORDER BY created_at",
-            nov.memory_id,
-        )
-        check(
-            [(f[0], f[1]) for f in nov_facts] == [("original", True)]
-            and nov_facts[0][2] == ["Bram"],
-            "C12 sync parity: no fact supersede, entities unchanged",
-        )
+        # (C9-C12 retired 2026-09-27) The worker escalation-novelty section
+        # lived here. The escalation call is folded into the write call, so the
+        # worker no longer surfaces novel components; observe-time NLP is the
+        # only novelty source, and the worker appends only the write call's gist
+        # (covered by C2b above).
 
         # Retry ladder.
         fl_agent, _ = await make_agent(pool, "walker-flaky", AGENT_CONFIG)

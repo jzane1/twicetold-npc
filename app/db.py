@@ -204,14 +204,20 @@ async def fetch_live_components(
 
 @dataclass
 class SpanPlan:
-    """A gist span ready for insert. component_ref is a UUID string for an
+    """A span ready for insert. component_ref is a UUID string for an
     existing component, an int index into InsertPlan.new_components for a
-    component created in this same transaction, or None (category-only hit)."""
+    component created in this same transaction, or None (category-only hit).
+
+    `is_gist` (migration 009) splits the two roles of memory_gist_spans:
+    is_gist=true rows are the minimal frozen facts reconstruction reads;
+    is_gist=false rows are component EVIDENCE (entity/category/coref) for trim
+    and coref, never a reconstruction constraint."""
 
     start_char: int
     end_char: int
     component_ref: str | int | None
     matched_category: str | None
+    is_gist: bool = False
 
 
 @dataclass
@@ -362,7 +368,10 @@ async def insert_observation(
                 )
                 fact_version_id = (await cur.fetchone())[0]
 
-                # 5. gist spans — offsets into the immutable observation_text
+                # 5. spans — offsets into the immutable observation_text.
+                # is_gist rows are the minimal frozen facts reconstruction reads;
+                # is_gist=false rows are component evidence (trim/coref). Only the
+                # gist ids are surfaced as gist_span_ids (migration 009).
                 gist_span_ids: list[UUID] = []
                 for span in plan.spans:
                     if isinstance(span.component_ref, int):
@@ -373,17 +382,20 @@ async def insert_observation(
                         component_id = None
                     await cur.execute(
                         "INSERT INTO memory_gist_spans (memory_id, start_char, end_char, "
-                        "matched_component_id, matched_category) "
-                        "VALUES (%s, %s, %s, %s, %s) RETURNING span_id",
+                        "matched_component_id, matched_category, is_gist) "
+                        "VALUES (%s, %s, %s, %s, %s, %s) RETURNING span_id",
                         (
                             memory_id,
                             span.start_char,
                             span.end_char,
                             component_id,
                             span.matched_category,
+                            span.is_gist,
                         ),
                     )
-                    gist_span_ids.append((await cur.fetchone())[0])
+                    span_id = (await cur.fetchone())[0]
+                    if span.is_gist:
+                        gist_span_ids.append(span_id)
 
     return InsertOutcome(
         memory_id=memory_id,
@@ -687,7 +699,7 @@ async def fetch_memory_chain(pool: AsyncConnectionPool, memory_id: UUID) -> dict
         facts = await cur.fetchall()
         await cur.execute(
             "SELECT span_id, start_char, end_char, matched_category "
-            "FROM memory_gist_spans WHERE memory_id = %s ORDER BY start_char",
+            "FROM memory_gist_spans WHERE memory_id = %s AND is_gist ORDER BY start_char",
             (memory_id,),
         )
         spans = await cur.fetchall()
@@ -1019,7 +1031,7 @@ async def fetch_reconstruction_sources(
             "FROM memory_gist_spans s "
             "LEFT JOIN identity_components c "
             "ON c.component_id = s.matched_component_id "
-            "WHERE s.memory_id = ANY(%s) "
+            "WHERE s.memory_id = ANY(%s) AND s.is_gist "
             "AND (s.matched_component_id IS NULL OR c.invalid_at IS NULL) "
             "ORDER BY s.memory_id, s.start_char, s.end_char",
             (memory_ids,),
@@ -1746,7 +1758,7 @@ async def apply_enrichment(
                         await cur.execute(
                             "INSERT INTO memory_gist_spans (memory_id, "
                             "start_char, end_char, matched_component_id, "
-                            "matched_category) VALUES (%s, %s, %s, %s, %s) "
+                            "matched_category, is_gist) VALUES (%s, %s, %s, %s, %s, %s) "
                             "RETURNING span_id",
                             (
                                 memory_id,
@@ -1754,6 +1766,7 @@ async def apply_enrichment(
                                 span.end_char,
                                 component_id,
                                 span.matched_category,
+                                span.is_gist,
                             ),
                         )
                         gist_span_ids.append((await cur.fetchone())[0])

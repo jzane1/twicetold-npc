@@ -21,7 +21,7 @@ of an eval scenario):
 |---|---|---|
 | `name` | unique handle | bookkeeping only, never prompts |
 | `seed_identity` | free prose, no template | the rendered identity document (below) |
-| `diagnosticity_goal` | one line: what this character finds significant | the importance prompt, verbatim, and through it both retrieval weight and memory durability; the escalation stage reads the same signal when it extracts gist |
+| `diagnosticity_goal` | one line: what this character finds significant | the importance prompt, verbatim, and through it both retrieval weight and memory durability |
 | `rigidity` | 0.5 to 2.0 | the dissonance path's defend-vs-update resistance |
 | `config` | JSON knob overrides | every agent-scoped knob (section 4) |
 
@@ -72,10 +72,11 @@ Two hard-won lessons:
   importance and lost retrieval to fresher gossip. Adding "what threatens the house" moved the
   same memory to 0.72. If a beat depends on a memory surfacing, the goal must make that memory
   matter.
-- **The goal also shapes gist.** The escalation stage extracts the diagnostic spans of each
-  observation as fixed gist, and gist is exactly what a reconstruction may never change. So the
-  goal decides not only which memories are durable but which parts of them are frozen. See
-  section 5 for why that matters.
+- **The goal drives durability, not gist breadth (since 2026-09-27).** The goal sets importance,
+  and importance sets how long a memory resists decay. It no longer decides how MUCH of an
+  observation freezes: the write call now selects a **minimal** gist (a few essential facts, capped
+  by `gist_max_spans`, default 3) whatever the goal says. What the goal still shapes is which
+  memories are durable and surface, not which clauses are frozen. See section 5.
 
 ## 4. The config knobs an author owns
 
@@ -115,11 +116,11 @@ value an assertion or a beat depends on explicitly; never lean on service defaul
 Memories are authored as observation events: what the game says happened. The register rules
 are measured, not stylistic preferences.
 
-**Write shipped-game prose, not driver prose.** The write path's escalation stage fired on 79%
-of realistic prose versus 0% of synthetic load-driver prose in the 2026-07-21 measurement
-(roughly 95% on realistic corpora at current defaults). Synthetic filler silently starves the
-write path's construct, and everything downstream of it. Concrete: in-world sensory detail,
-named minor characters, quantities, consequences.
+**Write shipped-game prose, not driver prose.** The write call scores importance and selects gist
+from what it is given; synthetic filler silently starves both, and everything downstream of them
+(a 2026-07-21 measurement found the old write-path construct fired on 79% of realistic prose versus
+0% of synthetic load-driver prose). Concrete: in-world sensory detail, named minor characters,
+quantities, consequences.
 
 **Entity discipline.** Every proper noun in a memory should be established by that observation,
 the seed, or an earlier memory. The fabrication metric counts unexplained entities in the
@@ -133,17 +134,14 @@ an inspector close-up reads as a bug (she IS Branwen). Passive phrasing did not 
 Third person is right for what the character witnessed; first person for what the character did.
 Game-side action observes (the fire-and-forget observe path) should follow the same rule.
 
-**Texture that must drift has to be goal-orthogonal.** This is the subtle one. A reconstruction
-may thin and reshape only what is NOT gist, and gist extraction follows the diagnosticity goal.
-The demo's chimney-fire memory was written as maximal drama, and escalation dutifully froze
-two thirds of it as gist (11 spans over a 477-character observe); the leftover "detail" was
-punctuation fragments, and on that degenerate input the retelling model was unreliable (some
-calls returned no usable retelling at all; the serve path soft-degrades such an item to its
-live head, honestly but invisibly). Even after a rewrite, house-flavored texture kept getting
-promoted to gist because the goal says the house matters. If you need a memory to visibly
-drift, give it texture the goal does not care about: weather, light, incidental sensation, in
-sentences free of names and numbers. And know that a memory whose every clause matters will
-hold nearly still. That is the system working.
+**Give a memory that must drift some non-essential texture.** A reconstruction may thin and
+reshape only what is NOT gist, and since 2026-09-27 gist is the write call's **minimal** selection
+of the few irreducible facts (capped by `gist_max_spans`). Manner, sensory detail, and setting fall
+outside it and are free to drift. So a memory built entirely of load-bearing facts, with no
+incidental texture, will hold nearly still, while one with weather, light, and passing detail
+around its core has room to move. That is the system working: the core stays true, the texture
+drifts. (Before the split, the escalation stage over-froze memories, marking most of an observation
+as gist so almost nothing could drift; the minimal-gist write call is the fix.)
 
 ## 6. The authoring-time drift check
 

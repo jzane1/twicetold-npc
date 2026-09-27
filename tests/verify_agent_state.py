@@ -298,7 +298,7 @@ async def run(uri: str) -> None:
             "SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1",
         )
         check(
-            top is not None and top[0].startswith("008_"),
+            top is not None and top[0].startswith("009_"),
             "A1 the migration ledger still ends at 008 (C5 adds none)",
             detail=top[0] if top else "empty ledger",
         )

@@ -174,6 +174,14 @@ PRICE_ENV_KEYS: dict[str, str] = {
 SERVICE_DEFAULTS: dict[str, float] = {
     # Neutral importance applied when the scoring model fails (scoring_failed).
     "importance_neutral": 0.5,
+    # Minimal-gist cap (ruled 2026-09-27): the write call selects the few
+    # essential facts as gist; ingest truncates to at most this many gist spans.
+    # A >=1 floor in ingest guarantees reconstruction always has a constraint.
+    "gist_max_spans": 3.0,
+    # Escalation trigger knobs below are RETIRED (2026-09-27): the separate
+    # escalation gist call was folded into the write call. Kept as inert config
+    # keys for compat; nothing reads them since evaluate_triggers is no longer
+    # called.
     # Escalation trigger (1): importance_raw >= this.
     "escalation_importance_threshold": 0.45,
     # Escalation trigger (2): identity/category hit co-occurring with
@@ -659,16 +667,17 @@ def load_settings(env: dict[str, str] | None = None) -> Settings:
         importance = env.get(ENV_MODEL_IMPORTANCE, "")
         render = env.get(ENV_MODEL_RENDER, "")
         typology = env.get(ENV_MODEL_TYPOLOGY, "")
-        escalation = env.get(ENV_MODEL_ESCALATION, "")
         dialogue = env.get(ENV_MODEL_DIALOGUE, "")
         reconstruction = env.get(ENV_MODEL_RECONSTRUCTION, "")
+        # The escalation gist role was retired 2026-09-27 (gist is now selected
+        # by the write call). FIVE roles are required now; a leftover
+        # TWICETOLD_MODEL_ESCALATION in .env is ignored.
         missing = [
             name
             for name, value in (
                 (ENV_MODEL_IMPORTANCE, importance),
                 (ENV_MODEL_RENDER, render),
                 (ENV_MODEL_TYPOLOGY, typology),
-                (ENV_MODEL_ESCALATION, escalation),
                 (ENV_MODEL_DIALOGUE, dialogue),
                 (ENV_MODEL_RECONSTRUCTION, reconstruction),
             )
@@ -687,7 +696,6 @@ def load_settings(env: dict[str, str] | None = None) -> Settings:
                 "they diverge in .env."
             )
         model_write = importance
-        model_escalation = escalation
         model_dialogue = dialogue
         model_reconstruction = reconstruction
         anthropic_key = env.get("ANTHROPIC_API_KEY", "")

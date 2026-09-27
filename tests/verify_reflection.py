@@ -379,8 +379,7 @@ async def run(uri: str) -> None:
             # C3, 2026-08-17) — the mechanical ledger-pin update every
             # migration makes to prior walkers. The reflection mechanics
             # this walker verifies are untouched by 008.
-            [row[0] for row in ledger][-1] == "008_parameter_compiler.sql"
-            and len(ledger) == 8,
+            [row[0] for row in ledger][-1] == "009_gist_flag.sql" and len(ledger) == 9,
             "A5 the ledger records 001-008",
         )
         refl_cols = {
@@ -754,9 +753,9 @@ async def run(uri: str) -> None:
         )
         check(
             srcs[stale_mem.memory_id].spans == []
-            and srcs[fresh_mem.memory_id].spans == [(0, 4)],
-            "D5 constraint-follows-liveness: the pruned component's spans "
-            "drop; NULL-component and live spans stand",
+            and srcs[fresh_mem.memory_id].spans == [],
+            "D5 component evidence is not reconstruction gist (2026-09-27 split): "
+            "neither pruned nor live component spans appear as gist",
         )
 
         a_agent = await make_agent(pool, "walker-r-active", AGENT_CONFIG)

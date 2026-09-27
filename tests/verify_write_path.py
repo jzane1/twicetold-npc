@@ -39,7 +39,6 @@ from app.db import build_pool
 from app.ingest import IngestService
 from app.providers import (
     FailingEmbeddingProvider,
-    FailingEscalationProvider,
     FailingWriteProvider,
     FakeEmbeddingProvider,
     FakeEscalationProvider,
@@ -175,17 +174,28 @@ async def main(database_uri: str) -> None:
     )
     spans = await fetchall(
         pool,
-        "SELECT span_id, start_char, end_char, matched_component_id "
+        "SELECT span_id, start_char, end_char, matched_component_id, is_gist "
         "FROM memory_gist_spans WHERE memory_id = %s ORDER BY start_char",
         result.memory_id,
     )
+    # Migration 009 split: is_gist=true rows are the minimal frozen facts
+    # (surfaced as gist_span_ids); is_gist=false rows are component evidence.
+    gist_rows = [s for s in spans if s[4]]
+    evidence_rows = [s for s in spans if not s[4]]
     check(
-        sorted(s[0] for s in spans) == sorted(result.gist_span_ids),
-        "gist span rows match IngestResult.gist_span_ids",
-        f"{len(spans)} span(s)",
+        sorted(s[0] for s in gist_rows) == sorted(result.gist_span_ids),
+        "gist rows (is_gist) match IngestResult.gist_span_ids",
+        f"{len(gist_rows)} gist, {len(evidence_rows)} evidence",
     )
-    mara = [s for s in spans if s[3] == component_id]
-    check(bool(mara), "known component (Mara) produced a gist span")
+    check(
+        1 <= len(gist_rows) <= 3,
+        "gist is minimal (1..gist_max_spans)",
+        f"{len(gist_rows)} gist span(s)",
+    )
+    mara = [s for s in evidence_rows if s[3] == component_id]
+    check(
+        bool(mara), "known component (Mara) produced an evidence span (is_gist=false)"
+    )
     check(
         row[10] == event.client_timestamp, "valid_at = client world time (bi-temporal)"
     )
@@ -258,7 +268,7 @@ async def main(database_uri: str) -> None:
         row[0] == event.observation_text,
         "stored observation_text is byte-identical to the event's",
     )
-    for _sid, start, end, _cid in spans:
+    for _sid, start, end, _cid, _is_gist in spans:
         if not (0 <= start < end <= len(event.observation_text)):
             fail("span offsets", f"[{start},{end}) out of bounds")
     ok("all span offsets are valid half-open ranges into observation_text")
@@ -270,7 +280,7 @@ async def main(database_uri: str) -> None:
     )
 
     # ------------------------------------------------------------------ #
-    print("\n[8+13] Instrumentation present (incl. escalation accounting)")
+    print("\n[8+13] Instrumentation present (escalation retired -> zeroed)")
     instr = result.instrumentation
     for field_name in ("nlp_ms", "embed_ms", "haiku_ms", "insert_ms", "total_ms"):
         value = getattr(instr, field_name)
@@ -282,12 +292,19 @@ async def main(database_uri: str) -> None:
         "haiku token counts present",
     )
     check(instr.embedding_tokens > 0, "embedding token count present")
+    # Escalation retired 2026-09-27: the vestigial fields stay at zero/false.
     check(
-        instr.escalated and len(instr.escalated_by) > 0,
-        "escalation fired and escalated_by recorded",
-        ",".join(instr.escalated_by),
+        not instr.escalated
+        and instr.escalated_by == []
+        and instr.escalation_input_tokens == 0
+        and instr.escalation_output_tokens == 0
+        and instr.escalation_ms == 0.0,
+        "escalation instrumentation is vestigial-zero",
     )
-    check(instr.escalation_input_tokens > 0, "escalation token accounting present")
+    check(
+        not result.escalation_failed,
+        "escalation_failed is vestigial-false",
+    )
 
     # ------------------------------------------------------------------ #
     print("\n[fake determinism] same text -> identical scores and vectors")
@@ -416,105 +433,10 @@ async def main(database_uri: str) -> None:
     )
 
     # ------------------------------------------------------------------ #
-    print("\n[11] Escalation soft-degrade: fail twice -> write lands, flagged")
-    failing_escalation = FailingEscalationProvider()
-    degrade_service = fake_service(pool, settings, escalation=failing_escalation)
-    before = (
-        await fetchrow(
-            pool, "SELECT count(*) FROM memories WHERE agent_id = %s", agent_id
-        )
-    )[0]
-    degraded = await degrade_service.ingest_observation(
-        observe_event(agent_id=agent_id)
-    )
-    check(failing_escalation.calls == 2, "escalation retried exactly once (2 calls)")
-    check(
-        degraded.escalation_failed is True,
-        "escalation_failed flagged on the result",
-    )
-    after = (
-        await fetchrow(
-            pool, "SELECT count(*) FROM memories WHERE agent_id = %s", agent_id
-        )
-    )[0]
-    check(after == before + 1, "the degraded write landed (one new memories row)")
-    row_flag = (
-        await fetchrow(
-            pool,
-            "SELECT escalation_failed FROM memories WHERE memory_id = %s",
-            degraded.memory_id,
-        )
-    )[0]
-    check(
-        row_flag is True,
-        "escalation_failed persisted to the memories column (migration 005)",
-    )
-
-    # ------------------------------------------------------------------ #
-    print("\n[11b] thin_gist span-floor trigger (ruled 2026-07-23)")
-    # Pure-function contract first (crafted NlpResult, fully deterministic):
-    # a base pass below the span floor escalates regardless of importance;
-    # knob 0.0 is the kill-switch; the floor compares against the span COUNT.
-    from app.nlp import (
-        TRIGGER_THIN_GIST,
-        NlpResult as _NlpResult,
-        evaluate_triggers as _evaluate,
-    )
-    from app.providers import GistSpanCandidate as _Span
-
-    _knobs = {
-        "escalation_importance_threshold": 0.45,
-        "escalation_affect_threshold": 0.5,
-        "escalation_min_base_spans": 1.0,
-    }
-    _empty = _NlpResult(
-        spans=[],
-        novel_components=[],
-        entities=[],
-        affect_valence=None,
-        affect_arousal=None,
-        affect_detail=None,
-    )
-    check(
-        _evaluate(_empty, 0.1, _knobs) == [TRIGGER_THIN_GIST],
-        "zero base spans + low importance -> thin_gist fires ALONE",
-    )
-    check(
-        _evaluate(_empty, 0.1, {**_knobs, "escalation_min_base_spans": 0.0}) == [],
-        "escalation_min_base_spans = 0.0 disables the trigger (kill-switch)",
-    )
-    _one_span = _NlpResult(
-        spans=[_Span(start_char=0, end_char=4)],
-        novel_components=[],
-        entities=[],
-        affect_valence=None,
-        affect_arousal=None,
-        affect_detail=None,
-    )
-    check(
-        _evaluate(_one_span, 0.1, _knobs) == []
-        and TRIGGER_THIN_GIST
-        in _evaluate(_one_span, 0.1, {**_knobs, "escalation_min_base_spans": 2.0}),
-        "the floor compares the base span COUNT (1 span: quiet at 1.0, fires at 2.0)",
-    )
-    # Service-level beat: a text measured to produce ZERO base spans and no
-    # other trigger (no component mention, no unresolved ref, fake importance
-    # 0.3675 < 0.45) — pre-ruling this observe landed with an EMPTY gist; now
-    # it escalates with thin_gist as the sole cause.
-    thin = await service.ingest_observation(
-        observe_event(
-            agent_id=agent_id,
-            observation_text=(
-                "The sexton counted the silver twice by candlelight in the vestry."
-            ),
-        )
-    )
-    check(
-        thin.instrumentation.escalated
-        and thin.instrumentation.escalated_by == [TRIGGER_THIN_GIST],
-        "zero-base-span observe escalates with thin_gist as the SOLE trigger",
-        ",".join(thin.instrumentation.escalated_by),
-    )
+    # [11]/[11b] retired 2026-09-27: the escalation soft-degrade path and the
+    # thin_gist trigger are gone. Gist is now folded into the write call, which
+    # always yields at least one span (capped by gist_max_spans). The is_gist
+    # split, minimality, and evidence coexistence are covered by [1] above.
 
     # ------------------------------------------------------------------ #
     print("\n[12] Arousal populated from the VAD lexicon")

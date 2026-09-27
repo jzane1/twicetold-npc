@@ -444,8 +444,9 @@ def test_trim_mechanical_rule_and_per_affected_eviction(scene):
     """Done-when 6 (core): under the frozen clock a component whose entire
     span evidence is stale prunes (invalid_at, never DELETE); the authored
     (zero-span) and fresh-evidence components survive; cache rows evict
-    per-affected-memory only; the gate's live set shrinks; reconstruction
-    sources drop the pruned component's spans."""
+    per-affected-memory only; the gate's live set shrinks. Component-evidence
+    spans (is_gist=false since the 2026-09-27 split) are trim evidence, never a
+    reconstruction constraint."""
 
     async def scenario(ctx):
         from app import db
@@ -473,8 +474,10 @@ def test_trim_mechanical_rule_and_per_affected_eviction(scene):
         await db.insert_cache_row(ctx.pool, stale_mem.memory_id, "v|b0", "stale")
         await db.insert_cache_row(ctx.pool, top.memory_id, "v|b0", "fresh")
 
+        # Component-evidence spans are NOT reconstruction gist since the
+        # 2026-09-27 split; they exist only for trim/coref.
         before = await db.fetch_reconstruction_sources(ctx.pool, [stale_mem.memory_id])
-        assert before[stale_mem.memory_id].spans == [(0, 10)]
+        assert before[stale_mem.memory_id].spans == []
 
         service = ctx.reflection(
             defaults={
@@ -502,13 +505,15 @@ def test_trim_mechanical_rule_and_per_affected_eviction(scene):
         assert await ctx.cache_rows(stale_mem.memory_id) == {}
         assert await ctx.cache_rows(top.memory_id) == {"v|b0": "fresh"}
 
-        # Constraint-follows-liveness: the pruned component's span drops out
-        # of the gist constraint; the fresh memory's span is untouched.
+        # Gist and component evidence are separate rows now: the trim evicted
+        # the affected memory's cache (above) but touched no reconstruction
+        # constraint, because component-evidence spans were never gist. Both
+        # memories carry no gist spans, so reconstruction sources stay empty.
         after = await db.fetch_reconstruction_sources(
             ctx.pool, [stale_mem.memory_id, fresh_mem.memory_id]
         )
         assert after[stale_mem.memory_id].spans == []
-        assert after[fresh_mem.memory_id].spans == [(0, 4)]
+        assert after[fresh_mem.memory_id].spans == []
 
     run_structural(scene, scenario)
 

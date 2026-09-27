@@ -122,65 +122,9 @@ def test_declared_typology_survives_completion(scene):
     run_structural(scene, scenario)
 
 
-def test_escalation_novel_component_appends_add_only(scene):
-    """A worker escalation that surfaces a novel entity grows
-    identity_components and appends its mention span (add-only; stored span
-    rows byte-untouched) — and the fact chain does NOT supersede: sync
-    parity, escalation novels become components, never memory entities."""
-
-    async def scenario(ctx):
-        text = "Bram hid the ledger stone beneath the ford gate."
-        agent = await ctx.make_agent("k-novel", V1_CONFIG)
-        seeded = await ctx.seed_pending(
-            agent,
-            text,
-            NOW - timedelta(hours=1),
-            triggers=("thin_gist",),
-            spans=((0, 4),),  # a stored base span (Bram)
-            entities=["Bram"],
-        )
-        m = seeded.memory_id
-        spans_before = await ctx.fetchall(
-            "SELECT span_id, start_char, end_char FROM memory_gist_spans "
-            "WHERE memory_id = %s ORDER BY start_char",
-            m,
-        )
-
-        from app.providers import NoveltyEscalationProvider
-
-        assert await ctx.worker(escalation=NoveltyEscalationProvider()).drain() == 1
-
-        comp = await ctx.fetchrow(
-            "SELECT component_id, category FROM identity_components "
-            "WHERE agent_id = %s AND canonical = %s",
-            agent,
-            "ledger stone",
-        )
-        assert comp is not None and comp[1] == "object"
-
-        spans_after = await ctx.fetchall(
-            "SELECT span_id, start_char, end_char, matched_component_id "
-            "FROM memory_gist_spans WHERE memory_id = %s ORDER BY start_char",
-            m,
-        )
-        # Add-only: the stored span row survives byte-identically...
-        assert [s[0] for s in spans_before] == [
-            s[0] for s in spans_after if s[3] != comp[0]
-        ]
-        # ...and exactly one new span points at the novel component's mention.
-        novel_spans = [s for s in spans_after if s[3] == comp[0]]
-        start = text.index("ledger stone")
-        assert [(s[1], s[2]) for s in novel_spans] == [
-            (start, start + len("ledger stone"))
-        ]
-
-        # Sync parity: no fact supersede — one live 'original' fact row,
-        # entities unchanged.
-        facts = await ctx.fact_chain(m)
-        assert [(f[0], f[3] is None) for f in facts] == [("original", True)]
-        assert facts[0][5] == ["Bram"]
-
-    run_structural(scene, scenario)
+# (Retired 2026-09-27) The worker escalation novelty test lived here. The
+# separate escalation gist call was folded into the write call, so the worker no
+# longer surfaces novel components; observe-time NLP is the only novelty source.
 
 
 def test_failed_attempt_stays_pending_then_completes(scene):

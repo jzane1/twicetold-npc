@@ -586,8 +586,12 @@ async def main(database_uri: str) -> None:
             # C3, 2026-08-17) — the same mechanical ledger-pin update. The
             # gate mechanics this walker verifies are untouched by 008.
             "008_parameter_compiler.sql",
+            # 009 joined the ledger at the gist/evidence split (2026-09-27) —
+            # the same mechanical ledger-pin update. The gate mechanics this
+            # walker verifies are untouched by 009.
+            "009_gist_flag.sql",
         ],
-        "the ledger records 001 + 002 + 003 + 004 + 005 + 006 + 007 + 008",
+        "the ledger records 001 + 002 + 003 + 004 + 005 + 006 + 007 + 008 + 009",
     )
     indexes = {
         row[0]

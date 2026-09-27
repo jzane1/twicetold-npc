@@ -51,13 +51,12 @@ from datetime import datetime, timezone
 
 from psycopg_pool import AsyncConnectionPool
 
-from app import db, nlp
+from app import db
 from app.config import Settings, agent_knob
 from app.db import EnrichmentClaim, EnrichmentRunRecord, FactDelta
 from app.ingest import (
     TYPOLOGY_FALLBACK,
-    _merge_components,
-    escalate_with_retry,
+    _select_gist_spans,
     plan_spans,
     resolve_typology,
     run_write_call,
@@ -226,7 +225,6 @@ class DeferredWriteWorker:
             )
             return True
         config: dict = agent["config"]
-        components = await db.fetch_live_components(self._pool, claim.agent_id)
 
         # --- the deferred write call (retry-later failure policy) ---------
         declared = source.typology if source.typology_source == "declared" else None
@@ -280,80 +278,33 @@ class DeferredWriteWorker:
             settings=self._settings,
         )
 
-        # --- escalation: stored non-importance triggers + the importance
-        # trigger the observe couldn't evaluate (soft on double failure) ---
-        triggers = list(source.pending_triggers)
-        if write_outcome.importance >= agent_knob(
-            config, "escalation_importance_threshold", self._settings
-        ):
-            triggers = [nlp.TRIGGER_IMPORTANCE, *triggers]
-        stored_keys = {
-            (
-                s.start_char,
-                s.end_char,
-                str(s.matched_component_id) if s.matched_component_id else None,
-                s.matched_category,
-            )
-            for s in source.spans
-        }
-        stored_offsets = {(s.start_char, s.end_char) for s in source.spans}
+        # --- minimal gist: selected by the deferred write call (2026-09-27;
+        # the separate escalation gist call is retired). Evidence spans were
+        # stored at observe time; the worker appends only the gist spans
+        # (is_gist=true). No triggers, no novel components from the worker
+        # (observe-time NLP novels are already component rows). --------------
+        triggers: list[str] = []
         escalation_failed = False
         esc_in = esc_out = 0
         escalation_ms = 0.0
-        fresh_spans: list[GistSpanCandidate] = []
         novel_components: list[NewComponent] = []
-        if triggers:
-            candidate_spans = [
-                GistSpanCandidate(
-                    start_char=s.start_char,
-                    end_char=s.end_char,
-                    matched_component_id=(
-                        str(s.matched_component_id) if s.matched_component_id else None
-                    ),
-                    matched_category=s.matched_category,
-                )
-                for s in source.spans
-            ]
-            t0 = time.perf_counter()
-            escalation = await escalate_with_retry(
-                self._providers,
-                observation_text=source.observation_text,
-                known_components=components,
-                candidate_spans=candidate_spans,
-                # Observe-time novels are already component rows; the model
-                # sees them among known_components, not as candidates.
-                candidate_components=[],
-                triggers=triggers,
+        gist_max = int(agent_knob(config, "gist_max_spans", self._settings))
+        evidence_candidates = [
+            GistSpanCandidate(
+                start_char=s.start_char,
+                end_char=s.end_char,
+                matched_component_id=None,
+                matched_category=None,
             )
-            escalation_ms = _ms(time.perf_counter() - t0)
-            if escalation is None:
-                escalation_failed = True
-            else:
-                esc_in = escalation.input_tokens
-                esc_out = escalation.output_tokens
-                fresh_spans = [
-                    s
-                    for s in escalation.spans
-                    if (
-                        s.start_char,
-                        s.end_char,
-                        s.matched_component_id,
-                        s.matched_category,
-                    )
-                    not in stored_keys
-                ]
-                known_canonicals = {c["canonical"].lower() for c in components}
-                novel_components = [
-                    c
-                    for c in _merge_components([], list(escalation.new_components))
-                    if c.canonical.lower() not in known_canonicals
-                ]
-        span_plans = plan_spans(
+            for s in source.spans
+        ]
+        gist_spans = _select_gist_spans(
             source.observation_text,
-            fresh_spans,
-            novel_components,
-            occupied_extra=stored_offsets,
+            write_outcome.gist_spans,
+            evidence_candidates,
+            gist_max,
         )
+        span_plans = plan_spans(source.observation_text, gist_spans, [], is_gist=True)
 
         # --- opportunistic embedding repair (soft: stays NULL on failure) --
         # Fact entities are deliberately NOT grown here: the sync path's

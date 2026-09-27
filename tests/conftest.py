@@ -372,9 +372,11 @@ class Ctx:
             embedding=vec,
             entities=entities,
             spans=(
-                [db.SpanPlan(s, e, None, "person") for (s, e) in spans]
+                # `spans` are gist (reconstruction's frozen facts, is_gist=true);
+                # `component_spans` are component EVIDENCE for trim (is_gist=false).
+                [db.SpanPlan(s, e, None, "person", is_gist=True) for (s, e) in spans]
                 + [
-                    db.SpanPlan(s, e, str(cid), "person")
+                    db.SpanPlan(s, e, str(cid), "person", is_gist=False)
                     for (s, e, cid) in component_spans
                 ]
             ),

@@ -67,7 +67,6 @@ from app.providers import (
     RealCompilerProvider,
     RealDialogueProvider,
     RealEmbeddingProvider,
-    RealEscalationProvider,
     RealJudgeProvider,
     RealReconstructionProvider,
     RealReflectionProvider,
@@ -455,37 +454,8 @@ def test_openai_every_json_role_round_trips(caplog):
             {"/chat/completions": lambda e: openai_chat_json(canned["text"])}, rec
         ),
     )
-    component_id = str(uuid4())
-    canned["text"] = json.dumps(
-        {
-            "spans": [
-                {"text": "crossed the ford", "component": "Mara", "category": "place"},
-                {"text": "not in the text", "component": None, "category": None},
-            ],
-            "new_components": [
-                {"canonical": "the toll", "aliases": ["toll"], "category": "place"}
-            ],
-        }
-    )
-    esc = RealEscalationProvider(settings, backend).extract_gist(
-        observation_text=OBSERVATION,
-        known_components=[
-            {
-                "canonical": "Mara",
-                "aliases": ["the blacksmith"],
-                "category": "person",
-                "component_id": component_id,
-            }
-        ],
-        candidate_spans=[],
-        candidate_components=[],
-        triggers=["novelty"],
-    )
-    assert len(esc.spans) == 1  # the unlocatable substring dropped
-    assert esc.spans[0].start_char == OBSERVATION.find("crossed the ford")
-    assert esc.spans[0].matched_component_id == component_id
-    assert esc.new_components[0].canonical == "the toll"
-    assert rec.last.body["max_tokens"] == 1024 and rec.last.body["model"] == "model-e"
+    # (Escalation retired 2026-09-27: gist folded into the write call, so there
+    # is no separate escalation role to round-trip here.)
 
     memory_id = str(uuid4())
     canned["text"] = json.dumps({memory_id: "[canned] a retelling", "other": 3})
@@ -869,10 +839,11 @@ def test_embedding_client_selection():
 
 
 def test_build_providers_wires_backends_offline():
-    """Real-mode construction opens no socket on either backend: the five
-    bundle roles share ONE backend object; the judge-shaped factories build
-    Real* classes on the openai backend without an Anthropic key; fake mode
-    ignores the selector entirely."""
+    """Real-mode construction opens no socket on either backend: the real chat
+    roles share ONE backend object; the judge-shaped factories build Real*
+    classes on the openai backend without an Anthropic key; fake mode ignores
+    the selector entirely. (Escalation retired 2026-09-27: its bundle slot holds
+    the fake and is not a chat role.)"""
     local = _openai_settings(
         model_judge="model-j", model_reflection="model-f", model_compiler="model-c"
     )
@@ -880,7 +851,6 @@ def test_build_providers_wires_backends_offline():
     assert isinstance(bundle.write._backend, OpenAIChatBackend)
     assert (
         bundle.write._backend
-        is bundle.escalation._backend
         is bundle.dialogue._backend
         is bundle.reconstruction._backend
     )

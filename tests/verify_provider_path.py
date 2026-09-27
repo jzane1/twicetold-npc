@@ -99,7 +99,6 @@ from app.providers import (
     RealCompilerProvider,
     RealDialogueProvider,
     RealEmbeddingProvider,
-    RealEscalationProvider,
     RealJudgeProvider,
     RealReconstructionProvider,
     RealReflectionProvider,
@@ -489,11 +488,11 @@ def section_b_wiring() -> None:
     check(
         isinstance(bundle.write._backend, OpenAIChatBackend)
         and bundle.write._backend
-        is bundle.escalation._backend
         is bundle.dialogue._backend
         is bundle.reconstruction._backend
         and isinstance(bundle.embedding, RealEmbeddingProvider),
-        "B1 the openai bundle shares ONE backend across its four LLM roles",
+        "B1 the openai bundle shares ONE backend across its chat roles "
+        "(escalation retired 2026-09-27)",
     )
     check(
         isinstance(build_judge_provider(local), RealJudgeProvider)
@@ -558,45 +557,9 @@ def section_c_openai_roles() -> None:
             "C1 write: path, bearer placeholder, system+user, max_tokens 1024, "
             "json_object, no stream/thinking/sampling; every field round-trips",
         )
-        component_id = str(uuid4())
-        canned["text"] = json.dumps(
-            {
-                "spans": [
-                    {"text": "crossed the ford", "component": "Mara", "category": "p"},
-                    {
-                        "text": "nowhere in the text",
-                        "component": None,
-                        "category": None,
-                    },
-                ],
-                "new_components": [
-                    {"canonical": "the toll", "aliases": ["toll"], "category": "place"}
-                ],
-            }
-        )
-        esc = RealEscalationProvider(settings, backend).extract_gist(
-            observation_text=OBSERVATION,
-            known_components=[
-                {
-                    "canonical": "Mara",
-                    "aliases": [],
-                    "category": "person",
-                    "component_id": component_id,
-                }
-            ],
-            candidate_spans=[],
-            candidate_components=[],
-            triggers=["novelty"],
-        )
-        check(
-            len(esc.spans) == 1
-            and esc.spans[0].start_char == OBSERVATION.find("crossed the ford")
-            and esc.spans[0].matched_component_id == component_id
-            and esc.new_components[0].canonical == "the toll"
-            and rec.last.body["max_tokens"] == 1024
-            and rec.last.body["model"] == "model-e",
-            "C2 escalation: span offsets + component id, unlocatable dropped, 1024",
-        )
+        # (C2 retired 2026-09-27) The escalation gist-call round-trip lived here.
+        # Gist is now selected by the write call (C1 above exercises that call);
+        # there is no separate escalation role to round-trip.
         memory_id = str(uuid4())
         canned["text"] = json.dumps({memory_id: "[canned] a retelling", "x": 1})
         items = [

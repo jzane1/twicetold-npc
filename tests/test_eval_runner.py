@@ -233,7 +233,7 @@ def test_provision_drop_roundtrip(suite_env):
         uri = provision_scratch(base, name)
         with psycopg.connect(uri, connect_timeout=3) as conn:
             applied = conn.execute("SELECT count(*) FROM schema_migrations").fetchone()
-        assert applied[0] == 8  # 001-008 (008: parameter compiler, 2026-08-17)
+        assert applied[0] == 9  # 001-009 (009: gist/evidence split, 2026-09-27)
         drop_scratch(base, name)
         admin = scratch_uri(base, "postgres")
         with psycopg.connect(admin, connect_timeout=3, autocommit=True) as conn:

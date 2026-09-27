@@ -175,6 +175,45 @@ def _merge_components(
     return merged
 
 
+def _first_sentence_end(text: str) -> int:
+    """The end offset of the first sentence (or the whole text). The gist
+    floor's last resort."""
+    for i, ch in enumerate(text):
+        if ch in ".!?":
+            return i + 1
+    return len(text)
+
+
+def _select_gist_spans(
+    observation_text: str,
+    write_gist: list[GistSpanCandidate],
+    evidence_spans: list[GistSpanCandidate],
+    max_spans: int,
+) -> list[GistSpanCandidate]:
+    """The minimal gist (ruled 2026-09-27): the write call's chosen facts,
+    capped to `max_spans`, with a >=1 floor. If the write call returned no
+    usable gist (a failed/degraded call), fall back to the first evidence
+    span(s), then to a single span over the first sentence — reconstruction
+    always needs at least one constraint."""
+    cap = max(1, max_spans)
+    chosen = list(write_gist)[:cap]
+    if chosen:
+        return chosen
+    if evidence_spans:
+        return list(evidence_spans)[:cap]
+    end = _first_sentence_end(observation_text)
+    if end <= 0:
+        return []
+    return [
+        GistSpanCandidate(
+            start_char=0,
+            end_char=end,
+            matched_component_id=None,
+            matched_category=None,
+        )
+    ]
+
+
 # ---------------------------------------------------------------------------
 # The write-call / typology / escalation stages — module-level since the
 # deferred-write build (extract-only move, 2026-08-12) so the sync branch and
@@ -199,6 +238,7 @@ class WriteStageOutcome:
     input_tokens: int
     output_tokens: int
     failure: str | None
+    gist_spans: list[GistSpanCandidate]  # minimal gist from the write call
 
 
 async def run_write_call(
@@ -218,6 +258,7 @@ async def run_write_call(
     call_typology: str | None = None
     call_confidence: float | None = None
     failure: str | None = None
+    gist_spans: list[GistSpanCandidate] = []
     try:
         write_result: WriteCallResult = await providers.gate.run(
             providers.write.render_and_score,
@@ -231,6 +272,7 @@ async def run_write_call(
         call_confidence = write_result.typology_confidence
         tokens_in = write_result.input_tokens
         tokens_out = write_result.output_tokens
+        gist_spans = write_result.gist_spans
     except ProviderCallError as exc:
         scoring_failed = True
         failure = str(exc)
@@ -248,6 +290,7 @@ async def run_write_call(
         input_tokens=tokens_in,
         output_tokens=tokens_out,
         failure=failure,
+        gist_spans=gist_spans,
     )
 
 
@@ -320,18 +363,23 @@ def plan_spans(
     spans: list[GistSpanCandidate],
     new_components: list[NewComponent],
     occupied_extra: set[tuple[int, int]] | None = None,
+    *,
+    is_gist: bool = False,
 ) -> list[SpanPlan]:
     """Convert candidates to insert-ready plans; novel-entity mentions become
     spans referencing the component row created in the same transaction.
     `occupied_extra` lets the deferred worker exclude already-stored span
     offsets from the novel-mention scan (add-only appends); the sync path
-    passes nothing."""
+    passes nothing. `is_gist` tags the plans (migration 009): the evidence pass
+    (NLP entity/category/coref + novel mentions) passes False; the gist pass
+    (the write call's minimal facts) passes True."""
     plans = [
         SpanPlan(
             start_char=s.start_char,
             end_char=s.end_char,
             component_ref=s.matched_component_id,
             matched_category=s.matched_category,
+            is_gist=is_gist,
         )
         for s in spans
     ]
@@ -348,6 +396,7 @@ def plan_spans(
                         end_char=end,
                         component_ref=index,
                         matched_category=comp.category,
+                        is_gist=is_gist,
                     )
                 )
     return plans
@@ -395,19 +444,13 @@ class IngestService:
 
         # --- deferral fork (deferred-writes.md, ruled 2026-08-12) ---------
         deferred = agent_knob(config, "deferred_writes_enabled", self._settings) != 0.0
-        knobs = {
-            key: agent_knob(config, key, self._settings)
-            for key in (
-                "escalation_importance_threshold",
-                "escalation_affect_threshold",
-                "escalation_min_base_spans",
-            )
-        }
-        spans = list(nlp_result.spans)
+        evidence_spans = list(nlp_result.spans)
         new_components = list(nlp_result.novel_components)
-        triggers: list[str] = []
-        escalation_ms = 0.0
-        esc_in = esc_out = 0
+        gist_spans: list[GistSpanCandidate] = []
+        gist_max = int(agent_knob(config, "gist_max_spans", self._settings))
+        # The escalation gist call was retired 2026-09-27 (gist is selected by
+        # the write call). escalation_failed stays a vestigial always-false flag
+        # for wire/DB compat; no triggers are evaluated.
         escalation_failed = False
         pending_triggers: list[str] | None = None
 
@@ -438,7 +481,9 @@ class IngestService:
                 )
             else:
                 typology = typology_source = typology_confidence = None
-            pending_triggers = nlp.evaluate_triggers(nlp_result, float("-inf"), knobs)
+            # Gist is the worker's to select via the write call; evidence spans
+            # are stored now. No triggers (the escalation path is retired).
+            pending_triggers = None
         else:
             # --- single Haiku write call (soft degradation) ---------------
             t0 = time.perf_counter()
@@ -468,35 +513,15 @@ class IngestService:
                 settings=self._settings,
             )
 
-            # --- escalation (biased loose; SOFT-DEGRADES on double failure:
-            # the write lands with the base NLP-pass gist and sets
-            # escalation_failed — the 2026-07-13 hard-stop was retired
-            # 2026-07-22, migration 005) -----------------------------------
-            triggers = nlp.evaluate_triggers(nlp_result, importance, knobs)
-            if triggers:
-                t0 = time.perf_counter()
-                escalation = await escalate_with_retry(
-                    self._providers,
-                    observation_text=event.observation_text,
-                    known_components=components,
-                    candidate_spans=list(nlp_result.spans),
-                    candidate_components=list(nlp_result.novel_components),
-                    triggers=triggers,
-                )
-                escalation_ms = _ms(time.perf_counter() - t0)
-                if escalation is None:
-                    # Soft-degrade (ruled 2026-07-22): the gist-escalation
-                    # call failed twice; proceed with the base NLP-pass
-                    # spans/components (no merge) and flag it. A degraded
-                    # gist is never a lost write.
-                    escalation_failed = True
-                else:
-                    esc_in = escalation.input_tokens
-                    esc_out = escalation.output_tokens
-                    spans = _merge_spans(spans, escalation.spans)
-                    new_components = _merge_components(
-                        new_components, escalation.new_components
-                    )
+            # --- minimal gist: the write call selected it (2026-09-27); cap
+            # and floor it here where the agent config lives. The NLP spans
+            # stay as component EVIDENCE (is_gist=false), never gist. ------
+            gist_spans = _select_gist_spans(
+                event.observation_text,
+                write_outcome.gist_spans,
+                evidence_spans,
+                gist_max,
+            )
 
         # --- embedding (soft degradation: NULL embedding) -----------------
         t0 = time.perf_counter()
@@ -539,7 +564,11 @@ class IngestService:
             if name and name.lower() not in {e.lower() for e in entities}:
                 entities.append(name)
 
-        span_plans = plan_spans(event.observation_text, spans, new_components)
+        # Evidence spans (is_gist=false: trim/coref) + the minimal gist spans
+        # (is_gist=true: reconstruction's frozen facts), one plan list.
+        span_plans = plan_spans(
+            event.observation_text, evidence_spans, new_components, is_gist=False
+        ) + plan_spans(event.observation_text, gist_spans, [], is_gist=True)
 
         # --- atomic insert -------------------------------------------------
         t0 = time.perf_counter()
@@ -605,11 +634,11 @@ class IngestService:
                 haiku_input_tokens=haiku_in,
                 haiku_output_tokens=haiku_out,
                 embedding_tokens=embed_tokens,
-                escalated=bool(triggers),
-                escalated_by=triggers,
-                escalation_ms=escalation_ms,
-                escalation_input_tokens=esc_in,
-                escalation_output_tokens=esc_out,
+                escalated=False,
+                escalated_by=[],
+                escalation_ms=0.0,
+                escalation_input_tokens=0,
+                escalation_output_tokens=0,
             ),
         )
 

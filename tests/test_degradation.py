@@ -175,85 +175,10 @@ def test_correction_embed_failure_all_or_nothing(scene):
     run_structural(scene, scenario)
 
 
-@pytest.mark.nlp
-def test_escalation_failure_soft_degrades(scene):
-    """Escalation fails twice => SOFT-DEGRADE (ruled 2026-07-22): the write
-    proceeds with the base NLP-pass gist, one memories row lands, and
-    escalation_failed = true. Structurally assertable: row present + flag set,
-    never a lost write."""
-
-    async def scenario(ctx):
-        from app.providers import FailingEscalationProvider
-
-        agent = await ctx.make_agent("g-escdegrade", V1_CONFIG)
-        failing = FailingEscalationProvider()
-        service = ctx.ingest(escalation=failing)
-        count_sql = "SELECT count(*) FROM memories WHERE agent_id = %s"
-        before = (await ctx.fetchrow(count_sql, agent))[0]
-        result = await service.ingest_observation(observe(agent))
-        assert failing.calls == 2  # retried exactly once, then degraded
-        assert result.escalation_failed is True  # flagged on the wire
-        assert (await ctx.fetchrow(count_sql, agent))[0] == before + 1  # not lost
-        row = await ctx.fetchrow(
-            "SELECT escalation_failed FROM memories WHERE memory_id = %s",
-            result.memory_id,
-        )
-        assert row[0] is True  # persisted to the dedicated column (migration 005)
-
-    run_structural(scene, scenario)
-
-
-def test_thin_gist_trigger_pure():
-    """The thin_gist span-floor trigger (ruled 2026-07-23): a base NLP pass
-    with fewer gist spans than escalation_min_base_spans escalates regardless
-    of importance — protecting reconstruction's fixed constraint (measured
-    2026-07-23: 16/80 realistic observes otherwise landed with ZERO gist
-    spans). Pure function over production SERVICE_DEFAULTS — no DB, no NLP
-    models, keyless."""
-    from app.config import SERVICE_DEFAULTS
-    from app.nlp import TRIGGER_THIN_GIST, NlpResult, evaluate_triggers
-    from app.providers import GistSpanCandidate
-
-    knobs = {
-        key: SERVICE_DEFAULTS[key]  # production values, deliberately unpinned
-        for key in (
-            "escalation_importance_threshold",
-            "escalation_affect_threshold",
-            "escalation_min_base_spans",
-        )
-    }
-    empty = NlpResult(
-        spans=[],
-        novel_components=[],
-        entities=[],
-        affect_valence=None,
-        affect_arousal=None,
-        affect_detail=None,
-    )
-    # zero spans + sub-threshold importance: thin_gist fires ALONE at the
-    # shipped defaults — the pre-ruling write path landed this observe with
-    # an empty gist and no escalation.
-    assert evaluate_triggers(empty, 0.1, knobs) == [TRIGGER_THIN_GIST]
-    # knob 0.0 is the kill-switch (span counts are never negative).
-    assert (
-        evaluate_triggers(empty, 0.1, {**knobs, "escalation_min_base_spans": 0.0}) == []
-    )
-    # the floor compares the span COUNT: one span is quiet at the shipped
-    # floor (1.0) and fires at a raised floor (2.0).
-    one = NlpResult(
-        spans=[GistSpanCandidate(start_char=0, end_char=4)],
-        novel_components=[],
-        entities=[],
-        affect_valence=None,
-        affect_arousal=None,
-        affect_detail=None,
-    )
-    assert evaluate_triggers(one, 0.1, knobs) == []
-    assert TRIGGER_THIN_GIST in evaluate_triggers(
-        one, 0.1, {**knobs, "escalation_min_base_spans": 2.0}
-    )
-    # the shipped default IS the gist floor (ruled 2026-07-23).
-    assert SERVICE_DEFAULTS["escalation_min_base_spans"] == 1.0
+# (Retired 2026-09-27) The escalation soft-degrade and thin_gist-trigger tests
+# lived here. The separate escalation gist call was folded into the write call;
+# gist is now selected there (at least one span, capped by gist_max_spans), so
+# there is no escalation retry to fail and no thin-gist trigger to fire.
 
 
 def test_retrieval_fail_quiet_fallback(scene):

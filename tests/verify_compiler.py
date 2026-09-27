@@ -412,8 +412,7 @@ async def run(uri: str) -> None:
             pool, "SELECT version FROM schema_migrations ORDER BY version"
         )
         check(
-            [row[0] for row in ledger][-1] == "008_parameter_compiler.sql"
-            and len(ledger) == 8,
+            [row[0] for row in ledger][-1] == "009_gist_flag.sql" and len(ledger) == 9,
             "A6 the ledger records 001-008",
         )
 

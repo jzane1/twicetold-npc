@@ -161,7 +161,15 @@ class MalformedOutputError(RuntimeError):
 
 @dataclass(frozen=True)
 class WriteCallResult:
-    """Structured output of the single Haiku write call."""
+    """Structured output of the single Haiku write call.
+
+    `gist_spans` is the MINIMAL factual skeleton the write call now selects
+    directly (2026-09-27 ruling, folding gist into the write call and retiring
+    the separate escalation pass): the few irreducible facts a reconstruction
+    may never change. Offsets are mapped from exact substrings at the seam;
+    unlocatable substrings are dropped. The NLP pass still emits the full
+    entity/category/coref spans, but those are component EVIDENCE (is_gist=false),
+    not gist."""
 
     rendered_content: str
     importance_raw: float
@@ -169,6 +177,7 @@ class WriteCallResult:
     typology_confidence: float | None
     input_tokens: int
     output_tokens: int
+    gist_spans: list[GistSpanCandidate] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -485,6 +494,27 @@ class FakeWriteProvider:
             confidence = round(
                 0.5 + _stable_unit_float(observation_text, "conf") / 2, 4
             )
+        # Minimal deterministic gist: up to two word-spans chosen by a stable
+        # hash, in text order (mirrors the real write call's few exact
+        # substrings). The structural suite asserts on offsets/counts, never on
+        # which words. Empty text -> no gist -> the ingest floor supplies one.
+        word_spans = [
+            (m.group(), m.start(), m.end())
+            for m in re.finditer(r"[\w']+", observation_text)
+        ]
+        chosen = sorted(
+            sorted(word_spans, key=lambda w: _stable_unit_float(w[0], "gist"))[-2:],
+            key=lambda w: w[1],
+        )
+        gist_spans = [
+            GistSpanCandidate(
+                start_char=start,
+                end_char=end,
+                matched_component_id=None,
+                matched_category=None,
+            )
+            for _text, start, end in chosen
+        ]
         words = len(observation_text.split())
         return WriteCallResult(
             rendered_content=f"[fake render] {observation_text}",
@@ -493,6 +523,7 @@ class FakeWriteProvider:
             typology_confidence=confidence,
             input_tokens=words,
             output_tokens=words,
+            gist_spans=gist_spans,
         )
 
 
@@ -1297,8 +1328,15 @@ _WRITE_SYSTEM = (
     "the NPC performed are owned in first person, never narrated as if watched; "
     "events the NPC witnessed stay witnessed; use only people and things the "
     "observation itself establishes, never inventing names), importance_raw "
-    "(float 0..1, anchored to the NPC's diagnosticity goal){typology_clause}. "
-    "No other text."
+    "(float 0..1, anchored to the NPC's diagnosticity goal){typology_clause}, "
+    "gist_spans (a list of 1 to 3 strings. Each MUST be copied VERBATIM from the "
+    "observation: an exact, character-for-character substring with the original "
+    "wording, order, punctuation and capitalization, so a literal search finds "
+    "it. NEVER paraphrase, reorder, summarize, or stitch together distant words. "
+    "Choose the FEWEST and SHORTEST spans that capture the irreducible factual "
+    "skeleton, the core action(s) and the key thing(s) done, that a listener must "
+    "retain for this to remain the same event. EXCLUDE manner, descriptive and "
+    "sensory detail, and setting. At least one span). No other text."
 )
 _TYPOLOGY_CLAUSE = (
     ", typology (one of observed|told|inferred|reflected), "
@@ -1314,6 +1352,29 @@ _ESCALATION_SYSTEM = (
     "objects {canonical, aliases, category} for entities central to the "
     "observation but absent from the known components). No other text."
 )
+
+
+def _locate_span(hay: str, needle: str) -> tuple[int, int] | None:
+    """Map a model-returned gist substring to half-open offsets in the
+    observation. Exact match first, then case-insensitive, then
+    whitespace-tolerant (the model sometimes re-spaces). Returns None when the
+    text cannot be located (a paraphrase) — the caller drops it, offsets stay
+    truthful, and the ingest floor still guarantees >=1 gist span."""
+    needle = needle.strip()
+    if not needle:
+        return None
+    idx = hay.find(needle)
+    if idx >= 0:
+        return (idx, idx + len(needle))
+    idx = hay.lower().find(needle.lower())
+    if idx >= 0:
+        return (idx, idx + len(needle))
+    words = needle.split()
+    if words:
+        m = re.search(r"\s+".join(re.escape(w) for w in words), hay, re.IGNORECASE)
+        if m:
+            return (m.start(), m.end())
+    return None
 
 
 class RealWriteProvider:
@@ -1358,6 +1419,23 @@ class RealWriteProvider:
                 if declared_typology is None
                 else None
             )
+            # Minimal gist: exact substrings mapped to half-open offsets; an
+            # unlocatable substring is dropped so offsets stay truthful (the
+            # RealEscalationProvider precedent). The cap + a >=1 floor are
+            # enforced downstream in ingest, where the agent config lives.
+            gist_spans: list[GistSpanCandidate] = []
+            for raw_span in payload.get("gist_spans") or []:
+                located = _locate_span(observation_text, str(raw_span))
+                if located is None:
+                    continue
+                gist_spans.append(
+                    GistSpanCandidate(
+                        start_char=located[0],
+                        end_char=located[1],
+                        matched_component_id=None,
+                        matched_category=None,
+                    )
+                )
         except (
             KeyError,
             ValueError,
@@ -1386,6 +1464,7 @@ class RealWriteProvider:
             ),
             input_tokens=input_tokens,
             output_tokens=output_tokens,
+            gist_spans=gist_spans,
         )
 
 
@@ -1945,7 +2024,11 @@ def build_providers(settings: Settings) -> Providers:
         _log_real_wiring(settings)
         return Providers(
             write=RealWriteProvider(settings, backend),
-            escalation=RealEscalationProvider(settings, backend),
+            # The separate escalation gist call was retired 2026-09-27 (gist is
+            # now selected by the write call). The field stays for wire/fixture
+            # compat but is never invoked, so the fake stands in either mode and
+            # no escalation model role is required.
+            escalation=FakeEscalationProvider(),
             embedding=RealEmbeddingProvider(settings),
             dialogue=RealDialogueProvider(settings, backend),
             reconstruction=RealReconstructionProvider(settings, backend),

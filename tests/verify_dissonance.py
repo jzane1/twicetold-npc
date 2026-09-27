@@ -313,7 +313,7 @@ async def run(uri: str) -> None:
             pool, "SELECT version FROM schema_migrations ORDER BY version"
         )
         check(
-            len(ledger) == 8 and ledger[-1][0] == "008_parameter_compiler.sql",
+            len(ledger) == 9 and ledger[-1][0] == "009_gist_flag.sql",
             "A6 the ledger records 001-008 — C4 ships NO migration (ruled)",
         )
 
