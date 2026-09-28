@@ -314,7 +314,7 @@ async def run(uri: str) -> None:
         )
         check(
             len(ledger) == 9 and ledger[-1][0] == "009_gist_flag.sql",
-            "A6 the ledger records 001-008 — C4 ships NO migration (ruled)",
+            "A6 the ledger records 001-009 — C4 ships NO migration (ruled)",
         )
 
         # ------------------------------------------------------------------ #

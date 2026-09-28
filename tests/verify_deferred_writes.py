@@ -522,6 +522,18 @@ async def run(uri: str) -> None:
             and tm_row[6] is False,
             "C16 terminal fill == sync scoring-failed end-state",
         )
+        tm_gist = await fetchall(
+            pool,
+            "SELECT start_char, end_char, matched_component_id FROM "
+            "memory_gist_spans WHERE memory_id = %s AND is_gist",
+            tm.memory_id,
+        )
+        check(
+            tm_gist == [(0, len("The terminal forge observation."), None)],
+            "C16b terminal fill lands the gist floor (no evidence: the first "
+            "sentence, unlinked) — never a gistless row",
+            str(tm_gist),
+        )
         check(
             [(c[0], c[3] is None) for c in await chain(pool, tm.memory_id)]
             == [("original", True)],
@@ -616,6 +628,16 @@ async def run(uri: str) -> None:
         check(
             or_row[4] is True and or_row[6] is False,
             "C27 the sweep terminal-fills a budget-spent row, no model call",
+        )
+        or_gist = await fetchall(
+            pool,
+            "SELECT count(*) FROM memory_gist_spans WHERE memory_id = %s AND is_gist",
+            orp.memory_id,
+        )
+        check(
+            or_gist[0][0] == 1,
+            "C27b the sweep's terminal fill lands the gist floor too",
+            f"{or_gist[0][0]} gist row(s)",
         )
 
         # Anchor-set membership.

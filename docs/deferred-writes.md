@@ -3,8 +3,7 @@
 Engram-style deferred write cognition: the raw observation text is stored immediately and the
 expensive enrichment happens on the service's own schedule (the design follows Engram, arXiv
 2606.09900, and the sleep-time-compute family). This is a cost and throughput optimization, not
-a correctness fix: the zero-gist case is closed inline by the `thin_gist` escalation trigger, and
-observe latency is a client concern served by async observes. Design truth is
+a correctness fix: observe latency is a client concern served by async observes. Design truth is
 [architecture.md](architecture.md) §5 and §7; the schema delta is migration 006. This document
 describes the mechanism; it does not restate the data model.
 
@@ -13,27 +12,26 @@ is byte-for-byte the synchronous path.
 
 ## What is deferred, and what is not
 
-Only the LLM calls defer. The local NLP pass (gist spans and entities) and the embedding stay in
-the request path; the single write call and the escalation call move to the worker. A deferred
+Only the model call defers. The local NLP pass (component-evidence spans and entities) and the
+embedding stay in the request path; the single write call, which also selects the minimal gist,
+moves to the worker. A deferred
 observe returns after NLP, embedding, and insert, so the row is fully vector- and
 lexically-reachable the moment the observe returns. Enrichment writes back by supersession through
 the existing chains, never by mutating stored content.
 
 ## The deferred observe (the un-enriched window's row shape)
 
-With the knob on, `ingest_observation` skips both LLM calls and inserts:
+With the knob on, `ingest_observation` skips the write call and inserts:
 
 - the raw `observation_text` as the live `original` head (the raw head is the un-enriched head, the
   same shape as the scoring-failed fallback),
 - `importance_raw`, `typology`, `typology_confidence`, and `typology_source` NULL (the pending
   marker; a declared typology has nothing to defer and stores at insert),
 - `scoring_failed = false` (pending is the signal; nothing failed),
-- the NLP pass's spans, entities, affect, and embedding exactly as the synchronous path,
-- `enrichment_pending = true`, `enrichment_attempts = 0`, and `enrichment_pending_triggers` set to
-  the five non-importance escalation triggers evaluated at observe time. Their NLP raw material
-  (unresolved references, low-confidence spans, novelty) is not recoverable from the database, so it
-  is captured as a write-time fact and never cleared. The importance trigger is the worker's to add
-  once a model importance exists.
+- the NLP pass's component-evidence spans, entities, affect, and embedding exactly as the synchronous
+  path (the gist spans arrive with the worker's completion),
+- `enrichment_pending = true`, `enrichment_attempts = 0`, and `enrichment_pending_triggers` NULL (the
+  column is a remnant of the retired escalation call; nothing reads it).
 - an `IngestResult` carrying the nullable scalars plus `enrichment_pending`, with honest zero LLM
   instrumentation (the per-attempt truth lives in the run log).
 
@@ -49,7 +47,6 @@ defines (architecture.md §6):
 - **Serving**: the raw text serves verbatim (`read_mode = "verbatim"`).
 - **Reconstruction during the window** is possible in principle (a fresh row rarely crosses the
   decay threshold); a retelling that wins the head triggers the facts-only completion path below.
-  Gist spans exist from t = 0, so the reconstruction pipeline's zero-gist hole does not reopen.
 
 ## The worker (`app\deferred.py`)
 
@@ -67,30 +64,32 @@ a later pass, and the poll loop is the retry spacing, never a back-to-back re-cl
 Per attempt, `_process` fetches the source snapshot (gone or not-pending is a silent skip), makes the
 write call through the same `run_write_call` the synchronous branch uses (a failure records a `failed`
 run row and leaves the row pending, the budget-spending attempt terminal-fills instead), resolves
-typology through the shared `resolve_typology` (a downstream COALESCE keeps declared values), runs
-escalation with the stored triggers plus the importance trigger once the model importance clears the
-knob (a double failure stays soft: completion proceeds and `escalation_failed` is set), attempts an
-opportunistic embedding repair when the live fact head is NULL (a failure leaves it NULL), and then
-runs the one completion transaction, `db.apply_enrichment`.
+typology through the shared `resolve_typology` (a downstream COALESCE keeps declared values), takes
+the minimal gist from the write call (capped by `gist_max_spans`, with the same floor as the
+synchronous path), attempts an opportunistic embedding repair when the live fact head is NULL (a
+failure leaves it NULL), and then runs the one completion transaction, `db.apply_enrichment`.
 
 The completion transaction (all model calls happen before it) does: (a) the guarded one-shot scalar
 fill (`WHERE enrichment_pending`, the idempotency guard; rowcount 0 is a rolled-back no-op); (b)
-escalation-novel `identity_components`; (c) the prose supersede, compare-and-set on the captured raw
-head, where an already-moved head is skipped (facts-only); (d) the fact supersede, only on a real
-delta such as a repaired embedding, with `basis_text` carried byte-verbatim server-side; (e)
-add-only span appends; (f) cache eviction on every completion shape, since enrichment is a chain
+worker-surfaced novel `identity_components` (none since the escalation call's retirement; the slot
+remains); (c) the prose supersede, compare-and-set on the captured raw head, where an already-moved
+head is skipped (facts-only); (d) the fact supersede, only on a real delta such as a repaired
+embedding, with `basis_text` carried byte-verbatim server-side; (e) the gist span appends
+(`is_gist = true`); (f) cache eviction on every completion shape, since enrichment is a chain
 writer; (g) the run-log row.
 
-Escalation-novel entities become identity components and mention spans, never memory entities. The
-synchronous path's fact entities are the NER-plus-client merge stored at insert, and enrichment
-reproduces exactly what the synchronous path would have written and nothing more. This is why the
-common completion touches only the telling chain, and the fact chain supersedes only for the
-embedding repair.
+The worker surfaces no novel entities: those come from the observe-time NLP pass and are already
+identity components by the time it runs. The synchronous path's fact entities are the
+NER-plus-client merge stored at insert, and enrichment reproduces exactly what the synchronous path
+would have written and nothing more. This is why the common completion touches only the telling
+chain, and the fact chain supersedes only for the embedding repair.
 
 The terminal fill (once `deferred_max_attempts` is spent) writes neutral importance,
-`scoring_failed`, and the config-default typology (COALESCE keeps declared values), and clears
-pending. The result is byte-equivalent to the synchronous scoring-failed end-state.
-`escalation_failed` stays false, because that call never ran; the run log is the honest signal.
+`scoring_failed`, and the config-default typology (COALESCE keeps declared values), lands the gist
+floor (the stored evidence spans copied without their component link, else the first sentence,
+capped by `gist_max_spans`), and clears pending, all in one transaction. The result is equivalent to
+the synchronous scoring-failed end-state, gist included. `escalation_failed` stays false: that call
+is retired.
 
 ## Enrichment and the non-destructive invariant
 
@@ -109,7 +108,7 @@ The difference is deliberate: the synchronous path degrades immediately, the def
 | Event | Synchronous path (knob off) | Deferred path |
 |---|---|---|
 | write call fails or malformed | degrade now: neutral importance, `scoring_failed`, raw-text head | retry later: `failed` run row, row stays pending; the terminal attempt reproduces the synchronous end-state |
-| escalation double failure | soft: base gist plus `escalation_failed` | same (completion proceeds) |
+| no usable gist from the write call | the floor: first evidence span, unlinked, else the first sentence | same floor, at completion or in the terminal fill |
 | embedding fails | NULL embedding, lexically reachable | not applicable at observe (embed is inline); the worker's repair failure leaves NULL, the same end-state |
 | malformed `typology_confidence` | salvage: None or clamped, write lands | same seat, same salvage |
 
@@ -145,13 +144,14 @@ All live in `SERVICE_DEFAULTS` as floats under the `agent_knob` contract.
 
 A background worker has no response payload to ride, so per-attempt accounting persists in
 `memory_enrichment_runs` (migration 006): the attempt number, the outcome
-(`completed`, `completed_facts_only`, `failed`, or `terminal_degraded`), the error, the triggers, the
-flags, the per-stage timings (`write_ms`, `escalation_ms`, `embed_ms`, `insert_ms`, `total_ms`, with
-`insert_ms` measured inside the completion transaction up to the run-row statement), and the token
-columns. The unscored `/chain` inspector read surfaces these together with `enrichment_pending` and
+(`completed`, `completed_facts_only`, `failed`, or `terminal_degraded`), the error, the flags, the
+per-stage timings (`write_ms`, `embed_ms`, `insert_ms`, `total_ms`, with `insert_ms` measured inside
+the completion transaction up to the run-row statement), and the token columns. The escalation
+timing, token, and trigger columns remain from migration 006 and read zero or empty since that call's
+retirement. The unscored `/chain` inspector read surfaces these together with `enrichment_pending` and
 `enrichment_attempts`, and The Ledger renders the `enrichment` cause badge. The load driver carries
-an `observe_total` p50/p95 series; its cost table sums seam tokens, so with the knob on the write and
-escalation rows read near zero and the run log is the deferred-spend source of truth.
+an `observe_total` p50/p95 series; its cost table sums seam tokens, so with the knob on the write row
+reads near zero and the run log is the deferred-spend source of truth.
 
 ## Wire deltas
 
@@ -164,9 +164,10 @@ and `DecayClass`, both always present.
 
 ## Verification
 
-Suite Set K (`tests\test_deferred_writes.py`, 13 scenarios, one nlp-marked) and the walker
-`tests\verify_deferred_writes.py` (51 criteria: migration shape, kill-switch parity, the deferred
-observe shape, the full completion/retry/terminal/facts-only/repair/orphan ladder, anchor-set
+Suite Set K (`tests\test_deferred_writes.py`, 12 scenarios, one nlp-marked) and the walker
+`tests\verify_deferred_writes.py` (50 criteria: migration shape, kill-switch parity, the deferred
+observe shape, the full completion/retry/terminal/facts-only/repair/orphan ladder with the gist
+floor on both terminal paths, anchor-set
 membership, and worker lifecycle at both construction sites). The write-path walker staying
 byte-identical is the deferred-off parity evidence. See [test-suite.md](test-suite.md) for the walker
 scratch-database convention.

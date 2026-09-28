@@ -383,6 +383,26 @@ async def main(database_uri: str) -> None:
         row4 is not None and abs(row4[0] - 0.5) < 1e-6 and row4[1] is True,
         "write landed with neutral importance and scoring_failed = true",
     )
+    deg_gist = await fetchall(
+        pool,
+        "SELECT matched_component_id FROM memory_gist_spans "
+        "WHERE memory_id = %s AND is_gist",
+        degraded.memory_id,
+    )
+    deg_linked_evidence = await fetchrow(
+        pool,
+        "SELECT count(*) FROM memory_gist_spans WHERE memory_id = %s "
+        "AND NOT is_gist AND matched_component_id IS NOT NULL",
+        degraded.memory_id,
+    )
+    check(
+        len(deg_gist) >= 1
+        and all(r[0] is None for r in deg_gist)
+        and deg_linked_evidence[0] >= 1,
+        "failed write call: the gist floor (copied from evidence) lands >=1 "
+        "gist row with NO component link; the evidence keeps its link",
+        f"{len(deg_gist)} gist, {deg_linked_evidence[0]} linked evidence",
+    )
 
     # The ladder's OTHER write-call row (test-suite.md "malformed model
     # responses"): the call SUCCEEDS but its structured output is

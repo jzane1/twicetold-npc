@@ -4,7 +4,7 @@ Formed beliefs over lived episodes. The reflect verb samples an agent's live mem
 and recency, writes conclusions grounded in cited `memory_id`s to the `reflections` table, guards the
 identity revision with a non-LLM repetition detector (RRR), folds identity-relevant beliefs into the
 rendered identity document (which the dialogue prompt moves onto), and prunes the identity-components
-table with constraint-follows-liveness teeth. Design truth is [architecture.md](architecture.md) §10,
+table, evicting the affected memories' reconstruction caches. Design truth is [architecture.md](architecture.md) §10,
 with §2, §4.2 to §4.3, and §7. This document describes the mechanism.
 
 The feature ships default OFF at the worker (`reflection_worker_enabled` 0.0 per agent); the reflect
@@ -139,10 +139,11 @@ agent's own reflections, not cross-memory conflict detection.
 
 - **The mechanical rule** (SQL plus the sample list, zero model input). A live component is pruned by
   this reflect call if and only if all of:
-  1. **It has span evidence at all**: at least one `memory_gist_spans` row matches it. Zero-span
-     components are authored (provisioning-seeded; escalation always creates the component with its
-     mention span), and authored identity is operator intent, so mechanically pruning it would be
-     auto-deleting seed content. Exempt.
+  1. **It has span evidence at all**: at least one `memory_gist_spans` row matches it (the
+     component-evidence rows, `is_gist = false`, that the observe-time NLP pass writes). Zero-span
+     components are authored (provisioning-seeded; the NLP pass always creates a novel component
+     together with its mention span), and authored identity is operator intent, so mechanically
+     pruning it would be auto-deleting seed content. Exempt.
   2. **All its evidence is stale**: no live memory carrying a span matched to it has `valid_at` within
      `reflection_trim_stale_seconds` of now.
   3. **It is not active evidence**: no memory in this call's sample references it (a formative old
@@ -155,11 +156,14 @@ agent's own reflections, not cross-memory conflict detection.
 - **Prune** sets `invalid_at` on the component row (it invalidates, never deletes). Pruned ids and
   eviction counts ride the response (`pruned_component_ids`, `evicted_cache_rows`), fully
   walker-assertable with a frozen clock.
-- **Constraint-follows-liveness**: `fetch_reconstruction_sources` carries the liveness join, so spans
-  whose `matched_component_id` is invalidated drop out of the gist constraint, while spans with a NULL
-  `matched_component_id` are untouched. With no trimmed components the sources are byte-identical.
+- **A trim never shrinks a gist constraint.** Reconstruction reads only `is_gist = true` spans, and gist
+  never links an identity component: the write call selects it unlinked, and its fallback copies
+  evidence spans without their link. So pruning a component leaves every memory's frozen facts intact;
+  a memory's minimal facts should not vanish because an entity left the persona. (Before gist selection
+  moved into the write call, spans linked to a pruned component dropped out of the gist constraint;
+  that behavior is retired.)
 - **Eviction** happens per-affected-memory, inside the write transaction: only `reconstruction_cache`
-  rows for `memory_id`s having at least one gist span whose `matched_component_id` was pruned this call.
+  rows for `memory_id`s having at least one span whose `matched_component_id` was pruned this call.
   Agent-wide eviction is rejected, because it would evict unrelated memories and force re-reconstruction
   for rows the trim never touched. The gate needs no change, since `fetch_live_components` already
   follows liveness, and the tripwire set shrinks.

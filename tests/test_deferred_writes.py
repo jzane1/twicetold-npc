@@ -161,21 +161,46 @@ def test_failed_attempt_stays_pending_then_completes(scene):
 
 def test_terminal_degrade_matches_sync_end_state(scene):
     """The attempt that spends the budget terminal-fills the row
-    byte-equivalent to today's sync scoring-failed end-state: neutral
-    importance, scoring_failed, the config-default typology, raw head still
-    live — nothing chain-written."""
+    equivalent to today's sync scoring-failed end-state: neutral importance,
+    scoring_failed, the config-default typology, raw head still live —
+    nothing chain-written — AND the gist floor the sync path lands when its
+    write call fails (the stored evidence span, unlinked; with no evidence,
+    the first sentence). A deferred observe stores evidence only, so without
+    the floor a budget-spent row would end with no gist at all."""
 
     async def scenario(ctx):
+        from app import db
         from app.providers import FailingWriteProvider
 
         agent = await ctx.make_agent("k-terminal", V1_CONFIG)
-        seeded = await ctx.seed_pending(agent, T_OBS, NOW - timedelta(hours=1))
+        seeded = await ctx.seed_pending(
+            agent, T_OBS, NOW - timedelta(hours=1), spans=((0, 4),)
+        )
         m = seeded.memory_id
+        bare_text = "The sexton counted the silver twice. Then he slept."
+        bare = await ctx.seed_pending(agent, bare_text, NOW - timedelta(hours=1))
 
         worker = ctx.worker(
             write=FailingWriteProvider(), defaults={"deferred_max_attempts": 1.0}
         )
-        assert await worker.drain() == 1
+        assert await worker.drain() == 2
+
+        async def spans_of(memory_id):
+            return await ctx.fetchall(
+                "SELECT start_char, end_char, is_gist, matched_component_id "
+                "FROM memory_gist_spans WHERE memory_id = %s "
+                "ORDER BY is_gist, start_char",
+                memory_id,
+            )
+
+        # Evidence stays; the floor copies it as an unlinked gist row.
+        assert await spans_of(m) == [(0, 4, False, None), (0, 4, True, None)]
+        # No evidence: the floor is the first sentence.
+        first_end = bare_text.index(".") + 1
+        assert await spans_of(bare.memory_id) == [(0, first_end, True, None)]
+        srcs = await db.fetch_reconstruction_sources(ctx.pool, [m, bare.memory_id])
+        assert srcs[m].spans == [(0, 4)]
+        assert srcs[bare.memory_id].spans == [(0, first_end)]
 
         row = await _memories_row(ctx, m)
         neutral = ctx.settings.defaults["importance_neutral"]

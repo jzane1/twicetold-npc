@@ -380,7 +380,7 @@ async def run(uri: str) -> None:
             # migration makes to prior walkers. The reflection mechanics
             # this walker verifies are untouched by 008.
             [row[0] for row in ledger][-1] == "009_gist_flag.sql" and len(ledger) == 9,
-            "A5 the ledger records 001-008",
+            "A5 the ledger records 001-009",
         )
         refl_cols = {
             r[0]

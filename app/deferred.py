@@ -53,7 +53,13 @@ from psycopg_pool import AsyncConnectionPool
 
 from app import db
 from app.config import Settings, agent_knob
-from app.db import EnrichmentClaim, EnrichmentRunRecord, FactDelta
+from app.db import (
+    EnrichmentClaim,
+    EnrichmentRunRecord,
+    EnrichmentSource,
+    FactDelta,
+    SpanPlan,
+)
 from app.ingest import (
     TYPOLOGY_FALLBACK,
     _select_gist_spans,
@@ -74,6 +80,23 @@ logger = logging.getLogger(__name__)
 
 def _ms(seconds: float) -> float:
     return round(seconds * 1000.0, 2)
+
+
+def _gist_plans(
+    source: EnrichmentSource,
+    write_gist: list[GistSpanCandidate],
+    gist_max: int,
+) -> list[SpanPlan]:
+    """The gist a deferred row gets, as insert-ready is_gist=true plans: the
+    write call's minimal selection, else the floor (stored evidence, else the
+    first sentence) — the same `_select_gist_spans` rule the sync path uses,
+    shared by the completion and the terminal fill so they cannot drift."""
+    evidence = [
+        GistSpanCandidate(start_char=s.start_char, end_char=s.end_char)
+        for s in source.spans
+    ]
+    gist = _select_gist_spans(source.observation_text, write_gist, evidence, gist_max)
+    return plan_spans(source.observation_text, gist, [], is_gist=True)
 
 
 class DeferredWriteWorker:
@@ -177,10 +200,23 @@ class DeferredWriteWorker:
     ) -> None:
         """The terminal degraded completion: neutral importance +
         scoring_failed + the agent's default typology (COALESCE — a declared
-        typology stands), pending cleared. Byte-equivalent to the sync
-        scoring-failed end-state."""
+        typology stands), pending cleared, and the gist FLOOR (no write call
+        ever succeeded, so the floor comes from the stored evidence, else the
+        first sentence — exactly what the sync path lands when its write call
+        fails). Equivalent to the sync scoring-failed end-state, gist
+        included."""
         agent = await db.fetch_agent(self._pool, claim.agent_id)
         config: dict = agent["config"] if agent is not None else {}
+        source = await db.fetch_enrichment_source(self._pool, claim.memory_id)
+        floor_gist = (
+            _gist_plans(
+                source,
+                [],
+                int(agent_knob(config, "gist_max_spans", self._settings)),
+            )
+            if source is not None
+            else []  # no longer pending: the guard below downgrades anyway
+        )
         outcome = await db.record_enrichment_failure(
             self._pool,
             memory_id=claim.memory_id,
@@ -195,6 +231,7 @@ class DeferredWriteWorker:
             terminal_typology_confidence=agent_knob(
                 config, "typology_confidence_default", self._settings
             ),
+            terminal_gist=floor_gist,
         )
         logger.warning(
             "deferred enrichment terminal for %s (attempt %s, outcome %s): %s",
@@ -228,6 +265,7 @@ class DeferredWriteWorker:
 
         # --- the deferred write call (retry-later failure policy) ---------
         declared = source.typology if source.typology_source == "declared" else None
+        gist_max = int(agent_knob(config, "gist_max_spans", self._settings))
         t0 = time.perf_counter()
         write_outcome = await run_write_call(
             self._providers,
@@ -235,6 +273,7 @@ class DeferredWriteWorker:
             diagnosticity_goal=agent["diagnosticity_goal"] or "",
             declared_typology=declared,
             neutral_importance=agent_knob(config, "importance_neutral", self._settings),
+            gist_max_spans=gist_max,
         )
         write_ms = _ms(time.perf_counter() - t0)
         if write_outcome.scoring_failed:
@@ -288,23 +327,7 @@ class DeferredWriteWorker:
         esc_in = esc_out = 0
         escalation_ms = 0.0
         novel_components: list[NewComponent] = []
-        gist_max = int(agent_knob(config, "gist_max_spans", self._settings))
-        evidence_candidates = [
-            GistSpanCandidate(
-                start_char=s.start_char,
-                end_char=s.end_char,
-                matched_component_id=None,
-                matched_category=None,
-            )
-            for s in source.spans
-        ]
-        gist_spans = _select_gist_spans(
-            source.observation_text,
-            write_outcome.gist_spans,
-            evidence_candidates,
-            gist_max,
-        )
-        span_plans = plan_spans(source.observation_text, gist_spans, [], is_gist=True)
+        span_plans = _gist_plans(source, write_outcome.gist_spans, gist_max)
 
         # --- opportunistic embedding repair (soft: stays NULL on failure) --
         # Fact entities are deliberately NOT grown here: the sync path's

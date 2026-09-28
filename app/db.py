@@ -1368,8 +1368,8 @@ class EnrichmentClaim:
 
 @dataclass(frozen=True)
 class EnrichmentSpanRow:
-    """A stored gist span, read back for the worker's add-only dedupe and
-    the escalation call's candidate rebuild."""
+    """A stored span (evidence at this point: gist lands with the worker's
+    completion), read back so the worker can build the gist floor from it."""
 
     start_char: int
     end_char: int
@@ -1624,14 +1624,15 @@ async def apply_enrichment(
         present (a declared typology is never overwritten) and the
         `WHERE enrichment_pending` guard makes a duplicate claim's loser (or
         a re-drain) a rolled-back no-op;
-    (b) new identity_components from escalation novels;
+    (b) new identity_components from worker-surfaced novels (none since the
+        escalation call's retirement, 2026-09-27; the slot stays for shape);
     (c) the prose supersede, CAS on the captured raw `original` head — a
         rowcount of 0 (or raw_detail_id None: the head had already moved at
         fetch time) SKIPS the supersede, the ruled facts-only path;
     (d) the fact supersede, only when the caller passes a delta (entities
         grew or an embedding was repaired) — basis_text (and, un-repaired,
         the embedding) carried server-side from the superseded row;
-    (e) add-only span appends (caller pre-dedupes against stored spans);
+    (e) add-only span appends (the write call's gist, is_gist=true);
     (f) cache eviction — ALWAYS, on both the supersede and the facts-only
         path: enrichment is a chain writer, the eviction invariant binds;
     (g) the run-log row, same transaction (completion and its accounting
@@ -1669,7 +1670,7 @@ async def apply_enrichment(
                     )
                     if cur.rowcount != 1:
                         raise _NotPendingError
-                    # (b) escalation-novel components
+                    # (b) worker-surfaced novel components (none since 2026-09-27)
                     for comp in new_components:
                         await cur.execute(
                             "INSERT INTO identity_components (agent_id, "
@@ -1816,14 +1817,17 @@ async def record_enrichment_failure(
     terminal_importance: float | None = None,
     terminal_typology: str | None = None,
     terminal_typology_confidence: float | None = None,
+    terminal_gist: list[SpanPlan] | None = None,
 ) -> str:
     """Record a failed attempt. When `terminal`, the same transaction applies
     the guarded terminal fill — neutral importance + scoring_failed + the
-    config-default typology, pending cleared — landing the row byte-equivalent
-    to today's sync scoring-failed end-state (escalation_failed stays false:
-    that call never ran; the run log is the honest signal). If the guard finds
-    the row no longer pending (a concurrent drain completed it), the outcome
-    downgrades to a plain 'failed' record. Returns the outcome written."""
+    config-default typology, pending cleared, plus the `terminal_gist` floor
+    rows (is_gist=true; the deferred observe stored evidence only, so without
+    them a budget-spent row would end gistless) — landing the row equivalent
+    to the sync scoring-failed end-state (escalation_failed stays false: the
+    escalation call is retired). If the guard finds the row no longer pending
+    (a concurrent drain completed it), the outcome downgrades to a plain
+    'failed' record and no gist is written. Returns the outcome written."""
     outcome = "failed"
     async with pool.connection() as conn:
         async with conn.transaction():
@@ -1849,6 +1853,14 @@ async def record_enrichment_failure(
                     )
                     if cur.rowcount == 1:
                         outcome = "terminal_degraded"
+                        for span in terminal_gist or []:
+                            await cur.execute(
+                                "INSERT INTO memory_gist_spans (memory_id, "
+                                "start_char, end_char, matched_component_id, "
+                                "matched_category, is_gist) "
+                                "VALUES (%s, %s, %s, NULL, NULL, true)",
+                                (memory_id, span.start_char, span.end_char),
+                            )
                 await _insert_run_row(
                     cur,
                     memory_id=memory_id,

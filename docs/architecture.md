@@ -192,13 +192,15 @@ scoring; typology classification only when the client did not declare it), then 
 populating all write-time facts.
 
 An optional deferred-write mode (the `deferred_writes_enabled` knob, **default OFF**, migration 006)
-moves the two LLM calls to an in-process worker. The NLP pass, embedding, and atomic insert stay
-synchronous; the raw text lands as the live `original` head with the write-call scalars NULL and
-`enrichment_pending` set; the worker's one-shot completion fills the scalars and supersedes the head
-with the render, `write_cause = 'enrichment'`, which also joins the drift-anchor set. This is the one
-exception to "populate all write-time facts at write": a deferred row's write-time window is stretched
-to the worker's completion, and the terminal-failure fill is byte-equivalent to the synchronous
-scoring-failed end-state, so deferral never adds a lost-write rung.
+moves the write call (render, importance, typology, and the gist selection) to an in-process
+worker. The NLP pass, embedding, and atomic insert stay synchronous, so the component-evidence spans
+land at observe; the raw text lands as the live `original` head with the write-call scalars NULL and
+`enrichment_pending` set; the worker's one-shot completion fills the scalars, appends the gist spans,
+and supersedes the head with the render, `write_cause = 'enrichment'`, which also joins the
+drift-anchor set. This is the one exception to "populate all write-time facts at write": a deferred
+row's write-time window is stretched to the worker's completion, and the terminal-failure fill is
+equivalent to the synchronous scoring-failed end-state, gist floor included (the stored evidence,
+else the first sentence), so deferral never adds a lost-write rung.
 
 - **Evidence typology:** `observed | told | inferred | reflected`, with a 0-1 confidence. A default
   per-typology confidence table exists; the client may override per event, and **client declaration

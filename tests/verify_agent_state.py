@@ -299,7 +299,7 @@ async def run(uri: str) -> None:
         )
         check(
             top is not None and top[0].startswith("009_"),
-            "A1 the migration ledger still ends at 008 (C5 adds none)",
+            "A1 the migration ledger ends at 009 (C5 adds none; 009 is the gist split)",
             detail=top[0] if top else "empty ledger",
         )
         agent_cols = await fetchall(

@@ -60,6 +60,7 @@ from app.config import (
     MODEL_TOKEN_LIMIT_FIELD_DEFAULT,
     OPENAI_HOSTED_BASE_URL,
     PLACEHOLDER_API_KEY,
+    SERVICE_DEFAULTS,
     ConfigError,
     Settings,
 )
@@ -356,7 +357,19 @@ class WriteProvider(Protocol):
         observation_text: str,
         diagnosticity_goal: str,
         declared_typology: str | None,
+        gist_max_spans: int | None = None,
     ) -> WriteCallResult: ...
+
+
+def resolve_gist_max(gist_max_spans: int | float | None) -> int:
+    """The gist cap the write call is asked for: the caller's agent knob, else
+    the single service default (never a second hardcoded literal); at least 1."""
+    value = (
+        gist_max_spans
+        if gist_max_spans is not None
+        else SERVICE_DEFAULTS["gist_max_spans"]
+    )
+    return max(1, int(value))
 
 
 class EscalationProvider(Protocol):
@@ -484,6 +497,7 @@ class FakeWriteProvider:
         observation_text: str,
         diagnosticity_goal: str,
         declared_typology: str | None,
+        gist_max_spans: int | None = None,
     ) -> WriteCallResult:
         importance = round(_stable_unit_float(observation_text, "importance"), 4)
         typology: str | None = None
@@ -494,16 +508,18 @@ class FakeWriteProvider:
             confidence = round(
                 0.5 + _stable_unit_float(observation_text, "conf") / 2, 4
             )
-        # Minimal deterministic gist: up to two word-spans chosen by a stable
-        # hash, in text order (mirrors the real write call's few exact
-        # substrings). The structural suite asserts on offsets/counts, never on
-        # which words. Empty text -> no gist -> the ingest floor supplies one.
+        # Minimal deterministic gist: up to two word-spans (never more than the
+        # asked cap) chosen by a stable hash, in text order (mirrors the real
+        # write call's few exact substrings). The structural suite asserts on
+        # offsets/counts, never on which words. Empty text -> no gist -> the
+        # ingest floor supplies one.
+        take = min(2, resolve_gist_max(gist_max_spans))
         word_spans = [
             (m.group(), m.start(), m.end())
             for m in re.finditer(r"[\w']+", observation_text)
         ]
         chosen = sorted(
-            sorted(word_spans, key=lambda w: _stable_unit_float(w[0], "gist"))[-2:],
+            sorted(word_spans, key=lambda w: _stable_unit_float(w[0], "gist"))[-take:],
             key=lambda w: w[1],
         )
         gist_spans = [
@@ -1329,7 +1345,7 @@ _WRITE_SYSTEM = (
     "events the NPC witnessed stay witnessed; use only people and things the "
     "observation itself establishes, never inventing names), importance_raw "
     "(float 0..1, anchored to the NPC's diagnosticity goal){typology_clause}, "
-    "gist_spans (a list of 1 to 3 strings. Each MUST be copied VERBATIM from the "
+    "gist_spans (a list of 1 to {gist_max} strings. Each MUST be copied VERBATIM from the "
     "observation: an exact, character-for-character substring with the original "
     "wording, order, punctuation and capitalization, so a literal search finds "
     "it. NEVER paraphrase, reorder, summarize, or stitch together distant words. "
@@ -1356,9 +1372,10 @@ _ESCALATION_SYSTEM = (
 
 def _locate_span(hay: str, needle: str) -> tuple[int, int] | None:
     """Map a model-returned gist substring to half-open offsets in the
-    observation. Exact match first, then case-insensitive, then
-    whitespace-tolerant (the model sometimes re-spaces). Returns None when the
-    text cannot be located (a paraphrase) — the caller drops it, offsets stay
+    observation. Exact match first, then a case- and whitespace-tolerant match
+    run on the ORIGINAL text (offsets are never taken from a lowercased copy,
+    whose length can differ for some characters). Returns None when the text
+    cannot be located (a paraphrase) — the caller drops it, offsets stay
     truthful, and the ingest floor still guarantees >=1 gist span."""
     needle = needle.strip()
     if not needle:
@@ -1366,15 +1383,28 @@ def _locate_span(hay: str, needle: str) -> tuple[int, int] | None:
     idx = hay.find(needle)
     if idx >= 0:
         return (idx, idx + len(needle))
-    idx = hay.lower().find(needle.lower())
-    if idx >= 0:
-        return (idx, idx + len(needle))
     words = needle.split()
-    if words:
-        m = re.search(r"\s+".join(re.escape(w) for w in words), hay, re.IGNORECASE)
-        if m:
-            return (m.start(), m.end())
+    m = re.search(r"\s+".join(re.escape(w) for w in words), hay, re.IGNORECASE)
+    if m:
+        return (m.start(), m.end())
     return None
+
+
+def _parse_gist_spans(raw: object, observation_text: str) -> list[GistSpanCandidate]:
+    """The write call's gist field, parsed defensively and SEPARATELY from the
+    render/importance parse: a malformed gist field (not a list, or non-string
+    items) yields no spans — the ingest floor then supplies one — instead of
+    discarding the whole write result."""
+    if not isinstance(raw, list):
+        return []
+    spans: list[GistSpanCandidate] = []
+    for item in raw:
+        if not isinstance(item, str):
+            continue
+        located = _locate_span(observation_text, item)
+        if located is not None:
+            spans.append(GistSpanCandidate(start_char=located[0], end_char=located[1]))
+    return spans
 
 
 class RealWriteProvider:
@@ -1391,9 +1421,12 @@ class RealWriteProvider:
         observation_text: str,
         diagnosticity_goal: str,
         declared_typology: str | None,
+        gist_max_spans: int | None = None,
     ) -> WriteCallResult:
         clause = _TYPOLOGY_CLAUSE if declared_typology is None else ""
-        system = _WRITE_SYSTEM.format(typology_clause=clause)
+        system = _WRITE_SYSTEM.format(
+            typology_clause=clause, gist_max=resolve_gist_max(gist_max_spans)
+        )
         try:
             completion = self._backend.complete(
                 model=self._model,
@@ -1419,23 +1452,6 @@ class RealWriteProvider:
                 if declared_typology is None
                 else None
             )
-            # Minimal gist: exact substrings mapped to half-open offsets; an
-            # unlocatable substring is dropped so offsets stay truthful (the
-            # RealEscalationProvider precedent). The cap + a >=1 floor are
-            # enforced downstream in ingest, where the agent config lives.
-            gist_spans: list[GistSpanCandidate] = []
-            for raw_span in payload.get("gist_spans") or []:
-                located = _locate_span(observation_text, str(raw_span))
-                if located is None:
-                    continue
-                gist_spans.append(
-                    GistSpanCandidate(
-                        start_char=located[0],
-                        end_char=located[1],
-                        matched_component_id=None,
-                        matched_category=None,
-                    )
-                )
         except (
             KeyError,
             ValueError,
@@ -1453,6 +1469,11 @@ class RealWriteProvider:
         # rejected has no meaningful confidence, and ingest's default branch
         # knob-defaults both together.
         clamped = clamp_typology(str(typology)) if typology is not None else None
+        # Minimal gist, parsed apart from the render/importance parse above so
+        # a malformed gist field costs only the gist (the ingest floor then
+        # supplies one), never the whole write. The cap + floor live in ingest,
+        # where the agent config is.
+        gist_spans = _parse_gist_spans(payload.get("gist_spans"), observation_text)
         return WriteCallResult(
             rendered_content=rendered,
             importance_raw=importance,

@@ -194,13 +194,19 @@ def _select_gist_spans(
     capped to `max_spans`, with a >=1 floor. If the write call returned no
     usable gist (a failed/degraded call), fall back to the first evidence
     span(s), then to a single span over the first sentence — reconstruction
-    always needs at least one constraint."""
+    always needs at least one constraint. Gist never carries an identity
+    component link, the evidence fallback included: a linked gist row would
+    fall out of the constraint when a reflection trim prunes its component
+    (the liveness clause in db.fetch_reconstruction_sources)."""
     cap = max(1, max_spans)
     chosen = list(write_gist)[:cap]
     if chosen:
         return chosen
     if evidence_spans:
-        return list(evidence_spans)[:cap]
+        return [
+            GistSpanCandidate(start_char=s.start_char, end_char=s.end_char)
+            for s in list(evidence_spans)[:cap]
+        ]
     end = _first_sentence_end(observation_text)
     if end <= 0:
         return []
@@ -248,9 +254,12 @@ async def run_write_call(
     diagnosticity_goal: str,
     declared_typology: str | None,
     neutral_importance: float,
+    gist_max_spans: int,
 ) -> WriteStageOutcome:
     """The single write model call (render + importance + typology-when-
-    absent) with its ruled soft degradation."""
+    absent + the minimal gist, asked for at most `gist_max_spans` spans — the
+    agent's knob, so the prompt and the ingest cap always agree) with its ruled
+    soft degradation."""
     scoring_failed = False
     tokens_in = tokens_out = 0
     rendered_content = observation_text  # fallback head when no render exists
@@ -265,6 +274,7 @@ async def run_write_call(
             observation_text=observation_text,
             diagnosticity_goal=diagnosticity_goal,
             declared_typology=declared_typology,
+            gist_max_spans=gist_max_spans,
         )
         rendered_content = write_result.rendered_content
         importance = write_result.importance_raw
@@ -455,16 +465,15 @@ class IngestService:
         pending_triggers: list[str] | None = None
 
         if deferred:
-            # Both LLM calls move to the worker. The raw observation text IS
-            # the un-enriched `original` head; the write-call scalars land
-            # NULL (the pending marker — the worker's one-shot completion
-            # fills them, and retrieval's importance-NULL neutral fallback
-            # covers scoring meanwhile). A declared typology has nothing to
-            # defer and stores now. The non-importance triggers are
-            # evaluated here (their NLP raw material is not recoverable from
-            # the DB) and persisted for the worker; the importance trigger
-            # is the worker's to add once a model importance exists — the
-            # -inf below cannot clear a non-negative threshold knob.
+            # The write call (render + importance + typology + the minimal
+            # gist) moves to the worker. The raw observation text IS the
+            # un-enriched `original` head; the write-call scalars land NULL
+            # (the pending marker — the worker's one-shot completion fills
+            # them, and retrieval's importance-NULL neutral fallback covers
+            # scoring meanwhile). A declared typology has nothing to defer and
+            # stores now. The NLP evidence spans store now; gist lands with the
+            # worker's completion, or with the terminal fill's floor if the
+            # attempt budget runs out.
             haiku_ms = 0.0
             haiku_in = haiku_out = 0
             scoring_failed = False
@@ -481,8 +490,7 @@ class IngestService:
                 )
             else:
                 typology = typology_source = typology_confidence = None
-            # Gist is the worker's to select via the write call; evidence spans
-            # are stored now. No triggers (the escalation path is retired).
+            # No triggers to persist: the escalation path is retired.
             pending_triggers = None
         else:
             # --- single Haiku write call (soft degradation) ---------------
@@ -495,6 +503,7 @@ class IngestService:
                 neutral_importance=agent_knob(
                     config, "importance_neutral", self._settings
                 ),
+                gist_max_spans=gist_max,
             )
             haiku_ms = _ms(time.perf_counter() - t0)
             rendered_content = write_outcome.rendered_content

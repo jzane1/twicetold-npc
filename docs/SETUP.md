@@ -19,7 +19,7 @@ Copy-Item .env.example .env    # then edit it, or keep the fake-mode defaults
 docker compose up -d --build
 ```
 
-This builds the API image, starts Postgres with pgvector, runs migrations 001 through 008 as a
+This builds the API image, starts Postgres with pgvector, runs migrations 001 through 009 as a
 one-shot `migrate` service, and starts the API, in dependency order. `docker compose ps` shows
 progress; the `api` service reports `healthy` once its pipelines have warmed, within about a
 minute of a cached `up`. The first build is a one-time few minutes (the image is about 4.9 GB on
@@ -129,7 +129,7 @@ Apply the schema:
 python db\migrate.py
 ```
 
-First run applies migrations 001–008 and records each in `schema_migrations` **in the same
+First run applies migrations 001–009 and records each in `schema_migrations` **in the same
 transaction as its DDL** — a half-applied migration can never be logged complete. Re-running is a
 clean no-op:
 
@@ -182,7 +182,6 @@ TWICETOLD_MODEL_BASE_URL=http://127.0.0.1:11434/v1
 TWICETOLD_MODEL_IMPORTANCE=llama3.1:8b
 TWICETOLD_MODEL_RENDER=llama3.1:8b
 TWICETOLD_MODEL_TYPOLOGY=llama3.1:8b
-TWICETOLD_MODEL_ESCALATION=llama3.1:8b
 TWICETOLD_MODEL_DIALOGUE=llama3.1:8b
 TWICETOLD_MODEL_RECONSTRUCTION=llama3.1:8b
 TWICETOLD_EMBEDDING_BASE_URL=http://127.0.0.1:11434/v1

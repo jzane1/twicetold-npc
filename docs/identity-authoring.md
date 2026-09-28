@@ -246,8 +246,8 @@ Nine memories over three June weeks, each with a job: a crisp correctable debt f
 eleven shillings, the correction beat's target), a first-person action memory that drifts
 reliably (the turned-away drovers, the drift beat's target), a deliberate knowledge gap (the
 nameless lodger, the abstention probe's target), road news, house texture, and a vivid closing
-incident (the chimney fire, which escalation freezes almost whole, exactly as section 5
-predicts).
+incident (the chimney fire, which the pre-2026-09-27 escalation stage froze almost whole; that
+over-freezing is what the minimal-gist write call in section 5 replaced).
 
 Validation, 2026-08-19, real providers (Haiku write/escalation/reconstruction, OpenAI
 embeddings), age 60 days:

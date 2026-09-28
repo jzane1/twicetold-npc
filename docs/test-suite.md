@@ -200,13 +200,12 @@ and exercise the worker through `drain()`, the deterministic entry, with no time
   `'enrichment'` head, cache evicted, a `completed` run row, and a re-drain that is a 0-row no-op with the
   chain byte-stable (idempotency by the `enrichment_pending` guard).
 - **COALESCE proof:** a declared typology stored at insert survives completion untouched.
-- **Escalation novelty:** a novel component grows `identity_components` and its mention appends as an
-  add-only span, with no fact supersede (novels become components, never memory entities).
 - **Retry-later:** a failed write call records a `failed` run row and leaves the row pending; the next
-  drain completes it. **Terminal:** the budget-spending attempt fills the row byte-equivalent to the
+  drain completes it. **Terminal:** the budget-spending attempt fills the row equivalent to the
   synchronous scoring-failed end-state (neutral importance plus `scoring_failed` plus default typology; the
-  raw head stays live). **Orphan sweep:** a pending row with a spent budget terminal-fills without model
-  calls.
+  raw head stays live) including the gist floor: the stored evidence span copied as an unlinked gist
+  row, or the first sentence when there is no evidence, so no row ends gistless. **Orphan sweep:** a
+  pending row with a spent budget terminal-fills, gist floor included, without model calls.
 - **Facts-only:** a retelling that superseded the raw head first gives scalars filled, the prose supersede
   skipped, the cache still evicted, `completed_facts_only`.
 - **Embedding repair:** a NULL-embedding pending row gains an `'enrichment'` fact version carrying the
@@ -466,9 +465,10 @@ and the walkers' own route sections.
 - NER failure during an authorial correction: all-or-nothing, same shape, since the NER runs before the
   embed and before the transaction, so nothing lands on either chain and the cache is untouched;
   `CorrectionNlpFailedError` gives 502.
-- Escalation call fails twice: soft-degrade, so the write lands with the base NLP-pass gist and
-  `escalation_failed = true` (result plus the dedicated column, migration 005), structurally assertable as
-  a row present plus the flag set.
+- The write call yields no usable gist (a failed call, a paraphrased span, or a malformed `gist_spans`
+  field): the write still lands, and the ingest floor supplies one gist row (the first evidence span with
+  its component link stripped, else the first sentence). A malformed gist field costs only the gist,
+  never the render or importance. Structurally assertable as gist-row count, offsets, and a NULL link.
 - Gate degradation ladder: embeddings down gives an entity-only lexical fetch; no entities gives
   novelty-only; both out gives a closed gate, the loaded set served, fail-quiet (the lexical fetch reads the
   post-migration-003 fact-head entities GIN; [mid-dialogue-gate.md](mid-dialogue-gate.md)).

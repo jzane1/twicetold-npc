@@ -1,7 +1,7 @@
 # Migration 001: foundational schema
 
 The foundational schema: hand-written SQL against PostgreSQL 16 with pgvector (the
-`pgvector/pgvector` Docker image), with UUIDs minted server-side. Migrations 002 through 008 live in
+`pgvector/pgvector` Docker image), with UUIDs minted server-side. Migrations 002 through 009 live in
 `db\migrations\` and are not restated here; where a later migration changed a column defined below, a
 note records the current state. Design truth is [architecture.md](architecture.md) §4.
 
@@ -49,7 +49,8 @@ One row per observation. `observation_text` is immutable after insert.
 - `scoring_failed` boolean NOT NULL default false: set true when the importance-scoring model fails, so
   the write still lands with neutral importance (a write is never lost). See architecture.md §2.
   (Migration 005 added the sibling `escalation_failed` boolean NOT NULL default false, the
-  gist-escalation soft-degrade flag; architecture.md §5.)
+  gist-escalation soft-degrade flag. The escalation call was retired when gist selection moved
+  into the write call, so the column is never set and always reads false.)
 - `typology` text CHECK in (`observed`, `told`, `inferred`, `reflected`).
 - `typology_confidence` real CHECK 0 to 1.
 - `typology_source` text CHECK in (`declared`, `inferred`).
@@ -80,6 +81,11 @@ individually assertable rows (the suite asserts gist rows are immutable).
 - `matched_component_id` FK to identity_components, nullable.
 - `matched_category` text, nullable, for category hits without a named entity.
 - `created_at`.
+
+(Migration 009 added `is_gist` boolean NOT NULL default true plus a partial index on `memory_id`
+where `is_gist`. The table now holds two kinds of row: `is_gist = true`, the minimal frozen facts
+the write call selects, which reconstruction reads; and `is_gist = false`, the NLP component
+evidence that trim and coreference read, never a reconstruction constraint. architecture.md §4.1.)
 
 ### memory_details
 
@@ -172,10 +178,12 @@ The entity and topic index: gist matching plus the entity-gate tripwire.
   row commit in one transaction, so a half-applied migration can never be logged complete. The later
   migrations: 002 (the fact-version chain, architecture.md §4.4); 003 (the entities fact-chain column,
   [mid-dialogue-gate.md](mid-dialogue-gate.md)); 004 (the hybrid lexical channel's partial FTS GIN over
-  live fact heads, architecture.md §6); 005 (the `memories.escalation_failed` soft-degrade flag,
-  architecture.md §5); 006 (deferred-write columns plus `memory_enrichment_runs`,
-  [deferred-writes.md](deferred-writes.md)); 007 (`reflection_runs`, [reflection.md](reflection.md)); and
-  008 (`compiled_bundles` plus `compiler_runs`, [parameter-compiler.md](parameter-compiler.md)).
+  live fact heads, architecture.md §6); 005 (the `memories.escalation_failed` soft-degrade flag, now
+  retired and always false); 006 (deferred-write columns plus `memory_enrichment_runs`,
+  [deferred-writes.md](deferred-writes.md)); 007 (`reflection_runs`, [reflection.md](reflection.md));
+  008 (`compiled_bundles` plus `compiler_runs`, [parameter-compiler.md](parameter-compiler.md)); and
+  009 (`memory_gist_spans.is_gist`, splitting the minimal gist from component evidence,
+  architecture.md §4.1).
 - Docker: `pgvector/pgvector` for Postgres 16, with the connection string from `.env`.
 
 ## Verification

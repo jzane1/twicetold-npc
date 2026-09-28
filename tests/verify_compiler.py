@@ -413,7 +413,7 @@ async def run(uri: str) -> None:
         )
         check(
             [row[0] for row in ledger][-1] == "009_gist_flag.sql" and len(ledger) == 9,
-            "A6 the ledger records 001-008",
+            "A6 the ledger records 001-009",
         )
 
         # ---------------- B. the compile ladder ---------------------------

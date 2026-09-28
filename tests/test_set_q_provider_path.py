@@ -393,6 +393,63 @@ def test_openai_write_call_request_shape():
     assert declared.typology is None and declared.typology_confidence is None
 
 
+def test_write_call_gist_contract():
+    """The minimal-gist field of the write call (2026-09-27, fixed 2026-09-28
+    after the floor-verify): the caller's gist cap rides the prompt (never a
+    second hardcoded literal); verbatim and case/whitespace-tolerant spans map
+    to offsets into the ORIGINAL text; paraphrases drop; a malformed gist
+    field costs only the gist, never the render/importance."""
+    from app.config import SERVICE_DEFAULTS
+    from app.providers import _locate_span
+
+    def call(gist_field, **kwargs):
+        payload = dict(WRITE_PAYLOAD)
+        if gist_field is not _ABSENT:
+            payload["gist_spans"] = gist_field
+        rec = Recorder()
+        backend = _openai_backend(
+            {"/chat/completions": openai_chat_json(json.dumps(payload))}, rec
+        )
+        result = RealWriteProvider(_openai_settings(), backend).render_and_score(
+            observation_text=OBSERVATION,
+            diagnosticity_goal="g",
+            declared_typology=None,
+            **kwargs,
+        )
+        return result, rec.last.body["messages"][0]["content"]
+
+    # The cap in the prompt is the caller's knob, else the service default.
+    _, system = call(["crossed the ford"], gist_max_spans=5)
+    assert "1 to 5 strings" in system
+    default_cap = int(SERVICE_DEFAULTS["gist_max_spans"])
+    _, system = call(["crossed the ford"])
+    assert f"1 to {default_cap} strings" in system
+
+    # Verbatim, tolerant, and paraphrased spans.
+    start = OBSERVATION.find("crossed the ford")
+    want = (start, start + len("crossed the ford"))
+    result, _ = call(["crossed the ford", "CROSSED  the Ford", "Mara forded it"])
+    assert [(s.start_char, s.end_char) for s in result.gist_spans] == [want, want]
+    assert all(s.matched_component_id is None for s in result.gist_spans)
+
+    # Offsets are never taken from a lowercased copy (İ lowercases to 2 chars).
+    hay = "İzmir sold the COIN"
+    located = _locate_span(hay, "the coin")
+    assert located is not None and hay[located[0] : located[1]] == "the COIN"
+
+    # Malformed gist fields: no gist, and the rest of the write survives.
+    for bad in ("crossed the ford", 7, {"a": 1}, None, _ABSENT):
+        result, _ = call(bad)
+        assert result.gist_spans == []
+        assert result.rendered_content == WRITE_PAYLOAD["rendered_content"]
+        assert result.importance_raw == 0.7
+    result, _ = call([3, None, "crossed the ford"])
+    assert [(s.start_char, s.end_char) for s in result.gist_spans] == [want]
+
+
+_ABSENT = object()
+
+
 def test_openai_token_limit_field_flips_wire_field():
     """With the knob at max_completion_tokens the per-role value rides that
     field on BOTH call paths — non-streaming and streaming — and max_tokens

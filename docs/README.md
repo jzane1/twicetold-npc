@@ -24,7 +24,7 @@ Moved here from the README at F1 (2026-09-03) so the front page stays short.
 | Path | What it is |
 |---|---|
 | `app\` | the service: ingest, retrieval, reconstruction, the gate, dialogue, the two model backends, the routes, the eval runner |
-| `db\` | migrations 001–008 and the transactional migration runner |
+| `db\` | migrations 001–009 and the transactional migration runner |
 | `tests\` | the pytest suite and the sixteen walkers |
 | `client\` | `NpcMemory.Core`, the engine-agnostic C# client, and its console harness |
 | `unity\` | the Unity 6 playable low-poly village: five skinned NPCs, a replayable gold-bag event, dialogue anchors, and the embedded client adapter |
@@ -60,7 +60,7 @@ an integrator or evaluator still needs; `architecture.md` is the living summary 
 | `reflection.md` | reflection (C2): the reflect verb + optional default-OFF worker, evidence-cited beliefs, the mechanical component trim | 007 |
 | `parameter-compiler.md` | the parameter compiler (C3): beliefs compiled into per-scene-type weight multipliers, the standalone worker | 008 |
 
-**Note on `migration-01.md`:** it documents migration **001 only**. Migrations 002–008 live in
+**Note on `migration-01.md`:** it documents migration **001 only**. Migrations 002–009 live in
 `db\migrations\`; for the current schema, read the SQL.
 
 ---

@@ -65,10 +65,10 @@ flowchart LR
 ```
 
 **Writing.** An observe runs a no-LLM NLP pass (spaCy, fastcoref coreference, VADER and
-Warriner affect), then one model call renders the memory prose, scores importance and
-classifies typology, and an atomic insert lands every write-time fact. An escalation pass
-catches the hard cases and is biased loose on purpose: a wasted call is cheap, a lost gist
-breaks the character.
+Warriner affect), then one model call renders the memory prose, scores importance,
+classifies typology and picks the gist, and an atomic insert lands every write-time fact. The
+gist is kept deliberately small, the few facts that make it the same event, so everything
+else in the memory is free to drift.
 
 **Reading.** The retrieval gate is not a model: a novelty check and an entity tripwire decide
 whether a mid-scene line needs a lookup at all. Retrieval is hybrid (pgvector HNSW plus a
@@ -126,7 +126,7 @@ Copy-Item .env.example .env    # then edit it, or keep the fake-mode defaults
 docker compose up -d --build
 ```
 
-That builds the API image, starts Postgres with pgvector, applies migrations 001 through 008
+That builds the API image, starts Postgres with pgvector, applies migrations 001 through 009
 as a one-shot step, and serves the API, all bound to `127.0.0.1`. The compose path needs no
 host Python. The first build takes a few minutes and the image is about 4.9 GB on disk (1.7 GB
 to pull); after that the stack is healthy within a minute of `up`. Then open
