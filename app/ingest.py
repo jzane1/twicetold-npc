@@ -454,8 +454,23 @@ class IngestService:
 
         # --- deferral fork (deferred-writes.md, ruled 2026-08-12) ---------
         deferred = agent_knob(config, "deferred_writes_enabled", self._settings) != 0.0
-        evidence_spans = list(nlp_result.spans)
         new_components = list(nlp_result.novel_components)
+        # The component-evidence rows exactly as they will be stored: the NLP
+        # matches PLUS the new-entity mentions `plan_spans` adds. The gist
+        # floor reads THIS set, in text order, so a failed write call freezes
+        # the same fallback facts here as the deferred worker (which reads the
+        # stored rows back, ordered by offset) — terminal parity by
+        # construction (the 2026-09-28 floor-verify finding).
+        evidence_plans = plan_spans(
+            event.observation_text,
+            list(nlp_result.spans),
+            new_components,
+            is_gist=False,
+        )
+        evidence_spans = [
+            GistSpanCandidate(start_char=p.start_char, end_char=p.end_char)
+            for p in sorted(evidence_plans, key=lambda p: (p.start_char, p.end_char))
+        ]
         gist_spans: list[GistSpanCandidate] = []
         gist_max = int(agent_knob(config, "gist_max_spans", self._settings))
         # The escalation gist call was retired 2026-09-27 (gist is selected by
@@ -523,8 +538,9 @@ class IngestService:
             )
 
             # --- minimal gist: the write call selected it (2026-09-27); cap
-            # and floor it here where the agent config lives. The NLP spans
-            # stay as component EVIDENCE (is_gist=false), never gist. ------
+            # and floor it here where the agent config lives. The evidence
+            # rows stay component EVIDENCE (is_gist=false); the floor copies
+            # them unlinked only when the write call gave no usable gist. ---
             gist_spans = _select_gist_spans(
                 event.observation_text,
                 write_outcome.gist_spans,
@@ -575,9 +591,9 @@ class IngestService:
 
         # Evidence spans (is_gist=false: trim/coref) + the minimal gist spans
         # (is_gist=true: reconstruction's frozen facts), one plan list.
-        span_plans = plan_spans(
-            event.observation_text, evidence_spans, new_components, is_gist=False
-        ) + plan_spans(event.observation_text, gist_spans, [], is_gist=True)
+        span_plans = evidence_plans + plan_spans(
+            event.observation_text, gist_spans, [], is_gist=True
+        )
 
         # --- atomic insert -------------------------------------------------
         t0 = time.perf_counter()

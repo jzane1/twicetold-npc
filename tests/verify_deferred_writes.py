@@ -544,6 +544,53 @@ async def run(uri: str) -> None:
             "C18 the terminal run row",
         )
 
+        # Gist-floor parity through the real NLP pass: a failed write call on
+        # the sync path and the deferred terminal fill freeze the SAME
+        # fallback spans for a text naming an entity new to the NPC (whose
+        # mention is added at insert, not by the NLP match pass).
+        par_text = "Bram hid a pouch of silver under the forge gate at dusk."
+        par_sync_agent, _ = await make_agent(pool, "walker-par-sync", AGENT_CONFIG)
+        par_def_agent, _ = await make_agent(
+            pool, "walker-par-def", {**AGENT_CONFIG, "deferred_writes_enabled": 1.0}
+        )
+
+        def par_event(agent_id):
+            return ObserveEvent(
+                agent_id=agent_id,
+                observation_text=par_text,
+                phase_tag="walker",
+                client_timestamp=NOW,
+                provenance="lived",
+            )
+
+        par_sync = await IngestService(
+            pool, fake_providers(write=FailingWriteProvider()), settings
+        ).ingest_observation(par_event(par_sync_agent))
+        par_def = await IngestService(
+            pool, fake_providers(), settings
+        ).ingest_observation(par_event(par_def_agent))
+        await worker_for(
+            pool,
+            settings,
+            write=FailingWriteProvider(),
+            defaults={"deferred_max_attempts": 1.0},
+        ).drain()
+        par_gist_sql = (
+            "SELECT start_char, end_char, matched_component_id FROM "
+            "memory_gist_spans WHERE memory_id = %s AND is_gist "
+            "ORDER BY start_char, end_char"
+        )
+        par_sync_gist = await fetchall(pool, par_gist_sql, par_sync.memory_id)
+        par_def_gist = await fetchall(pool, par_gist_sql, par_def.memory_id)
+        check(
+            bool(par_sync_gist)
+            and par_def_gist == par_sync_gist
+            and all(r[2] is None for r in par_sync_gist),
+            "C18b failed-write gist floor: sync == deferred terminal fill "
+            "(new-entity text), unlinked",
+            f"sync {par_sync_gist} / deferred {par_def_gist}",
+        )
+
         # Facts-only: a retelling won the head before enrichment arrived.
         ro_agent, _ = await make_agent(pool, "walker-raced", AGENT_CONFIG)
         ro = await seed_pending(pool, ro_agent, "The raced forge observation.")

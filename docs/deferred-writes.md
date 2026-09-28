@@ -164,10 +164,10 @@ and `DecayClass`, both always present.
 
 ## Verification
 
-Suite Set K (`tests\test_deferred_writes.py`, 12 scenarios, one nlp-marked) and the walker
-`tests\verify_deferred_writes.py` (50 criteria: migration shape, kill-switch parity, the deferred
+Suite Set K (`tests\test_deferred_writes.py`, 13 scenarios, two nlp-marked) and the walker
+`tests\verify_deferred_writes.py` (51 criteria: migration shape, kill-switch parity, the deferred
 observe shape, the full completion/retry/terminal/facts-only/repair/orphan ladder with the gist
-floor on both terminal paths, anchor-set
+floor on both terminal paths and its parity with the synchronous failed-write floor, anchor-set
 membership, and worker lifecycle at both construction sites). The write-path walker staying
 byte-identical is the deferred-off parity evidence. See [test-suite.md](test-suite.md) for the walker
 scratch-database convention.

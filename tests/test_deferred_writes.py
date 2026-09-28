@@ -404,6 +404,65 @@ def test_pending_row_fully_reachable_neutral_scored(scene):
 
 
 @pytest.mark.nlp
+def test_failed_write_gist_floor_parity_sync_vs_deferred(scene):
+    """The gist floor on a failed write call is the SAME on both paths: the
+    sync scoring-failed observe and the deferred terminal fill freeze
+    identical fallback spans for identical text, all unlinked. Covers a text
+    naming only an entity new to the NPC (whose mention is added at insert,
+    not by the NLP match pass), a known entity plus a new one, and a text with
+    no evidence at all (the 2026-09-28 floor-verify parity finding)."""
+
+    async def scenario(ctx):
+        from app.providers import FailingWriteProvider
+        from app.schemas import ObserveEvent
+
+        texts = (
+            "Bram hid a pouch of silver under the ford gate at dusk.",
+            "Mara watched John count the coins twice by the mill.",
+            "The coins were counted twice by candlelight in the vestry.",
+        )
+
+        async def gist_of(memory_id):
+            return await ctx.fetchall(
+                "SELECT start_char, end_char, matched_component_id "
+                "FROM memory_gist_spans WHERE memory_id = %s AND is_gist "
+                "ORDER BY start_char, end_char",
+                memory_id,
+            )
+
+        for i, text in enumerate(texts):
+            sync_agent = await ctx.make_agent(f"k-par-sync-{i}", V1_CONFIG)
+            def_agent = await ctx.make_agent(
+                f"k-par-def-{i}", {**V1_CONFIG, "deferred_writes_enabled": 1.0}
+            )
+
+            def event(agent_id, text=text):
+                return ObserveEvent(
+                    agent_id=agent_id,
+                    observation_text=text,
+                    phase_tag="suite",
+                    client_timestamp=NOW - timedelta(hours=1),
+                    provenance="lived",
+                )
+
+            sync = await ctx.ingest(write=FailingWriteProvider()).ingest_observation(
+                event(sync_agent)
+            )
+            deferred = await ctx.ingest().ingest_observation(event(def_agent))
+            worker = ctx.worker(
+                write=FailingWriteProvider(), defaults={"deferred_max_attempts": 1.0}
+            )
+            assert await worker.drain() == 1
+
+            sync_gist = await gist_of(sync.memory_id)
+            assert sync_gist, text  # the floor: never gistless
+            assert await gist_of(deferred.memory_id) == sync_gist, text
+            assert all(row[2] is None for row in sync_gist), text
+
+    run_structural(scene, scenario)
+
+
+@pytest.mark.nlp
 def test_deferred_observe_end_to_end(scene):
     """The full deferred pipeline at the service level: an enabled agent's
     observe lands pending with NULL scalars and honest zero LLM
