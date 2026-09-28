@@ -148,9 +148,41 @@
   #showcase .sc-stat .sc-statlab { font-size: 16px; margin-top: 10px; }
   #showcase .sc-stat .sc-statsub { font-size: 12px; color: var(--dim); margin-top: 4px; }
   #showcase .sc-foot { color: var(--dim); font-size: 14px; margin-top: 26px; }
+  body.demo header, body.demo main, body.demo footer { display: none; }
+  #demo { max-width: 1880px; padding: 48px 56px; margin: auto; font-family: "Segoe UI", sans-serif; }
+  #demo .eyebrow { color: var(--blue); letter-spacing: .2em; font-size: 16px; font-weight: 600; }
+  #demo h1 { font-size: 48px; letter-spacing: -.035em; margin: 10px 0 4px; }
+  #demo .intro { font-size: 21px; color: #a6afc1; margin: 0 0 24px; }
+  #demo nav { display: flex; gap: 12px; margin: 24px 0; }
+  #demo button { font-family: inherit; font-size: 19px; padding: 12px 25px; border-radius: 30px; }
+  #demo button.active { background: #283950; color: #bed1ff; border-color: var(--blue); }
+  #demo .demo-grid { display: grid; grid-template-columns: 1fr 1.08fr 1.08fr; gap: 24px; }
+  #demo article { background: var(--panel); padding: 28px; border: 1px solid var(--edge); border-radius: 14px; min-height: 555px; }
+  #demo article h2 { font-size: 23px; text-transform: none; margin: 0 0 4px; color: var(--ink); letter-spacing: 0; }
+  #demo .role { color: var(--dim); font-size: 16px; margin-bottom: 22px; }
+  #demo .telling { font-size: 24px; line-height: 1.5; }
+  #demo #demoObservation { font-size: 20px; line-height: 1.55; }
+  #demo .receipt { font: 13px/1.5 Consolas, monospace; color: var(--dim); margin-top: 24px; overflow-wrap: anywhere; }
+  #demo .demo-note { font-size: 18px; color: #a6afc1; margin-top: 24px; }
+  #demo .witness-card { border-top: 3px solid var(--amber); }
+  #demo .witness-card:last-child { border-top-color: var(--blue); }
+  #demoError { color: var(--red); }
 </style>
 </head>
 <body>
+<section id="demo" hidden>
+  <div class="eyebrow">TWICETOLD / THE MEMORY RECORD</div>
+  <h1>Same event. Different memories.</h1>
+  <p class="intro">Two witnesses reconstruct one shared experience through who they are.</p>
+  <nav id="demoTimeline" aria-label="Stored telling age"></nav>
+  <div class="demo-grid">
+    <article><h2>The event</h2><div class="role">Immutable observation · core facts highlighted</div><div id="demoObservation"></div><div class="receipt" id="demoFacts"></div></article>
+    <article class="witness-card"><h2>Henry</h2><div class="role">A merchant who learned to distrust easy money</div><div class="telling" id="demoHenry"></div><div class="receipt" id="demoHenryReceipt"></div></article>
+    <article class="witness-card"><h2>Joan</h2><div class="role">A believer in kindness and quiet acts of grace</div><div class="telling" id="demoJoan"></div><div class="receipt" id="demoJoanReceipt"></div></article>
+  </div>
+  <div class="demo-note" id="demoNote">Each accepted reconstruction is saved. Earlier tellings remain inspectable.</div>
+  <div id="demoError" role="alert"></div>
+</section>
 <header>
   <h1>THE LEDGER</h1>
   <span class="sub">twicetold-npc: what the character actually remembers, and how</span>
@@ -244,6 +276,11 @@ async function fetchJson(path) {
 async function loadIndex() {
   const agent = $("agentId").value.trim();
   if (!agent) return;
+  if (agent !== turnAgent) {
+    turnAgent = agent;
+    lastTurnSeq = 0;
+    $("turnPanel").replaceChildren();
+  }
   $("indexErr").textContent = "";
   try {
     const data = await fetchJson(`/v1/agents/${agent}/memories?limit=200`);
@@ -445,15 +482,15 @@ async function renderShowcase(memoryId, agentId) {
   markGist($("scObs"), c.observation_text, c.gist_spans);
   $("scAfter").textContent = live ? live.content : "";
   $("scAfterLabel").textContent = lastDays
-    ? `How she tells it ${monthsPhrase(lastDays)} later`
-    : "How she tells it now";
-  $("scSub").textContent = "the same question, put to her months apart";
+    ? `The telling ${monthsPhrase(lastDays)} later`
+    : "The telling now";
+  $("scSub").textContent = "one persistent memory, recalled months apart";
   const compounded = nRetellings > 1
     ? ` ${nRetellings} tellings so far, each built on the one before.`
     : "";
   $("scBridge").textContent =
-    "Each time she is asked, she reconstructs the memory from who she is now, "
-    + "on a budget, and writes the new telling back." + compounded;
+    "At a new age or identity, the character reconstructs the memory. "
+    + "Accepted tellings are saved; repeated reads reuse the cache." + compounded;
 
   const stats = $("scStats");
   stats.replaceChildren();
@@ -465,8 +502,8 @@ async function renderShowcase(memoryId, agentId) {
     const recall = m.detail_recall == null ? null : Math.round(m.detail_recall * 100);
     addStat(stats, recall == null ? "–" : `${recall}%`, "detail carried",
       "the rest softened with age", "var(--amber)");
-    addStat(stats, String(m.fabricated_entities.length), "invented",
-      "nothing added that was never there",
+    addStat(stats, String(m.fabricated_entities.length), "new named entities",
+      "entity check only; not a complete factuality test",
       m.fabricated_entities.length ? "var(--red)" : "var(--green)");
   } catch (e) {
     // Metrics are additive: a failure leaves the observation and telling.
@@ -510,13 +547,16 @@ function addStat(host, num, label, sub, color) {
 // serialization verbatim), and the v1 paste/drop path, kept for manual use.
 
 let lastTurnSeq = 0;
+let turnAgent = null;
 
 async function pollTurns() {
   try {
     const data = await fetchJson(`/v1/ledger/turns?after=${lastTurnSeq}`);
     lastTurnSeq = data.last_seq;
-    if (data.entries.length) {
-      renderTurn(data.entries[data.entries.length - 1].result);
+    const agent = $("agentId").value.trim();
+    const matching = data.entries.filter(entry => !agent || entry.result.agent_id === agent);
+    if (matching.length) {
+      renderTurn(matching[matching.length - 1].result);
     }
   } catch (e) {
     // The feed is additive: a feed failure never disturbs the panes, and
@@ -571,6 +611,8 @@ function renderTurn(result) {
   host.append(views);
 
   const ins = result.instrumentation || {};
+  const gate = (ins.retrieval || {}).gate || {};
+  host.append(el("div", "meta", `loaded this turn: ${result.items.length} · gate added: ${gate.fetched_new_count || 0} · cache hits: ${(ins.retrieval || {}).cache_hits || 0} · saved tellings: ${(ins.retrieval || {}).write_backs || 0}`));
   host.append(el("div", "meta",
     `perceived_first_word ${ins.perceived_first_word_ms} ms · first_word `
     + `${ins.first_word_ms} ms · gate ${JSON.stringify(
@@ -618,7 +660,59 @@ document.addEventListener("paste", (e) => {
   if (text.trim().startsWith("{")) tryLoadTurn(text);
 });
 const params = new URLSearchParams(location.search);
-if (params.get("view") === "showcase" && params.get("memory")) {
+if (params.get("view") === "demo") {
+  document.body.classList.add("demo");
+  $("demo").hidden = false;
+  let selectedDay = 180;
+  let showIdentity = false;
+  const witnesses = [
+    {name: "Henry", agent: params.get("henry"), memory: params.get("hm")},
+    {name: "Joan", agent: params.get("joan"), memory: params.get("jm")},
+  ];
+  const buttons = [];
+  for (const day of [0, 60, 90, 180]) {
+    const button = el("button", null, day === 0 ? "First memory" : `${day} days later`);
+    button.onclick = () => { selectedDay = day; showIdentity = false; refreshDemo(); };
+    $("demoTimeline").append(button);
+    buttons.push({day, button});
+  }
+  const identityButton = el("button", null, "Their identities");
+  identityButton.onclick = () => { showIdentity = !showIdentity; refreshDemo(); };
+  $("demoTimeline").append(identityButton);
+  let refreshVersion = 0;
+  async function refreshDemo() {
+    const version = ++refreshVersion;
+    try {
+      const records = await Promise.all(witnesses.map(async w => ({
+        ...w,
+        chain: await fetchJson(`/v1/memories/${w.memory}/chain`),
+        state: showIdentity ? await fetchJson(`/v1/agents/${w.agent}/state`) : null,
+      })));
+      if (version !== refreshVersion) return;
+      buttons.forEach(({day, button}) => button.classList.toggle("active", !showIdentity && day === selectedDay));
+      identityButton.classList.toggle("active", showIdentity);
+      const c = records[0].chain;
+      markGist($("demoObservation"), c.observation_text, c.gist_spans);
+      $("demoFacts").textContent = `${c.gist_spans.length} fixed spans selected for Henry. Each witness has its own gist record.`;
+      for (const record of records) {
+        const rows = [...record.chain.details].sort((a,b) => new Date(a.valid_at) - new Date(b.valid_at));
+        const initial = rows[0];
+        const eligible = rows.filter(row => daysBetween(initial.valid_at, row.valid_at) <= selectedDay);
+        const row = eligible[eligible.length - 1] || initial;
+        $("demo" + record.name).textContent = showIdentity ? record.state.seed_identity : row.content;
+        $("demo" + record.name + "Receipt").textContent = showIdentity
+          ? `Authored seed identity · ${record.agent}`
+          : `${row.write_cause} · day ${daysBetween(initial.valid_at, row.valid_at)} · ${row.is_live ? "current" : "preserved prior telling"}\nMemory ${record.memory}\nVersion ${row.detail_id}`;
+      }
+      $("demoError").textContent = "";
+    } catch (error) {
+      if (version !== refreshVersion) return;
+      $("demoError").textContent = "Could not refresh the memory record. " + error;
+    }
+  }
+  refreshDemo();
+  setInterval(refreshDemo, 2000);
+} else if (params.get("view") === "showcase" && params.get("memory")) {
   // Showcase: the default inspector is hidden and one memory is shown large,
   // polled so retellings appear on camera. Requires ?memory=<uuid>; ?agent=
   // is optional (only the title's name comes from it).

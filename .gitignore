@@ -45,6 +45,11 @@ unity/Packages/com.coplaydev.unity-mcp/
 # Eval run artifacts (eval-harness.md stage 2, fork 7: runs stay local;
 # milestone numbers get quoted into dated doc entries instead)
 data/eval/runs/
+data/demo/runs/
+data/demo/session.json
+data/demo/control/
+data/demo/*.log
+data/demo/output/
 
 # THE AI-PAIR APPARATUS — untracked-local by ruling (2026-09-13). The operating
 # rules (CLAUDE.md) and the .claude\ tooling (auditor agents, verification hooks,

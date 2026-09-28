@@ -253,12 +253,12 @@ async def main(database_uri: str) -> None:
     full = thin_detail(segments, 0.875)
     thin = thin_detail(segments, 0.125)
     check(
-        len(thin) < len(full) and all(seg.split(". ")[0] in thin for seg in segments),
-        "thinning is monotone in the band and keeps each segment's lead",
+        len(thin) < len(full) and thin == "" and thin_detail(segments, 1) != "",
+        "one global thinning budget reaches zero without a per-segment floor",
     )
     check(
         [band_index(s, 0.25) for s in (0.9, 0.6, 0.3, 0.05, 0.0001)] == [0, 1, 2, 3, 3]
-        and compose_cache_key("vhash", 2) == "vhash|b2",
+        and compose_cache_key("vhash", 2) == "vhash|r2|b2",
         "band quantization (capped) and composed cache key shape",
     )
     items = [
@@ -377,7 +377,7 @@ async def main(database_uri: str) -> None:
     old_cache = await cache_rows(pool, ids["old"])
     old_key = next(iter(old_cache))
     check(
-        old_key.startswith(f"{version}|b")
+        old_key.startswith(f"{version}|r2|b")
         and old_cache[old_key] == m1[ids["old"]].content,
         "cache row keyed identity_version|band; rendered_text == served text "
         "(serve-only-persisted-text)",

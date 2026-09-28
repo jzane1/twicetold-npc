@@ -274,6 +274,8 @@ class DeferredWriteWorker:
             declared_typology=declared,
             neutral_importance=agent_knob(config, "importance_neutral", self._settings),
             gist_max_spans=gist_max,
+            observer_name=agent["name"],
+            observer_identity=agent["seed_identity"] or "",
         )
         write_ms = _ms(time.perf_counter() - t0)
         if write_outcome.scoring_failed:

@@ -107,7 +107,14 @@ def test_assemble_no_gist_prompt_shapes():
     assert (default_system, default_user) == (on_system, on_user)
     assert default_system.endswith(_SYSTEM_TASK)
     for entry in json.loads(default_user):
-        assert list(entry) == ["memory_id", "gist", "detail", "current_telling"]
+        assert list(entry) == [
+            "memory_id",
+            "gist",
+            "detail",
+            "current_telling",
+            "detail_retention",
+        ]
+        assert entry["detail_retention"] == 0.5
 
     off_system, off_user = assemble_reconstruction_prompt(
         "doc", items, include_gist_constraint=False
@@ -115,7 +122,13 @@ def test_assemble_no_gist_prompt_shapes():
     assert off_system.endswith(_SYSTEM_TASK_NO_GIST)
     assert "[identity]" in off_system  # the identity block survives the swap
     for entry in json.loads(off_user):
-        assert list(entry) == ["memory_id", "detail", "current_telling"]
+        assert list(entry) == [
+            "memory_id",
+            "detail",
+            "current_telling",
+            "detail_retention",
+        ]
+        assert entry["detail_retention"] == 0.5
 
 
 def test_ablation_fixture_census_and_knob_copy():

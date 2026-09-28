@@ -23,8 +23,12 @@ database.
 *A real memory in The Ledger, the browser inspector the service ships. Left: what actually
 happened, the pinned facts in green. Right: how the innkeeper tells it seven months later,
 reconstructed from who she is now, not recited from a log. Every pinned fact survived, about a
-third of the incidental detail softened with age, and nothing was invented. Every telling is
+third of the incidental detail softened with age, and the entity check found no new named
+entities. That check is not a complete factuality test. Every telling is
 kept beside the original.*
+
+The [village demo and reproduction guide](data/demo/README.md) follows Henry and Joan
+through the same event, three later recalls, cache reuse, and a live retrieval-gate response.
 
 ## In numbers
 
@@ -32,9 +36,14 @@ Every figure carries its date and its conditions, because these numbers decay wi
 generation. All of them were taken on the locked Anthropic slate (Claude Haiku 4.5 on every
 turn-path role), from a Windows laptop against hosted APIs.
 
+The August quality, cost, and latency measurements below predate the minimal-gist and
+September 28 reconstruction changes. They are historical baselines, not measurements of
+the current demo. The current suite passes **232 tests**; the C# harness passes **53 checks**
+(2026-09-28).
+
 | What | Measured | Conditions |
 |---|---|---|
-| Retelling, judge-free | gist precision **0.83**, detail recall **0.84**, fabrication rate **0.016** | 2026-08-26, the reconstruction metrics over the judged corpus; no regression at any landing since Phase C. |
+| Retelling, judge-free | gist precision **0.83**, detail recall **0.84**, fabrication rate **0.016** | 2026-08-26, reconstruction metrics over the judged corpus; historical baseline. |
 | The gist-pin ablation | gist precision **0.83 → 0.70** with the pin off | 2026-08-12. The drift budget stayed under threshold in both arms, which is the finding: distance alone cannot see fact damage. |
 | Cost, all-in | **$0.084 per 100 turns** | 2026-08-26. A turn is one dialogue line on the 60-turn load driver, observes included; write, escalation, dialogue and embedding calls are priced from the token counts every payload carries. At 20 turns per player-hour that is about $0.02 an hour. |
 | Perceived first word, p50 | **826–917 ms** | 2026-08-26, five runs across the day. Streamed text, time to first word, no speech in the loop. |

@@ -463,6 +463,46 @@ def test_failed_write_gist_floor_parity_sync_vs_deferred(scene):
 
 
 @pytest.mark.nlp
+def test_observer_context_reaches_sync_and_deferred_write_calls(scene):
+    from app import db
+    from app.providers import FakeWriteProvider
+    from app.schemas import ObserveEvent
+
+    class RecordingWrite(FakeWriteProvider):
+        def __init__(self):
+            self.calls = []
+
+        def render_and_score(self, **kwargs):
+            self.calls.append(kwargs)
+            return super().render_and_score(**kwargs)
+
+    async def scenario(ctx):
+        write = RecordingWrite()
+        for deferred in (False, True):
+            name = f"witness-{deferred}"
+            agent = await ctx.make_agent(
+                name, {**V1_CONFIG, "deferred_writes_enabled": float(deferred)}
+            )
+            await ctx.ingest(write=write).ingest_observation(
+                ObserveEvent(
+                    agent_id=agent,
+                    observation_text="Bram left the coins beside the bench.",
+                    phase_tag="suite",
+                    client_timestamp=NOW,
+                    provenance="lived",
+                )
+            )
+            if deferred:
+                assert await ctx.worker(write=write).drain() == 1
+            stored = await db.fetch_agent(ctx.pool, agent)
+            assert write.calls[-1]["observer_name"] == name
+            assert write.calls[-1]["observer_identity"] == stored["seed_identity"]
+        assert len(write.calls) == 2
+
+    run_structural(scene, scenario)
+
+
+@pytest.mark.nlp
 def test_deferred_observe_end_to_end(scene):
     """The full deferred pipeline at the service level: an enabled agent's
     observe lands pending with NULL scalars and honest zero LLM

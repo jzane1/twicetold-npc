@@ -255,6 +255,8 @@ async def run_write_call(
     declared_typology: str | None,
     neutral_importance: float,
     gist_max_spans: int,
+    observer_name: str = "",
+    observer_identity: str = "",
 ) -> WriteStageOutcome:
     """The single write model call (render + importance + typology-when-
     absent + the minimal gist, asked for at most `gist_max_spans` spans — the
@@ -275,6 +277,8 @@ async def run_write_call(
             diagnosticity_goal=diagnosticity_goal,
             declared_typology=declared_typology,
             gist_max_spans=gist_max_spans,
+            observer_name=observer_name,
+            observer_identity=observer_identity,
         )
         rendered_content = write_result.rendered_content
         importance = write_result.importance_raw
@@ -519,6 +523,8 @@ class IngestService:
                     config, "importance_neutral", self._settings
                 ),
                 gist_max_spans=gist_max,
+                observer_name=agent["name"],
+                observer_identity=agent["seed_identity"] or "",
             )
             haiku_ms = _ms(time.perf_counter() - t0)
             rendered_content = write_outcome.rendered_content

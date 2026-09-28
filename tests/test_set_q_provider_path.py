@@ -367,6 +367,8 @@ def test_openai_write_call_request_shape():
         observation_text=OBSERVATION,
         diagnosticity_goal="what threatens the ford",
         declared_typology=None,
+        observer_name="Mara",
+        observer_identity="I keep the ford.",
     )
     assert result.rendered_content == WRITE_PAYLOAD["rendered_content"]
     assert result.importance_raw == 0.7
@@ -380,6 +382,8 @@ def test_openai_write_call_request_shape():
     assert body["model"] == "model-w"
     assert [m["role"] for m in body["messages"]] == ["system", "user"]
     assert OBSERVATION in body["messages"][1]["content"]
+    assert "Observer name: Mara" in body["messages"][1]["content"]
+    assert "Observer identity: I keep the ford." in body["messages"][1]["content"]
     assert body["max_tokens"] == 1024
     assert body["response_format"] == {"type": "json_object"}
     for absent in ("stream", "stream_options", "thinking", "temperature", "top_p"):

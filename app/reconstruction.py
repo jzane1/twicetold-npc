@@ -81,16 +81,35 @@ class UnknownIdentityVersionError(RuntimeError):
 # the read path), stable across environments.
 _SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+")
 
+_RETELL_INSTRUCTIONS = (
+    "'detail' contains the original fragments still available; "
+    "'detail_retention' ranges from 1 (fresh) toward 0 (very faded). "
+    "'current_telling' is the previous remembered account: build on its "
+    "meaning and perspective, but do not treat its incidental details as "
+    "permanently reliable evidence. Retention applies to the previous "
+    "account's incidental details too: carry forward only roughly that "
+    "fraction of its non-gist specifics. Near zero, remember the core event "
+    "and its subjective meaning, dropping the step-by-step sequence, "
+    "equipment, scenery, and sensory details unless fixed by gist. "
+    "Actively interpret ambiguity through this particular character's "
+    "beliefs and concerns: what does this event mean to THEM? Keep that "
+    "meaning as a personal belief, suspicion, hope, or uncertainty, never "
+    "an invented observed action. Build on the previous interpretation "
+    "rather than resetting it. This is selective remembering, not a "
+    "sentence-by-sentence paraphrase. Preserve who did what: witnessing "
+    "another person's action does not make it your own. Distinguish the "
+    "character's interpretation of motives from observed facts. Use plain "
+    "spoken language and never import past events from the identity as "
+    "facts of this event. Return ONLY a JSON object mapping each memory_id "
+    "to its retelling string. No other text."
+)
+
 _SYSTEM_TASK = (
     "[task]\n"
     "You are the reconstructive memory of a game character. Retell each "
     "remembered event as the character currently holds it, in first person. "
     "Per item: 'gist' lists FIXED facts — every retelling must remain "
-    "consistent with all of them; 'detail' is the fragmentary detail still "
-    "available (it may be thin — fill gaps plausibly, in character); "
-    "'current_telling' is how the character currently tells it, the starting "
-    "point. Return ONLY a JSON object mapping each memory_id to its "
-    "retelling string. No other text."
+    "consistent with all of them. " + _RETELL_INSTRUCTIONS
 )
 # The stage-4 ablation's OFF-arm task (ruled 2026-08-12): the same contract
 # with the gist sentence removed — items carry no 'gist' key, so the
@@ -101,11 +120,7 @@ _SYSTEM_TASK_NO_GIST = (
     "[task]\n"
     "You are the reconstructive memory of a game character. Retell each "
     "remembered event as the character currently holds it, in first person. "
-    "Per item: 'detail' is the fragmentary detail still available (it may "
-    "be thin — fill gaps plausibly, in character); 'current_telling' is how "
-    "the character currently tells it, the starting point. Return ONLY a "
-    "JSON object mapping each memory_id to its retelling string. No other "
-    "text."
+    "Per item: " + _RETELL_INSTRUCTIONS
 )
 _BLOCK_IDENTITY = "[identity]\n{document}"
 
@@ -168,20 +183,24 @@ def band_level(index: int, quantum: float) -> float:
 def compose_cache_key(identity_version: str, band: int) -> str:
     """The composed reconstruction key stored in the cache's version column
     (spec ruling 2026-07-17): identity_version + the decay band."""
-    return f"{identity_version}|b{band}"
+    return f"{identity_version}|r2|b{band}"
 
 
 def thin_detail(segments: list[str], level: float) -> str:
-    """Deterministic, monotone thinning: per contiguous detail segment,
-    retain the first ceil(level x n) sentences (always >= 1 — gist carries
-    the floor of durability; detail thins toward minimal, never to nothing
-    while the segment survives at all)."""
-    kept: list[str] = []
-    for segment in segments:
-        sentences = _SENTENCE_SPLIT.split(segment)
-        retain = max(1, math.ceil(level * len(sentences)))
-        kept.append(" ".join(sentences[:retain]))
-    return "\n".join(kept)
+    """One monotone budget across all detail fragments, in observation order.
+
+    Gist splitting must not grant each leftover fragment a permanent place
+    in the prompt. At low strength the original detail can disappear entirely;
+    gist and the previous telling have separate, explicit roles.
+    """
+    fragments = [
+        sentence.strip()
+        for segment in segments
+        for sentence in _SENTENCE_SPLIT.split(segment)
+        if sentence.strip()
+    ]
+    retain = math.floor(min(1.0, max(0.0, level)) * len(fragments))
+    return "\n".join(fragments[:retain])
 
 
 def build_reconstruction_item(
@@ -211,6 +230,7 @@ def build_reconstruction_item(
             gist=source.anchor_content,
             thinned_detail="",
             current_telling=current_telling,
+            detail_retention=level,
         )
     gist, segments = split_gist_detail(source.observation_text, source.spans)
     return ReconstructionItem(
@@ -218,6 +238,7 @@ def build_reconstruction_item(
         gist=gist if gist_constraint else "",
         thinned_detail=thin_detail(segments, level),
         current_telling=current_telling,
+        detail_retention=level,
     )
 
 
@@ -246,6 +267,7 @@ def assemble_reconstruction_prompt(
             entry["gist"] = item.gist
         entry["detail"] = item.thinned_detail
         entry["current_telling"] = item.current_telling
+        entry["detail_retention"] = item.detail_retention
         payload.append(entry)
     user_content = json.dumps(payload)
     return "\n\n".join(blocks), user_content

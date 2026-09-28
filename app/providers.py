@@ -240,6 +240,7 @@ class ReconstructionItem:
     gist: str
     thinned_detail: str
     current_telling: str
+    detail_retention: float = 1.0
 
 
 @dataclass(frozen=True)
@@ -358,6 +359,8 @@ class WriteProvider(Protocol):
         diagnosticity_goal: str,
         declared_typology: str | None,
         gist_max_spans: int | None = None,
+        observer_name: str = "",
+        observer_identity: str = "",
     ) -> WriteCallResult: ...
 
 
@@ -498,6 +501,8 @@ class FakeWriteProvider:
         diagnosticity_goal: str,
         declared_typology: str | None,
         gist_max_spans: int | None = None,
+        observer_name: str = "",
+        observer_identity: str = "",
     ) -> WriteCallResult:
         importance = round(_stable_unit_float(observation_text, "importance"), 4)
         typology: str | None = None
@@ -634,7 +639,7 @@ class FakeReconstructionProvider:
         for item in items:
             marker = hashlib.sha256(
                 f"{system_prompt}|{item.gist}|{item.thinned_detail}"
-                f"|{item.current_telling}".encode()
+                f"|{item.current_telling}|{item.detail_retention}".encode()
             ).hexdigest()[:8]
             text = f"{item.current_telling} [retold {marker}]"
             retellings[item.memory_id] = text
@@ -1343,7 +1348,11 @@ _WRITE_SYSTEM = (
     "telling of the observation in the NPC's own plain spoken register: actions "
     "the NPC performed are owned in first person, never narrated as if watched; "
     "events the NPC witnessed stay witnessed; use only people and things the "
-    "observation itself establishes, never inventing names), importance_raw "
+    "observation itself establishes, never inventing names. The observer is "
+    "identified separately: first-person actions in the observation belong "
+    "to that observer; third-person actions belong to their named actor. "
+    "Never turn someone else's action into the observer's action. Identity "
+    "provides voice and perspective, not extra facts about this event), importance_raw "
     "(float 0..1, anchored to the NPC's diagnosticity goal){typology_clause}, "
     "gist_spans (a list of 1 to {gist_max} strings. Each MUST be copied VERBATIM from the "
     "observation: an exact, character-for-character substring with the original "
@@ -1422,6 +1431,8 @@ class RealWriteProvider:
         diagnosticity_goal: str,
         declared_typology: str | None,
         gist_max_spans: int | None = None,
+        observer_name: str = "",
+        observer_identity: str = "",
     ) -> WriteCallResult:
         clause = _TYPOLOGY_CLAUSE if declared_typology is None else ""
         system = _WRITE_SYSTEM.format(
@@ -1432,6 +1443,8 @@ class RealWriteProvider:
                 model=self._model,
                 system=system,
                 user=(
+                    f"Observer name: {observer_name}\n"
+                    f"Observer identity: {observer_identity}\n\n"
                     f"Diagnosticity goal: {diagnosticity_goal}\n\n"
                     f"Observation: {observation_text}"
                 ),

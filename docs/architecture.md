@@ -191,6 +191,10 @@ Client event, then NLP span/affect pass, then a **single Haiku call** (prose ren
 scoring; typology classification only when the client did not declare it), then an **atomic insert**
 populating all write-time facts.
 
+The write call receives the observing agent's name and seed identity. The observer and the
+actor in the observation are distinct: a first-person render preserves who performed the action.
+Both synchronous ingestion and deferred enrichment supply this same context.
+
 An optional deferred-write mode (the `deferred_writes_enabled` knob, **default OFF**, migration 006)
 moves the write call (render, importance, typology, and the gist selection) to an in-process
 worker. The NLP pass, embedding, and atomic insert stay synchronous, so the component-evidence spans
@@ -305,6 +309,12 @@ document. On a chain whose drift anchor is a correction head (`authorial_correct
 `update_with_resentment` from the diegetic path), the fixed constraint follows the anchor: that head
 replaces the stale gist constraint, and original observation detail is never re-injected.
 
+Detail thinning uses one ordered sentence-fragment budget across all non-gist segments:
+`floor(band_level * fragment_count)`. The budget can reach zero. A gist boundary does not grant
+each remaining segment a permanent sentence. The prompt also receives `detail_retention`,
+which applies to incidental specifics carried in the prior telling; that telling supplies
+continuity of meaning and perspective, rather than an exemption from forgetting.
+
 **Write-back with a version chain:** one permanent `memory_id` forever; each retelling inserts a new
 detail row and stamps the prior one superseded, giving **versioned confabulation over an immutable
 record**. Chain rows carry a `write_cause` enum:
@@ -324,7 +334,10 @@ Those four are the only sanctioned mid-scene text-change causes.
 **Cache:** keyed `(memory_id × identity_version)`, where the version component **composes
 `identity_version` with a quantized, scene-frozen decay band**: the band both keys the cache and sets
 the thinning level, so the same key yields byte-identical text and deeper decay re-reconstructs on
-thinner detail. **Cache-eviction invariant (generalized):** cache writes happen only in the
+thinner detail. The current composed key is `<identity_version>|r2|b<band>`; the `r2`
+revision separates the corrected thinning/prompt behavior from legacy cache entries without
+rewriting history. Existing keys remain inspectable but do not satisfy a current cache lookup.
+**Cache-eviction invariant (generalized):** cache writes happen only in the
 reconstruction path; any other writer to a chain (correction, diegetic write, deferred-enrichment
 completion on every completion shape including facts-only, purge) must evict all cache rows for that
 memory_id.

@@ -36,6 +36,55 @@ T_DRIFT = (
 CORRECTED = "The stranger's cart broke at the ford; Mara and I cleared it."
 
 
+def test_detail_thinning_has_one_budget_and_can_reach_zero():
+    from app.reconstruction import thin_detail
+
+    # Gist boundaries can leave many one-sentence segments. None is immortal.
+    segments = ["The river was loud.", "A dog slept.", "The boards were wet."]
+    assert thin_detail(segments, 0.0) == ""
+    assert thin_detail(segments, 0.05) == ""
+    assert thin_detail(segments, 0.35) == segments[0]
+    assert thin_detail(segments, 1.0) == "\n".join(segments)
+    assert thin_detail([], 1.0) == ""
+    assert thin_detail(["A single fragment."], 0.9) == ""
+    assert thin_detail(["First. Second.", "Third."], 0.7) == "First.\nSecond."
+    samples = [thin_detail(segments, level) for level in (0, 0.2, 0.4, 0.8, 1)]
+    assert all(
+        later.startswith(earlier) for earlier, later in zip(samples, samples[1:])
+    )
+
+
+def test_legacy_cache_does_not_mask_new_reconstruction(scene):
+    from app.eval_metrics import band_from_composed_key
+
+    async def scenario(ctx):
+        agent = await ctx.make_agent("c-legacy-cache", RECON_CONFIG)
+        version = await _boundary(ctx, agent)
+        old = await ctx.seed(
+            agent, T_OLD, NOW - timedelta(days=10), decay_class="semantic"
+        )
+        for band in range(4):
+            await db.insert_cache_row(
+                ctx.pool, old.memory_id, f"{version}|b{band}", "legacy"
+            )
+        result = await ctx.retrieval().retrieve_dialogue_init(
+            request(agent, version, NOW)
+        )
+        assert result.instrumentation.cache_misses == 1
+        assert result.instrumentation.write_backs == 1
+        cache = await ctx.cache_rows(old.memory_id)
+        assert len(cache) == 5
+        assert all(cache[f"{version}|b{band}"] == "legacy" for band in range(4))
+        assert all(band_from_composed_key(key) is not None for key in cache)
+        repeat = await ctx.retrieval().retrieve_dialogue_init(
+            request(agent, version, NOW)
+        )
+        assert repeat.instrumentation.cache_hits == 1
+        assert repeat.items[0].content == result.items[0].content
+
+    run_structural(scene, scenario)
+
+
 def request(agent_id, version, basis, **overrides) -> DialogueInitRequest:
     base = dict(
         agent_id=agent_id,
@@ -99,7 +148,7 @@ def test_writeback_chain_and_immutable_sources(scene):
         cache = await ctx.cache_rows(old.memory_id)
         assert len(cache) == 1
         key = next(iter(cache))
-        assert key.startswith(f"{version}|b")
+        assert key.startswith(f"{version}|r2|b")
         assert cache[key] == m1[old.memory_id].content  # serve-only-persisted
 
         row = await ctx.fetchrow(
