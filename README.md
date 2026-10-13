@@ -117,13 +117,13 @@ These are the main references that helped shape the project:
 - **[Generative Agents: Interactive Simulacra of Human Behavior](https://arxiv.org/abs/2304.03442)** — Joon Sung Park et al. (2023). Its combination of an LLM, stored experiences, retrieval, and reflection informed the backend's general architecture for believable characters.
 
 ## Misc
-How it's verified
+How it's verified:
 I built this project solo, with Claude Code Opus 4.8/5 assisting the build. I submitted my detailed designs and work processes to CC with any forks escalating to me once reached. Every layer of the build is verified against the one beneath it, and a row lands in an append-only floord ledger only after an independent verifier pass returns green. 33 rows, from the schema to the provider seam.
 The suite contains 230 pytest scenarios, with a 215 fast subset run by a repo hook at the end of a working turn (counts checked 2026-10-12). Plus sixteen deep walkers, one per layer. Lastly, the working record is an append-only decision register and session log. They stay local on my system.
 
-Providers 
+Providers:
 The nine model roles are vars, and `TWICETOLD_MODEL_BACKEND` picks the family: `anthropic` (the default and the measured slate) or `openai`, which is any OpenAI-compatible chat-completions server behind `TWICETOLD_MODEL_BASE_URL`: OpenAI itself, Ollama, vLLM, LM Studio, OpenRouter. The embedding model name is its own knob; the 1536-dimension column is locked and fitted at the seam, narrower models zero-padded (the distances stay exact), wider ones refused. Details in
 [docs/SETUP.md §4b](docs/SETUP.md).
 
-Erasing
+Erasing:
 Two DELETE verbs are the only deletes in the design: `DELETE /v1/memories/{id}` and `DELETE /v1/agents/{id}/memories`, one transaction each across seven tables, honest counts back; reflections and identity survive. Memories attach to NPC agents, not players, so mapping a player to the memories they generated is yours to keep.
