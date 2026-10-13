@@ -53,7 +53,7 @@ The [evaluation harness](docs/eval-harness.md) covers agreement, ablations, and 
 
 ## In numbers
 
-The August measurements are historical baselines from a Windows laptop against hosted APIs, with Claude Haiku 4.5 on the turn-path roles. They predate the later gist and reconstruction changes.
+The August measurements are baselines from a Windows laptop against hosted APIs, with Claude Haiku 4.5 on the turn-path roles.
 
 | Measurement | Result | Conditions and date |
 |---|---|---|
