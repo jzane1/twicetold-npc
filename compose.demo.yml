@@ -1,0 +1,66 @@
+# Isolated, keyless first run. No .env copy or host Python required.
+# docker compose -f compose.demo.yml run --build --rm demo
+name: twicetold-demo-fake
+
+x-runtime: &runtime
+  build: .
+  image: twicetold-demo:local
+  environment:
+    DATABASE_URI: postgresql://demo:demo@db:5432/demo
+    TWICETOLD_PROVIDER_MODE: fake
+    TWICETOLD_ALLOWED_HOSTS: localhost,127.0.0.1,api
+  volumes:
+    - type: bind
+      source: ./.env.example
+      target: /app/.env
+      read_only: true
+      bind:
+        create_host_path: false
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      # Disposable local demo credentials; this database has no published port.
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: demo
+      POSTGRES_DB: demo
+    volumes:
+      - demo-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U demo -d demo"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  migrate:
+    build: .
+    image: twicetold-demo:local
+    depends_on:
+      db:
+        condition: service_healthy
+    command: [python, db/migrate.py, --database-uri, "postgresql://demo:demo@db:5432/demo"]
+
+  api:
+    <<: *runtime
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:8001:8000"
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/openapi.json', timeout=3)"]
+      start_period: 300s
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  demo:
+    <<: *runtime
+    depends_on:
+      api:
+        condition: service_healthy
+    command: [python, -m, app.first_run, --mode, fake, --base-url, "http://api:8000", --public-url, "http://127.0.0.1:8001"]
+
+volumes:
+  demo-data:

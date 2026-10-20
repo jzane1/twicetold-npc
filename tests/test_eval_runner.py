@@ -233,7 +233,7 @@ def test_provision_drop_roundtrip(suite_env):
         uri = provision_scratch(base, name)
         with psycopg.connect(uri, connect_timeout=3) as conn:
             applied = conn.execute("SELECT count(*) FROM schema_migrations").fetchone()
-        assert applied[0] == 9  # 001-009 (009: gist/evidence split, 2026-09-27)
+        assert applied[0] == 10  # 010: database-wide embedding configuration
         drop_scratch(base, name)
         admin = scratch_uri(base, "postgres")
         with psycopg.connect(admin, connect_timeout=3, autocommit=True) as conn:
@@ -413,6 +413,7 @@ async def _assert_no_eval_rows(ctx):
         "compiled_bundles",
         "compiler_runs",
         "corrections",
+        "embedding_space",
         "identity_components",
         "identity_documents",
         "memories",

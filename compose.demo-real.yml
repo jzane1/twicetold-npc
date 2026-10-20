@@ -1,0 +1,27 @@
+# Overlay: same scenario, real providers, separate project/volume/port.
+# Requires Compose >= 2.24.4 for !override. Only this path mounts secrets.
+name: twicetold-demo-real
+services:
+  api:
+    environment:
+      TWICETOLD_PROVIDER_MODE: real
+    volumes:
+      - type: bind
+        source: ./.env
+        target: /app/.env
+        read_only: true
+        bind:
+          create_host_path: false
+    ports: !override
+      - "127.0.0.1:8002:8000"
+  demo:
+    environment:
+      TWICETOLD_PROVIDER_MODE: real
+    volumes:
+      - type: bind
+        source: ./.env
+        target: /app/.env
+        read_only: true
+        bind:
+          create_host_path: false
+    command: [python, -m, app.first_run, --mode, real, --base-url, "http://api:8000", --public-url, "http://127.0.0.1:8002"]

@@ -1,15 +1,36 @@
 # twicetold-npc: Test suite
 
-The pytest suite in `tests\test_*.py` holds roughly 228 scenarios across Sets A through Q plus the
-route-contract and degradation scenarios. Fifteen carry the `nlp` marker (they call the write pass at
+The pytest suite in `tests\test_*.py` collects 317 cases across Sets A through Q plus the
+route-contract, degradation, setup and first-run scenarios. Seventeen carry the `nlp` marker (they call the write pass at
 the service level and pay the lazy spaCy and fastcoref load), so the turn-end subset that runs on every
-edit is `-m "not nlp"`, about 213 scenarios. The full suite runs on demand and at verification. The
+edit is `-m "not nlp"`, 300 cases. The full suite runs on demand and at verification. The
 suite is offline, keyless, deterministic, and self-managing (it creates and drops its own scratch
-database, `twicetold_suite`); when Postgres is unreachable it skips loudly and exits green, so it is
+database, `twicetold_suite_<pid>`); when Postgres is unreachable it skips loudly and exits green, so it is
 CI-ready.
 
 The scenario suite is a first-class deliverable, with its own fixture and runner in `tests\`, not an
 afterthought.
+
+## Setup and configuration
+
+`test_setup.py` and `test_embedding_space.py` add 62 cases for agent configuration validation,
+the documented Ollama recipe, secret-safe diagnostics, bounded provider probes over mock HTTP,
+embedding identity, and migration 010. Database cases use the suite's disposable store: competing
+startups cannot bind different embedding configurations; legacy adoption preserves vectors;
+incompatible settings fail before API NLP/provider construction; invalid config merges roll back;
+and the migration runner remains idempotent. The doctor is read-only unless adoption is explicitly
+requested. No test sends requests to a live model provider. Walker startup uses the same database
+compatibility guard as the runtime, before seeding fake vectors.
+
+## First-run demo
+
+`test_first_run.py` exercises the complete bundled demo twice over the real HTTP routes with fake
+providers and a disposable database. It checks fresh/aged recall, pins, cache reuse, dialogue,
+correction, preserved history and independent reruns. Focused cases verify safe HTTP failures,
+no automatic write retries, URL/timeout validation and an early mode-mismatch failure. Scene
+stability checks allow query-score/ranking variation while rejecting changed stored tellings. Compose
+startup and real-provider behavior are additionally verified by running `docs/first-run.md`'s
+commands; the offline suite itself never sends paid requests.
 
 ## The one rule
 

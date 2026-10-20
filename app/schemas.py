@@ -25,6 +25,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
+from app.agent_config import validate_agent_config
+
 Typology = Literal["observed", "told", "inferred", "reflected"]
 Provenance = Literal["lived", "injected"]
 
@@ -841,6 +843,11 @@ class CreateAgentRequest(BaseModel):
     rigidity: float | None = Field(default=None, ge=0.5, le=2.0)
     diagnosticity_goal: str | None = None
     config: dict | None = None
+
+    @field_validator("config")
+    @classmethod
+    def valid_config(cls, value: dict | None) -> dict | None:
+        return validate_agent_config(value)
 
 
 class CreateAgentResult(BaseModel):

@@ -35,7 +35,7 @@ import os
 import subprocess
 import sys
 import warnings
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import UUID
@@ -119,7 +119,7 @@ def _base_uri() -> str | None:
 
 @dataclass(frozen=True)
 class SuiteEnv:
-    database_uri: str
+    database_uri: str = field(repr=False)
     settings: Settings
 
 

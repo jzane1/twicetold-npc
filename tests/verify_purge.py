@@ -48,8 +48,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))  # tests\ helpers
 from scratch_uri import scratch_uri
 
 from app import db
+from app.runtime import open_runtime_pool
 from app.config import Settings
-from app.db import build_pool
 from app.ingest import IngestService, UnknownMemoryError
 from app.providers import (
     FakeEmbeddingProvider,
@@ -256,8 +256,7 @@ async def run(uri: str) -> None:
     from urllib.parse import urlsplit
 
     settings = Settings(database_uri=uri, provider_mode="fake")
-    pool = build_pool(uri)
-    await pool.open()
+    pool = await open_runtime_pool(settings)
     print(f"walker: scratch DB = {urlsplit(uri).path.lstrip('/')}")
     try:
         svc = IngestService(pool, fake_providers(), settings)

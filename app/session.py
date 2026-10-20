@@ -38,7 +38,7 @@ from app import db, identity
 from app.compiler import CompilerWorker
 from app.concurrency import ModelCallGate
 from app.config import Settings, load_settings
-from app.db import build_pool
+from app.runtime import open_runtime_pool
 from app.deferred import DeferredWriteWorker
 from app.dialogue import DialogueService
 from app.dissonance import DissonanceService
@@ -167,8 +167,7 @@ class SessionRunner:
         settings = settings if settings is not None else load_settings()
         owns_pool = pool is None
         if pool is None:
-            pool = build_pool(settings.database_uri, max_size=settings.db_pool_max_size)
-            await pool.open()
+            pool = await open_runtime_pool(settings)
         owns_providers = providers is None
         providers = providers if providers is not None else build_providers(settings)
         if warm_nlp:

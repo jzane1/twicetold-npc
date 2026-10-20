@@ -1,0 +1,8 @@
+Generated with the built-in image_gen tool. Prompt: recorded-memory-drift.prompt.txt.
+This is an illustration of actual recorded agent output, not a Ledger screenshot or a new backend execution.
+Source: selected passing demo take 20260928_192719_cbe90d74, rehearsal.json, witness stable_id joan, day 180.
+Original excerpts are from initial_chain.observation_text. Reconstructed text and interpretation are verbatim from the day-180 memory content.
+The green source spans correspond to Joan's initial_chain.gist_spans: pouch placement and pouch abandonment. Highlighting in the reconstruction shows their semantic counterparts.
+Rod, tackle, glint, and scenery fade visually because they are omitted from the selected reconstruction. The painted scenes are illustrative; their visual details are not evidence of observed game state.
+README embed:
+![Original observation and Joan's six-month reconstruction: gist in green, fading details and personal interpretation in amber](docs/media/recorded-memory-drift.png)

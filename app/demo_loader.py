@@ -31,7 +31,7 @@ from uuid import UUID
 
 from app import db
 from app.config import load_settings
-from app.db import build_pool
+from app.runtime import open_runtime_pool
 from app.eval_scenarios import (
     AsOfStep,
     ObserveStep,
@@ -83,8 +83,7 @@ async def load_demo(
     """Provision the agent, replay the corpus, then (unless disabled) merge
     the worker flags — separable so the suite drives it in-process on an
     injected scratch Settings (the run_scenarios shape)."""
-    pool = build_pool(settings.database_uri, max_size=settings.db_pool_max_size)
-    await pool.open()
+    pool = await open_runtime_pool(settings)
     try:
         agent_id: UUID = await db.insert_agent(
             pool,

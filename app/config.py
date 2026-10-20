@@ -34,8 +34,10 @@ from __future__ import annotations
 
 import os
 import sys
+import math
 from dataclasses import dataclass, field
 from pathlib import Path
+from urllib.parse import urlsplit
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 ENV_PATH = REPO_ROOT / ".env"
@@ -471,6 +473,9 @@ def load_env(path: Path = ENV_PATH) -> dict[str, str]:
         set(values)
         | {
             "DATABASE_URI",
+            "ANTHROPIC_API_KEY",
+            "OPENAI_API_KEY",
+            ENV_ALLOWED_HOSTS,
             ENV_PROVIDER_MODE,
             ENV_MODEL_IMPORTANCE,
             ENV_MODEL_RENDER,
@@ -586,8 +591,25 @@ def _base_url_or_empty(env: dict[str, str], key: str) -> str:
     raw = env.get(key, "").strip()
     if not raw:
         return ""
-    if not (raw.startswith("http://") or raw.startswith("https://")):
-        raise ConfigError(f"{key} must be an http(s) URL, got {raw!r}.")
+    try:
+        url = urlsplit(raw)
+        valid = (
+            url.scheme in ("http", "https")
+            and url.hostname
+            and url.port != 0
+            and not url.username
+            and not url.password
+            and not url.query
+            and not url.fragment
+            and not any(c.isspace() for c in raw)
+        )
+    except ValueError:
+        valid = False
+    if not valid:
+        raise ConfigError(
+            f"{key} must be an http(s) URL with a host and no credentials, "
+            "query, fragment or whitespace; put credentials in the API key setting."
+        )
     return raw.rstrip("/")
 
 
@@ -600,7 +622,7 @@ def load_settings(env: dict[str, str] | None = None) -> Settings:
     if not database_uri:
         raise ConfigError("DATABASE_URI not set in .env.")
 
-    mode = env.get(ENV_PROVIDER_MODE, "fake").lower()
+    mode = env.get(ENV_PROVIDER_MODE, "fake").strip().lower()
     if mode not in ("real", "fake"):
         raise ConfigError(
             f"{ENV_PROVIDER_MODE} must be 'real' or 'fake', got {mode!r}."
@@ -664,11 +686,11 @@ def load_settings(env: dict[str, str] | None = None) -> Settings:
     anthropic_key = ""
     openai_key = ""
     if mode == "real":
-        importance = env.get(ENV_MODEL_IMPORTANCE, "")
-        render = env.get(ENV_MODEL_RENDER, "")
-        typology = env.get(ENV_MODEL_TYPOLOGY, "")
-        dialogue = env.get(ENV_MODEL_DIALOGUE, "")
-        reconstruction = env.get(ENV_MODEL_RECONSTRUCTION, "")
+        importance = env.get(ENV_MODEL_IMPORTANCE, "").strip()
+        render = env.get(ENV_MODEL_RENDER, "").strip()
+        typology = env.get(ENV_MODEL_TYPOLOGY, "").strip()
+        dialogue = env.get(ENV_MODEL_DIALOGUE, "").strip()
+        reconstruction = env.get(ENV_MODEL_RECONSTRUCTION, "").strip()
         # The escalation gist role was retired 2026-09-27 (gist is now selected
         # by the write call). FIVE roles are required now; a leftover
         # TWICETOLD_MODEL_ESCALATION in .env is ignored.
@@ -799,7 +821,11 @@ def load_settings(env: dict[str, str] | None = None) -> Settings:
         try:
             prices[price_key] = float(raw)
         except ValueError as exc:
-            raise ConfigError(f"{env_key} must be a number, got {raw!r}.") from exc
+            raise ConfigError(
+                f"{env_key} must be a finite nonnegative number."
+            ) from exc
+        if not math.isfinite(prices[price_key]) or prices[price_key] < 0:
+            raise ConfigError(f"{env_key} must be a finite nonnegative number.")
 
     return Settings(
         database_uri=database_uri,

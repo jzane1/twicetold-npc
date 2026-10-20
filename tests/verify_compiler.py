@@ -51,6 +51,7 @@ from psycopg.types.json import Jsonb
 from scratch_uri import scratch_uri
 
 from app import db
+from app.runtime import open_runtime_pool
 from app.compiler import (
     DEFAULT_SCENE_TYPE,
     CompilerWorker,
@@ -66,7 +67,6 @@ from app.config import (
     load_settings,
     scene_types,
 )
-from app.db import build_pool
 from app.dialogue import DialogueService, weighted_score
 from app.providers import (
     CompilerCallResult,
@@ -319,8 +319,7 @@ async def run_turn(
 
 async def run(uri: str) -> None:
     settings = Settings(database_uri=uri, provider_mode="fake")
-    pool = build_pool(uri)
-    await pool.open()
+    pool = await open_runtime_pool(settings)
     try:
         # ---------------- A. migration 008 shape --------------------------
         print("\n-- A. migration 008 shape")
@@ -412,8 +411,9 @@ async def run(uri: str) -> None:
             pool, "SELECT version FROM schema_migrations ORDER BY version"
         )
         check(
-            [row[0] for row in ledger][-1] == "009_gist_flag.sql" and len(ledger) == 9,
-            "A6 the ledger records 001-009",
+            [row[0] for row in ledger][-1] == "010_embedding_space.sql"
+            and len(ledger) == 10,
+            "A6 the ledger records 001-010",
         )
 
         # ---------------- B. the compile ladder ---------------------------

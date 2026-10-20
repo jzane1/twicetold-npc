@@ -53,8 +53,8 @@ from psycopg.types.json import Jsonb
 from scratch_uri import scratch_uri
 
 from app import db
+from app.runtime import open_runtime_pool
 from app.config import Settings
-from app.db import build_pool
 from app.ingest import UnknownAgentError
 from app.providers import (
     FakeEmbeddingProvider,
@@ -285,8 +285,7 @@ async def run(uri: str) -> None:
     from urllib.parse import urlsplit
 
     settings = Settings(database_uri=uri, provider_mode="fake")
-    pool = build_pool(uri)
-    await pool.open()
+    pool = await open_runtime_pool(settings)
     print(f"walker: scratch DB = {urlsplit(uri).path.lstrip('/')}")
     try:
         svc = RetrievalService(pool, fake_providers(), settings)
@@ -298,8 +297,8 @@ async def run(uri: str) -> None:
             "SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1",
         )
         check(
-            top is not None and top[0].startswith("009_"),
-            "A1 the migration ledger ends at 009 (C5 adds none; 009 is the gist split)",
+            top is not None and top[0] == "010_embedding_space.sql",
+            "A1 the migration ledger ends at 010 (database embedding configuration)",
             detail=top[0] if top else "empty ledger",
         )
         agent_cols = await fetchall(

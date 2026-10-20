@@ -47,8 +47,8 @@ from psycopg.types.json import Jsonb
 from scratch_uri import scratch_uri
 
 from app import db
+from app.runtime import open_runtime_pool
 from app.config import SERVICE_DEFAULTS, ConfigError, Settings, load_settings
-from app.db import build_pool
 from app.dialogue import _BLOCK_PROSE_INSTRUCTION, assemble_prose_prompt
 from app.identity import ensure_identity_document, render_identity_document
 from app.providers import (
@@ -299,8 +299,7 @@ async def seed_many(pool, agent_id, n=5, importance=0.5):
 
 async def run(uri: str) -> None:
     settings = Settings(database_uri=uri, provider_mode="fake")
-    pool = build_pool(uri)
-    await pool.open()
+    pool = await open_runtime_pool(settings)
     try:
         # ---------------- A. migration 007 shape --------------------------
         print("\n-- A. migration 007 shape")
@@ -379,8 +378,9 @@ async def run(uri: str) -> None:
             # C3, 2026-08-17) — the mechanical ledger-pin update every
             # migration makes to prior walkers. The reflection mechanics
             # this walker verifies are untouched by 008.
-            [row[0] for row in ledger][-1] == "009_gist_flag.sql" and len(ledger) == 9,
-            "A5 the ledger records 001-009",
+            [row[0] for row in ledger][-1] == "010_embedding_space.sql"
+            and len(ledger) == 10,
+            "A5 the ledger records 001-010",
         )
         refl_cols = {
             r[0]

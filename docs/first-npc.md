@@ -1,5 +1,8 @@
 # Your first NPC
 
+To try the whole lifecycle before writing client code, run [the first-run Compose demo](first-run.md).
+It includes a small executable Python HTTP example, fake and real providers, and a populated Ledger.
+
 This is the page for the person wiring twicetold-npc into a game. It's about thirty lines of
 C# once the service is running, and the order of the calls matters more than the calls
 themselves, so I'll give you the order and the why. `SETUP.md` gets the service running;

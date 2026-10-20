@@ -69,6 +69,7 @@ from scratch_uri import scratch_uri
 
 import app.providers as providers_module
 from app import db
+from app.config import Settings
 from app.config import (
     EMBEDDING_DIM,
     EMBEDDING_MODEL_DEFAULT,
@@ -1079,6 +1080,8 @@ async def run(uri: str) -> None:
     section_f_embedding()
     pool = build_pool(uri)
     await pool.open()
+    # The mock HTTP embedding endpoint emits the deterministic fake vectors.
+    await db.ensure_embedding_space(pool, Settings(database_uri=uri))
     try:
         await section_g_served_beat(pool, uri)
         await section_h_failure_ladder(pool, uri)

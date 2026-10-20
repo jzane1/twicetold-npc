@@ -68,7 +68,14 @@ from pgvector.psycopg import register_vector_async
 from psycopg.types.json import Jsonb
 from psycopg_pool import AsyncConnectionPool
 
-from app.config import DB_POOL_MAX_SIZE_DEFAULT
+from app.config import DB_POOL_MAX_SIZE_DEFAULT, ConfigError, Settings
+from app.embedding_space import (
+    LEGACY,
+    EmbeddingSpaceError,
+    binding_status,
+    embedding_configuration,
+)
+from app.agent_config import validate_agent_config
 from app.providers import NewComponent
 
 
@@ -135,6 +142,7 @@ async def insert_agent(
     from the INSERT since the A1 re-shape (2026-08-04): they stay in the
     schema (applied migrations are immutable) but are never written or
     read."""
+    validate_agent_config(config)
     async with pool.connection() as conn, conn.cursor() as cur:
         await cur.execute(
             "INSERT INTO agents (name, seed_identity, rigidity, "
@@ -173,6 +181,7 @@ async def merge_agent_config(
             raise LookupError(f"unknown agent_id {agent_id}")
         merged = dict(row[0] or {})
         merged.update(patch)
+        validate_agent_config(merged)
         await cur.execute(
             "UPDATE agents SET config = %s WHERE agent_id = %s",
             (Jsonb(merged), agent_id),
@@ -2877,3 +2886,93 @@ async def purge_agent_memories(
         gist_spans_deleted=counts.spans,
         details_deleted=counts.details,
     )
+
+
+# Database-wide embedding compatibility (migration 010).
+READ_BINDING = "SELECT configuration FROM embedding_space WHERE singleton = true"
+LOCK_BINDING = "LOCK TABLE embedding_space IN EXCLUSIVE MODE"
+INSERT_BINDING = "INSERT INTO embedding_space (configuration) VALUES (%s)"
+HAS_VECTORS = """
+SELECT EXISTS (SELECT 1 FROM memory_fact_versions WHERE embedding IS NOT NULL)
+    OR EXISTS (SELECT 1 FROM memories
+               WHERE embedding IS NOT NULL OR location_embedding IS NOT NULL)
+"""
+
+
+async def ensure_embedding_space(pool, settings: Settings) -> None:
+    """Bind an empty database or check an existing binding, before any workers.
+
+    The table lock serializes first startup across competing configurations.
+    Old binaries must be stopped during migration/adoption (as for any upgrade).
+    """
+    requested = embedding_configuration(settings)
+    async with pool.connection() as conn, conn.cursor() as cur:
+        await cur.execute(LOCK_BINDING)
+        await cur.execute(READ_BINDING)
+        row = await cur.fetchone()
+        stored = row[0] if row else None
+        has_vectors = False
+        if stored is None:
+            await cur.execute(HAS_VECTORS)
+            has_vectors = (await cur.fetchone())[0]
+        status = binding_status(stored, requested, has_vectors)
+        if status == "legacy":
+            raise EmbeddingSpaceError(LEGACY)
+        if status == "unbound":
+            await cur.execute(INSERT_BINDING, (Jsonb(requested),))
+
+
+def inspect_embedding_space(
+    conn, settings: Settings, *, adopt_existing: bool = False
+) -> str:
+    """Read-only by default; explicit adoption only fills a missing binding.
+
+    A mismatched binding can never be overwritten, including on an empty store.
+    """
+    with conn.cursor() as cur:
+        if adopt_existing:
+            cur.execute(LOCK_BINDING)
+        cur.execute(READ_BINDING)
+        row = cur.fetchone()
+        cur.execute(HAS_VECTORS)
+        requested = embedding_configuration(settings)
+        status = binding_status(row[0] if row else None, requested, cur.fetchone()[0])
+        if adopt_existing and status != "matched":
+            cur.execute(INSERT_BINDING, (Jsonb(requested),))
+            return "adopted"
+        if status == "legacy":
+            raise EmbeddingSpaceError(LEGACY)
+        return status
+
+
+def inspect_setup_database(
+    settings: Settings,
+    expected: set[str],
+    *,
+    timeout: int = 10,
+    adopt_existing: bool = False,
+) -> str:
+    """Synchronous, bounded administrative diagnostics; no model calls."""
+    import psycopg
+
+    with psycopg.connect(settings.database_uri, connect_timeout=timeout) as conn:
+        conn.execute(
+            "SELECT set_config('statement_timeout', %s, true)", (str(timeout * 1000),)
+        )
+        if not conn.execute(
+            "SELECT 1 FROM pg_extension WHERE extname = 'vector'"
+        ).fetchone():
+            raise ConfigError("pgvector is missing; apply the migrations.")
+        if (
+            conn.execute("SELECT to_regclass('public.schema_migrations')").fetchone()[0]
+            is None
+        ):
+            raise ConfigError("Migration ledger is missing; apply the migrations.")
+        applied = {
+            r[0]
+            for r in conn.execute("SELECT version FROM schema_migrations").fetchall()
+        }
+        pending = sorted(expected - applied)
+        if pending:
+            raise ConfigError("Pending migrations: " + ", ".join(pending))
+        return inspect_embedding_space(conn, settings, adopt_existing=adopt_existing)

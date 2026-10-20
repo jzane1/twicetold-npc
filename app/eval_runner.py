@@ -124,7 +124,7 @@ from app.config import (
     load_env,
     load_settings,
 )
-from app.db import build_pool
+from app.runtime import open_runtime_pool
 from app.eval_judge import (
     RUBRICS,
     GoldItem,
@@ -629,8 +629,7 @@ async def run_scenarios(
     excluded = [s.scenario_id for s in scenarios if not include_held_out and s.held_out]
     if judged and judge is None:
         judge = build_judge_provider(settings)
-    pool = build_pool(settings.database_uri, max_size=settings.db_pool_max_size)
-    await pool.open()
+    pool = await open_runtime_pool(settings)
     providers = build_providers(settings)
     retrieval = RetrievalService(pool, providers, settings)
     all_turns: list[DialogueTurnResult] = []
@@ -932,8 +931,7 @@ async def drift_validate(
     """The `drift-validate` core: replay each corpus scenario's observes,
     age the session past the last authored moment, re-freeze the basis, and
     probe once with the capture seam attached."""
-    pool = build_pool(settings.database_uri, max_size=settings.db_pool_max_size)
-    await pool.open()
+    pool = await open_runtime_pool(settings)
     providers = build_providers(settings)
     all_turns: list[DialogueTurnResult] = []
     all_observes: list[IngestResult] = []
@@ -1136,8 +1134,7 @@ async def _ablation_arm(
 ) -> dict:
     """One arm: the drift-validate replay core per scenario, then the
     judge-free metric read per observed memory."""
-    pool = build_pool(settings.database_uri, max_size=settings.db_pool_max_size)
-    await pool.open()
+    pool = await open_runtime_pool(settings)
     providers = build_providers(settings)
     retrieval = RetrievalService(pool, providers, settings)
     all_turns: list[DialogueTurnResult] = []

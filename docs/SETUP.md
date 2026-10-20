@@ -11,6 +11,10 @@ at all. If you change how the project starts, change it here.
 
 ## The one-command backend (compose)
 
+For a complete executable trial, start with [the first-run Compose demo](first-run.md).
+It provisions an isolated database, exercises the HTTP API from ingestion through reconstruction
+and correction, and prints a populated inspector link. Both fake and real-provider paths are included.
+
 The fastest path to a running backend, and the one an integrator should use, is docker compose.
 It needs only Docker Desktop, no host Python:
 
@@ -19,7 +23,7 @@ Copy-Item .env.example .env    # then edit it, or keep the fake-mode defaults
 docker compose up -d --build
 ```
 
-This builds the API image, starts Postgres with pgvector, runs migrations 001 through 009 as a
+This builds the API image, starts Postgres with pgvector, runs migrations 001 through 010 as a
 one-shot `migrate` service, and starts the API, in dependency order. `docker compose ps` shows
 progress; the `api` service reports `healthy` once its pipelines have warmed, within about a
 minute of a cached `up`. The first build is a one-time few minutes (the image is about 4.9 GB on
@@ -32,11 +36,117 @@ reads `.env` from a read-only bind mount and compose refuses to invent it. Provi
 keys, and the OpenAI-compatible backend are all configured through that same `.env`, exactly as
 in the numbered sections below. Teardown is under [Teardown](#teardown) at the end.
 
-**Everything below is the bare-metal dev path** (host Python running the app directly, how the
-maintainer develops and how the suite and walkers run). For that, `docker compose up -d db`
+**The numbered installation steps below describe the bare-metal dev path** (host Python running
+the app directly). Provider settings apply to both paths; section 4b includes the Compose-specific
+host address. For host development, `docker compose up -d db`
 brings up just the database and you run `python -m app.serve` on the host beside it. Do not run
 the full compose stack and a host `python -m app.serve` at once: they both bind port 8000 and
 both drive the same database.
+
+## Check setup before making observations
+
+After the image has built and migrations have run, use a one-off container. This also works when
+the API cannot start, and does not load the NLP pipelines:
+
+```powershell
+docker compose run --rm --no-deps api python -m app.doctor
+```
+
+For a host Python installation, run `python -m app.doctor` instead. The default command is
+read-only: it reports the effective provider mode, required model names in real mode, database
+connectivity, pending migrations, and embedding-configuration compatibility. It makes **no model
+calls** and does not record a database binding. Exit 0 means these checks passed, not that a live
+model has been contacted. `--json` provides machine-readable checks; exit 1 means a check failed.
+
+To explicitly test provider connectivity too:
+
+```powershell
+docker compose run --rm --no-deps api python -m app.doctor --probe-providers
+# Host Python equivalent:
+# python -m app.doctor --probe-providers
+```
+
+Real mode sends one small JSON request to each distinct required chat model and one embedding
+request. These may incur provider charges. Fake mode only checks the deterministic fake embedding;
+it does not test any configured remote server. Probes use no automatic retries and a 10-second
+request timeout (`--timeout 30` changes it). Database failures prevent provider probes. Credentials,
+connection strings and remote error bodies are omitted from diagnostic output. The embedding probe
+checks the fitted 1536-dimension output and rejects empty, zero or non-finite vectors. A passing
+probe establishes basic connectivity and response shape, not memory quality or streaming support.
+Optional judge, reflection and compiler models are not probed.
+
+## Changing providers safely
+
+Migration 010 adds a database-wide embedding binding. Before NLP warm-up or worker startup, the
+API and command-line runners check it. A database without vectors is bound automatically on first
+runtime startup. The binding covers fake versus real mode, the embedding model, endpoint identity,
+dimension and fitting version. API keys and chat-model choices are excluded, so rotating keys or
+changing dialogue models does not invalidate embeddings. Endpoint identity is stored as a hash.
+An endpoint alias or model alias is conservatively treated as a different configuration; use the
+same connection topology consistently. A model server changing weights behind an unchanged model
+name cannot be detected, so use stable model versions.
+
+**To switch a fake trial to real providers, create a separate database.** Preserve the old one;
+do not delete the volume or relabel its binding. With the unchanged template database user:
+
+```powershell
+docker compose stop api
+docker compose exec db psql -U twicetold -d postgres -c 'CREATE DATABASE twicetold_real;'
+```
+
+Use your configured `POSTGRES_USER` if it differs. In `.env`, change `POSTGRES_DB` to
+`twicetold_real`, change the database name at the end of `DATABASE_URI` to the same name, and set
+`TWICETOLD_PROVIDER_MODE=real` plus the chosen provider settings. Keep the existing database user
+and password. Then run:
+
+```powershell
+docker compose up -d --build
+docker compose run --rm --no-deps api python -m app.doctor --probe-providers
+```
+
+The migration service initializes the new database. The old database remains in the volume; its
+agents and memories do not appear in the new database. On the host path, create a new database in
+the same way, point `DATABASE_URI` at it, run `python db\migrate.py`, then run the doctor and server.
+There is no re-embedding tool in v1; retained memories must be replayed into a new database using
+their original observations if a different embedding model is required.
+
+**Upgrading an existing store:** stop every API, REPL, worker and evaluation process using it
+before applying migration 010. The migration never guesses the provenance of existing vectors.
+If vectors exist without a binding, startup refuses them. Verify that `.env` describes the
+**original** embedding mode, model and endpoint, then explicitly attest to that configuration:
+
+```powershell
+# Compose: rebuild first, then migrate while the API is stopped.
+docker compose build
+docker compose run --rm migrate
+docker compose run --rm --no-deps api python -m app.doctor --adopt-existing-embeddings
+docker compose up -d api
+# Host equivalent after python db\migrate.py:
+# python -m app.doctor --adopt-existing-embeddings
+```
+
+Adoption only fills a missing binding; it cannot override an existing one and never changes
+vectors. It is an operator attestation, not a verification of historical model provenance. If
+provenance is unknown or mixed, use a new database. Historical and location vectors also count;
+purging live memories is not a supported way to change the binding.
+
+## Agent configuration errors
+
+`POST /v1/agents` validates `config` before provisioning and returns HTTP 422 for unknown keys,
+invalid types, non-finite numbers and unsafe ranges. The Python provisioning and configuration
+merge helpers use the same validation; a failed merge leaves the stored configuration unchanged.
+Valid configurations stay sparse: defaults are not copied into the stored object.
+
+For example, `{"decay_classes":{"episodic":86400},"decay_class_default":"episodic"}` is
+valid; a zero duration, an unresolved default label, or `retrieval_top_kk` is rejected. Numbers
+must be JSON numbers, not strings or booleans. Numeric `null` overrides retain their existing
+use-the-default meaning. Switches accept 0 or 1; count knobs require whole numbers. Zero remains
+valid for supported disable switches such as `gate_enabled`, `reconstruction_theta` and
+`lexical_fetch_k`. Decay durations, time scales and the reconstruction band quantum must be
+positive. Process-only worker poll/batch settings cannot be overridden per agent. Retired
+escalation keys remain accepted for corpus compatibility but have no effect. Existing stored
+configurations are not rewritten by this upgrade; validate them before updating them. Custom
+`text_search_config` names must also exist in Postgres.
 
 ---
 
@@ -169,7 +279,7 @@ selector. The Ollama shape, end to end:
 
 ```powershell
 winget install --id Ollama.Ollama
-ollama pull llama3.1:8b            # any chat model; the six role vars name it
+ollama pull llama3.1:8b            # any chat model; the five role vars name it
 ollama pull qwen3-embedding:4b     # Matryoshka: emits exactly 1536 via dimensions=
 $env:OLLAMA_CONTEXT_LENGTH = "16384"   # or a Modelfile num_ctx — see the warning below
 ```
@@ -177,6 +287,7 @@ $env:OLLAMA_CONTEXT_LENGTH = "16384"   # or a Modelfile num_ctx — see the warn
 Then in `.env` (one `KEY=VALUE` per line):
 
 ```
+TWICETOLD_PROVIDER_MODE=real
 TWICETOLD_MODEL_BACKEND=openai
 TWICETOLD_MODEL_BASE_URL=http://127.0.0.1:11434/v1
 TWICETOLD_MODEL_IMPORTANCE=llama3.1:8b
@@ -187,6 +298,25 @@ TWICETOLD_MODEL_RECONSTRUCTION=llama3.1:8b
 TWICETOLD_EMBEDDING_BASE_URL=http://127.0.0.1:11434/v1
 TWICETOLD_EMBEDDING_MODEL=qwen3-embedding:4b
 ```
+
+The URLs above are for **host Python**. For the API in **Docker Desktop Compose**, use
+`http://host.docker.internal:11434/v1` for both base URLs: `127.0.0.1` inside the API container
+refers to that container. Ollama must listen on an interface reachable from Docker. Quit any
+already-running Ollama tray/server instance, then start it in a separate PowerShell window:
+
+```powershell
+$env:OLLAMA_HOST = "0.0.0.0:11434"
+$env:OLLAMA_CONTEXT_LENGTH = "16384"
+ollama serve
+```
+
+This listens beyond loopback; restrict inbound port 11434 with the host firewall to the intended
+local/Docker clients. Keep this window open. For host Python only, use the same start procedure
+with `$env:OLLAMA_HOST = "127.0.0.1:11434"` so the context setting reaches the server process.
+After changing `.env`, restart the API (`docker compose restart api` or restart the host process),
+then run the doctor with `--probe-providers`. If the database already contains fake embeddings,
+follow [Changing providers safely](#changing-providers-safely) first. Startup rejects a mismatched
+binding instead of silently mixing the vectors.
 
 No API key is needed for a local server (a placeholder is sent; `TWICETOLD_MODEL_API_KEY` /
 `TWICETOLD_EMBEDDING_API_KEY` exist for hosted servers such as `https://api.openai.com/v1`).
@@ -201,8 +331,8 @@ emits exactly 1536; a narrower model (`nomic-embed-text` at 768, `bge`/`mxbai` a
 zero-padded to 1536 at the seam — cosine, L2, and inner-product distances between padded
 vectors equal those of the originals, so retrieval is unchanged — with one warning per
 process; a wider model is refused loudly (client-side truncation is unsound for non-Matryoshka
-models). The embedding model is a per-database choice: switching it orphans every stored
-vector, and there is no re-embed tooling in v1.
+models). The embedding model is a per-database choice: startup rejects a change to an existing
+binding, and there is no re-embed tooling in v1. Use a new database as described above.
 
 **Wire notes.** The token-limit FIELD is a knob (ruled 2026-09-03, built 2026-09-11):
 requests use `max_tokens` (the default; the field local servers document) unless

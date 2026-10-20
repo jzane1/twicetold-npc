@@ -52,8 +52,8 @@ from psycopg.types.json import Jsonb
 from scratch_uri import scratch_uri
 
 from app import db
+from app.runtime import open_runtime_pool
 from app.config import SERVICE_DEFAULTS, Settings
-from app.db import build_pool
 from app.dissonance import (
     DissonanceCallError,
     DissonanceService,
@@ -228,8 +228,7 @@ async def run(uri: str) -> None:
     from urllib.parse import urlsplit
 
     settings = Settings(database_uri=uri, provider_mode="fake")
-    pool = build_pool(uri)
-    await pool.open()
+    pool = await open_runtime_pool(settings)
     print(f"walker: scratch DB = {urlsplit(uri).path.lstrip('/')}")
     try:
         svc = DissonanceService(pool, fake_providers(), settings)
@@ -313,8 +312,8 @@ async def run(uri: str) -> None:
             pool, "SELECT version FROM schema_migrations ORDER BY version"
         )
         check(
-            len(ledger) == 9 and ledger[-1][0] == "009_gist_flag.sql",
-            "A6 the ledger records 001-009 — C4 ships NO migration (ruled)",
+            len(ledger) == 10 and ledger[-1][0] == "010_embedding_space.sql",
+            "A6 the ledger records 001-010 — C4 itself ships NO migration (ruled)",
         )
 
         # ------------------------------------------------------------------ #

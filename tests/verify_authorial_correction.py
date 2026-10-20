@@ -36,6 +36,7 @@ from psycopg.types.json import Jsonb
 from scratch_uri import scratch_uri
 
 from app import db
+from app.runtime import open_runtime_pool
 from app.ingest import (
     CorrectionConflictError,
     IngestService,
@@ -213,8 +214,7 @@ async def main(database_uri: str) -> None:
     from app.config import Settings
 
     settings = Settings(database_uri=database_uri, provider_mode="fake")
-    pool = db.build_pool(database_uri)
-    await pool.open()
+    pool = await open_runtime_pool(settings)
     ingest = IngestService(pool, fake_providers(), settings)
     retrieval = RetrievalService(pool, fake_providers(), settings)
     print(f"walker: scratch DB = {urlsplit(database_uri).path.lstrip('/')}")

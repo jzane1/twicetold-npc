@@ -34,8 +34,8 @@ from psycopg.types.json import Jsonb
 from scratch_uri import scratch_uri
 
 from app import api as api_module
+from app.runtime import open_runtime_pool
 from app.config import Settings
-from app.db import build_pool
 from app.ingest import IngestService
 from app.providers import (
     FailingEmbeddingProvider,
@@ -139,8 +139,7 @@ def fake_service(pool, settings, **provider_overrides) -> IngestService:
 
 async def main(database_uri: str) -> None:
     settings = Settings(database_uri=database_uri, provider_mode="fake")
-    pool = build_pool(database_uri)
-    await pool.open()
+    pool = await open_runtime_pool(settings)
     service = fake_service(pool, settings)
     print(f"walker: scratch DB = {urlsplit(database_uri).path.lstrip('/')}")
 

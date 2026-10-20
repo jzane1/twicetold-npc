@@ -1142,14 +1142,19 @@ class AnthropicChatBackend:
     prompts, as it always has. The hosted base URL is passed explicitly so a
     stray ANTHROPIC_BASE_URL in the process env can never re-route the key."""
 
-    def __init__(self, *, api_key: str, http_client=None):
+    def __init__(self, *, api_key: str, http_client=None, timeout=None, max_retries=2):
         import anthropic
 
         self._client = anthropic.Anthropic(
             api_key=api_key,
             base_url=ANTHROPIC_HOSTED_BASE_URL,
             http_client=http_client,
+            max_retries=max_retries,
+            **({"timeout": timeout} if timeout is not None else {}),
         )
+
+    def close(self) -> None:
+        self._client.close()
 
     def complete(
         self,
@@ -1226,14 +1231,23 @@ class OpenAIChatBackend:
         api_key: str,
         token_limit_field: str = MODEL_TOKEN_LIMIT_FIELD_DEFAULT,
         http_client=None,
+        timeout=None,
+        max_retries=2,
     ):
         import openai
 
         self._client = openai.OpenAI(
-            api_key=api_key, base_url=base_url, http_client=http_client
+            api_key=api_key,
+            base_url=base_url,
+            http_client=http_client,
+            max_retries=max_retries,
+            **({"timeout": timeout} if timeout is not None else {}),
         )
         self._base_url = base_url
         self._token_limit_field = token_limit_field
+
+    def close(self) -> None:
+        self._client.close()
 
     @staticmethod
     def _messages(system: str, user: str) -> list[dict]:
@@ -1320,7 +1334,9 @@ class OpenAIChatBackend:
         return ChatUsage(input_tokens=input_tokens, output_tokens=output_tokens)
 
 
-def build_chat_backend(settings: Settings, *, http_client=None) -> ChatBackend:
+def build_chat_backend(
+    settings: Settings, *, http_client=None, timeout=None, max_retries=2
+) -> ChatBackend:
     """The backend for `settings.model_backend` (real mode only — fake mode
     never constructs one). The openai backend sends the placeholder key when
     none is configured (the SDK refuses an empty key; local servers ignore
@@ -1331,9 +1347,14 @@ def build_chat_backend(settings: Settings, *, http_client=None) -> ChatBackend:
             api_key=settings.model_api_key or PLACEHOLDER_API_KEY,
             token_limit_field=settings.model_token_limit_field,
             http_client=http_client,
+            timeout=timeout,
+            max_retries=max_retries,
         )
     return AnthropicChatBackend(
-        api_key=settings.anthropic_api_key, http_client=http_client
+        api_key=settings.anthropic_api_key,
+        http_client=http_client,
+        timeout=timeout,
+        max_retries=max_retries,
     )
 
 
@@ -1933,7 +1954,9 @@ class RealEmbeddingProvider:
     unchanged. The hosted base URL is passed explicitly (no stray
     OPENAI_BASE_URL redirect)."""
 
-    def __init__(self, settings: Settings, *, http_client=None):
+    def __init__(
+        self, settings: Settings, *, http_client=None, timeout=None, max_retries=2
+    ):
         import openai
 
         if settings.embedding_base_url:
@@ -1943,10 +1966,17 @@ class RealEmbeddingProvider:
             base_url = OPENAI_HOSTED_BASE_URL
             api_key = settings.openai_api_key
         self._client = openai.OpenAI(
-            api_key=api_key, base_url=base_url, http_client=http_client
+            api_key=api_key,
+            base_url=base_url,
+            http_client=http_client,
+            max_retries=max_retries,
+            **({"timeout": timeout} if timeout is not None else {}),
         )
         self._model = settings.embedding_model
         self._base_url = base_url
+
+    def close(self) -> None:
+        self._client.close()
 
     def embed(self, texts: list[str]) -> EmbedResult:
         try:
@@ -1972,6 +2002,10 @@ class RealEmbeddingProvider:
     def _fit(self, vector: list[float]) -> list[float]:
         """The ruled width fit: pad narrower, pass exact, refuse wider."""
         width = len(vector)
+        if not vector or not all(math.isfinite(v) for v in vector) or not any(vector):
+            raise ProviderCallError(
+                "embedding must be a nonempty, finite, nonzero vector"
+            )
         if width == EMBEDDING_DIM:
             return vector
         if width > EMBEDDING_DIM:

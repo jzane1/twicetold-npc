@@ -23,6 +23,7 @@ from app.config import REPO_ROOT, Settings, load_settings
 from app.demo_loader import load_demo
 from app.eval_scenarios import ObserveStep, load_scenarios
 from app.providers import build_providers
+from app.runtime import open_runtime_pool
 from app.retrieval import RetrievalService
 from app.schemas import DialogueInitRequest
 from app.scratch_db import provision_scratch, scratch_uri
@@ -113,8 +114,7 @@ async def rehearse(settings, *, base_url: str) -> Path:
         "status": "running",
     }
     save_json(evidence_path, evidence)
-    pool = db.build_pool(settings.database_uri, max_size=settings.db_pool_max_size)
-    await pool.open()
+    pool = await open_runtime_pool(settings)
     providers = build_providers(settings)
     retrieval = RetrievalService(pool, providers, settings)
     try:

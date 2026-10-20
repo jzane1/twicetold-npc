@@ -43,8 +43,8 @@ from psycopg.types.json import Jsonb
 from scratch_uri import scratch_uri
 
 from app import db
+from app.runtime import open_runtime_pool
 from app.config import Settings
-from app.db import build_pool
 from app.ingest import IngestService
 from app.providers import (
     FailingEmbeddingProvider,
@@ -182,8 +182,7 @@ async def dialogue_init(pool, settings, agent_id, probe, version):
 
 async def run(uri: str) -> None:
     settings = Settings(database_uri=uri, provider_mode="fake")
-    pool = build_pool(uri)
-    await pool.open()
+    pool = await open_runtime_pool(settings)
     try:
         suffix = int(time.time() * 1000)
 

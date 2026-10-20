@@ -41,9 +41,9 @@ from psycopg.types.json import Jsonb
 
 from scratch_uri import scratch_uri
 
+from app.runtime import open_runtime_pool
 from app.concurrency import ModelCallGate
 from app.config import Settings
-from app.db import build_pool
 from app.dialogue import DialogueService
 from app.providers import (
     FakeEmbeddingProvider,
@@ -274,8 +274,7 @@ async def run(uri: str) -> None:
     await section_cap_enforcement()
     await section_release_on_exception()
     await section_wait_timing()
-    pool = build_pool(uri)
-    await pool.open()
+    pool = await open_runtime_pool(settings)
     try:
         await section_seam_wiring(pool, settings)
     finally:

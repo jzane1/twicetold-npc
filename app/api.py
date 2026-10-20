@@ -21,13 +21,15 @@ from uuid import UUID
 
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.compiler import CompilerWorker
 from app.config import load_allowed_hosts, load_settings
-from app.db import build_pool
+from app.runtime import open_runtime_pool
 from app.deferred import DeferredWriteWorker
 from app.dialogue import DialogueService
 from app.dissonance import DissonanceCallError, DissonanceService
@@ -106,8 +108,7 @@ def _tee_turn(result: DialogueTurnResult) -> None:
 @asynccontextmanager
 async def _lifespan(app: FastAPI):
     settings = load_settings()
-    pool = build_pool(settings.database_uri, max_size=settings.db_pool_max_size)
-    await pool.open()
+    pool = await open_runtime_pool(settings)
     await asyncio.to_thread(warm_pipelines)  # model load is startup cost
     providers = build_providers(settings)
     app.state.retrieval = RetrievalService(pool, providers, settings)
@@ -148,6 +149,25 @@ async def _lifespan(app: FastAPI):
 
 
 app = FastAPI(title="twicetold-npc API", version="1", lifespan=_lifespan)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_error(request: Request, exc: RequestValidationError):
+    if request.url.path == "/v1/agents":
+        # A rejected configuration may contain NaN/Infinity (including JSON
+        # numeric overflow). Echoing that input would make JSONResponse fail
+        # while reporting the validation error. Return locations and reasons.
+        return JSONResponse(
+            status_code=422,
+            content={
+                "detail": [
+                    {key: error[key] for key in ("type", "loc", "msg")}
+                    for error in exc.errors()
+                ]
+            },
+        )
+    return await request_validation_exception_handler(request, exc)
+
 
 # The Ledger host guard (config.py ENV_ALLOWED_HOSTS): validate the request
 # Host header against the loopback allowlist so neither the browser inspector

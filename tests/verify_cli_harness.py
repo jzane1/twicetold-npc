@@ -50,9 +50,9 @@ from psycopg.types.json import Jsonb
 
 from scratch_uri import scratch_uri
 
+from app.runtime import open_runtime_pool
 from app.cli import render_debug
 from app.config import Settings
-from app.db import build_pool
 from app.dialogue import (
     DialogueService,
     assemble_prose_prompt,
@@ -260,8 +260,7 @@ def crafted_item(memory_id, score, relevance, recency, importance_norm):
 
 async def main(database_uri: str) -> None:
     settings = Settings(database_uri=database_uri, provider_mode="fake")
-    pool = build_pool(database_uri)
-    await pool.open()
+    pool = await open_runtime_pool(settings)
     recording = RecordingProseProvider()
     providers = bundle(dialogue=recording)
     ingest = IngestService(pool, providers, settings)

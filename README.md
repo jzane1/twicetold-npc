@@ -199,35 +199,6 @@ back; reflections and identity survive. Memories attach to NPC agents, not playe
 mapping a player to the memories they generated is yours to keep. These are tools for your
 erase flow, not a GDPR button.
 
-## Shipping a game with this
-
-[docs/shipping.md](docs/shipping.md) is the page I'd have wanted before adopting anything like
-this. The short version:
-
-- **You host it.** A studio server behind auth you add, never on player machines: a
-  player-local build would ship your model keys with the game.
-- **You pay per turn.** The cost row above, at your turns per player-hour.
-- **Steam asks.** A game with live-generated AI content declares it and describes its
-  guardrails, and players can report it from the overlay.
-- **No moderation layer is included.** Content safety is the provider's filters plus whatever
-  you build.
-- **Desktop and mobile yes, WebGL no.** The client is netstandard2.1 with an IL2CPP note;
-  WebGL has no `System.Net`, Unity's constraint, not mine.
-
-## What this is not
-
-- **Not hosted, not authenticated.** Anyone who reaches the port can read, write and purge
-  every agent's memories, so treat it like a database socket. It binds `127.0.0.1:8000` by
-  default; if you must expose it, put a reverse proxy with auth and TLS in front. A Host-header
-  guard restricts the inspector page and API to a configurable localhost allowlist
-  (`TWICETOLD_ALLOWED_HOSTS`).
-- **Not benchmark-scored.** LoCoMo and LongMemEval grade verbatim recall; past the decay
-  threshold this system deliberately paraphrases, so they would score the feature as a
-  failure. The judge-free metrics and the published agreement statistics stand in.
-- **Not multilingual.** The write-time NLP pass is English-only.
-- **Not phoning home.** No telemetry, no analytics; nothing leaves your machine except the
-  model calls you configured.
-
 ## How it's verified
 
 I built this solo, in logged sessions since the first commit on 2026-07-12, with an AI pair,
@@ -237,16 +208,16 @@ the floor before anything builds on top. The judgment at each fork is mine; the 
 verifier agents, the hooks, and the operating rules that run the loop live in my local
 toolchain, not the published tree.
 
-- **Floors.** Every layer is verified against the one beneath it, and a row lands in an
+**Floors.** Every layer is verified against the one beneath it, and a row lands in an
   append-only floors ledger only after an independent verifier pass returns pass: 33
   rows, from the schema to the provider seam. Floors are re-openable; re-verifying one is the
   normal cost of a design improvement.
-- **The suite and the walkers.** 228 pytest scenarios, offline and keyless, structural only
+**The suite and the walkers.** 228 pytest scenarios, offline and keyless, structural only
   (IDs, chain shape, timestamps, byte-identity; a model's wording is not a test surface), with
   the 213-scenario fast subset run by a repo hook at the end of every working turn; plus
   sixteen deep walkers (`tests\verify_*.py`), one per layer, that prove a layer once at build
   time.
-- **The working record.** An append-only decision register (every ruling dated, with what it
+**The working record.** An append-only decision register (every ruling dated, with what it
   beat and why), a session log, and per-layer floor evidence sit behind all of this. They
   discipline the work and stay local; the published repo carries the code, tests, and docs,
   not the internal record or the tooling that writes it. When a mid-build redesign made a
@@ -264,29 +235,24 @@ as a failed bar and closed with a 34-row constructed-truth set where every plant
 contradiction, reversal and invented answer was caught (kappa 1.00). The apparatus is in
 [docs/eval-harness.md](docs/eval-harness.md).
 
-## Read next
+
+## Research lineage
+
+The lineage: RaMem's encoding-context read term, CoALA's supersede-versus-decay split, Bartlett and Talk of the
+Town on compounding retellings, and LoCoMo, LongMemEval, MemoryAgentBench and Fixed-Persona
+SLMs on the eval side. (HARFER: Inlcude references to these research sources mentioned)
+
+
+
+
+
+
+
+
+
+
+## Next reads 
 
 - [docs/README.md](docs/README.md): the index, the reading order, and what every folder is
 - [docs/architecture.md](docs/architecture.md): the design truth, in thirteen sections
 - [docs/first-npc.md](docs/first-npc.md) and [docs/shipping.md](docs/shipping.md): the integrator pages
-
-## Research lineage
-
-Two 2026 papers claim "memory is reconstructed, not replayed" with different mechanisms:
-MRAgent (ICML 2026, arXiv 2606.06036) reconstructs over a cue-tag-content graph, and
-MemHarness (arXiv 2607.28272) rewrites each retrieved experience for the task at hand. Neither
-conditions on a persistent identity, persists the retelling as a compounding write-back,
-keeps an immutable bi-temporal ground truth, or holds the retelling to a gist pin and a drift
-budget; those four are the design. Zep/Graphiti and "Less Context, More Accuracy" (the Engram
-engine, arXiv 2606.09900) set the bi-temporal discipline. The rest of the lineage (RaMem's
-encoding-context read term, CoALA's supersede-versus-decay split, Bartlett and Talk of the
-Town on compounding retellings, and LoCoMo, LongMemEval, MemoryAgentBench and Fixed-Persona
-SLMs on the eval side) is mapped paper by paper in my research notes.
-
-## License
-
-Apache-2.0 ([LICENSE](LICENSE)); the third-party inventory is in [NOTICE](NOTICE). psycopg is
-the one copyleft dependency (LGPL-3.0-only, not vendored), the bundled Warriner 2013 lexicon is
-CC-BY-4.0 with its attribution in `data\lexicons\`, and the fastcoref weights are MIT,
-downloaded at first use on the bare-metal path or baked into the API image at build time on
-the compose path. Built by Jackson Zane.

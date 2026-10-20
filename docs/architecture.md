@@ -117,8 +117,20 @@ seam. `dimensions=1536` is sent on every call (Matryoshka models emit exactly 15
 vector is zero-padded to 1536, so cosine, L2, and inner product between padded vectors equal those of
 the originals and the retrieval math is untouched (one warning per process); a wider vector is
 refused loudly, because client-side truncation is unsound for non-Matryoshka models. The embedding
-model is a per-database choice: switching it orphans every stored vector (no re-embed tooling in v1).
+model is a per-database choice (no re-embed tooling in v1). Migration 010 records a singleton
+`embedding_space` binding: mode, model, dimension/fitting version and a hash of the endpoint.
+Runtime startup binds an empty store or verifies the existing binding before model/NLP work.
+Incompatible configurations fail startup. Legacy vectors without metadata require an explicit
+operator attestation through `python -m app.doctor --adopt-existing-embeddings`; no vectors or
+existing binding are overwritten. Keys and chat model choices are not part of embedding identity.
 The same model embeds location names, descriptions, and gate-time utterances.
+
+Agent configuration is validated at the HTTP provisioning boundary and in the database's
+provision/merge helpers. Unknown keys, unsafe numeric values, unresolved decay defaults and
+process-only overrides fail before storage. Config remains sparse; reads still resolve defaults
+through the existing precedence. `python -m app.doctor` checks configuration, database readiness
+and embedding compatibility without model calls or writes; explicit `--probe-providers` requests
+bounded connectivity probes. See `SETUP.md` for the two runtime topologies and upgrade procedure.
 
 **Write-time NLP (no LLM).** spaCy `en_core_web_lg` + `fastcoref` for intra-observation coreference;
 affect via VADER (compound to valence) plus the bundled Warriner 2013 VAD lexicon (arousal,

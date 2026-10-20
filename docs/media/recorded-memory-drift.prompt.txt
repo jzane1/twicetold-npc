@@ -1,0 +1,26 @@
+Use case: infographic-diagram
+Asset type: downloadable GitHub README image for twicetold-npc.
+Create a sophisticated wide landscape editorial infographic, approximately 1800x1200, with two equal halves, warm ivory background, charcoal large legible typography, emerald preserved-gist highlights and amber detail/interpretation annotations. Beautiful restrained painterly medieval village scene, generous spacing, professional technical project showcase.
+Title across top exact "twicetold-npc"
+Subtitle exact "The event stays. The telling changes."
+LEFT heading "Original observation", subtitle "Immutable record"
+RIGHT heading "Reconstructed memory", subtitle "Joan • 180 days later"
+Top-middle of each half is an illustration of the SAME fisherman leaving a pouch of gold on the GROUND BESIDE a market bench, walking toward the river. Joan is a merchant witnessing from his stall, not the actor. Left image sharp rich specific details: brown pouch with tiny gold glints on ground, fishing rod in departing fisherman's hand, tackle near bench, houses by river, crisp bench and stall shadows. Right image intentionally reconstructed and visibly simplified: SAME fisherman silhouette departing toward river, SAME bench, SAME pouch on GROUND beside bench with a soft gold impression; rod and tackle absent, houses and shadows dissolve into blank soft washed edges. Keep pouch location invariant. It is a mental reconstruction, not a second physical event. Draw thin emerald outline around pouch in BOTH panels, leader to tag "Pouch left behind". On left amber small labels pointing accurately: "Rod", "Tackle", "Coin glint". On right amber label pointing to faded scene margins "Specifics fade".
+Below illustrations show readable actual stored prose excerpts in spacious rounded panels. Do not alter text.
+LEFT excerpt verbatim:
+"He set a brown pouch of gold coins on the ground beside the bench.
+Then the fisherman stood, picked up his rod, and walked toward the river.
+He left the pouch behind."
+Highlight first sentence and "He left the pouch behind." light green. "picked up his rod" light amber.
+RIGHT excerpt verbatim:
+"An old fisherman set down a brown pouch of gold coins by the market bench and walked away toward the river, leaving it behind."
+Highlight "set down a brown pouch of gold coins by the market bench" and "leaving it behind" light green.
+Below right prose small amber interpretation box exact:
+"I don't know what it meant—whether he meant to let it go, or if something pulled at him and he forgot. But there was something sad in it."
+Label "Joan's interpretation"
+Below left prose small muted box "Rod, tackle, light and shadows recorded"
+Between panels slim arrow labeled "Recall through current identity".
+Footer green legend "Preserved gist" amber legend "Fading detail / personal interpretation".
+Bottom architecture strip clean small exact text "Immutable observation → Gist + previous telling + current identity → Stored retelling"
+Bottom tiny provenance "Excerpts from a recorded twicetold-npc demo • Illustration of stored text"
+Constraints: readable accurate text, two strongly differentiated scenes, no made-up numerical measures, no fake app screenshot, no watermarks. Visualize selective loss and subjective interpretation, NOT invented coat/weather changes. Left rod visible and right rod omitted. Original remains intact. Gist highlights show semantic correspondence rather than identical wording.

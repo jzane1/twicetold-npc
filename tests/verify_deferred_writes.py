@@ -43,8 +43,8 @@ from psycopg.types.json import Jsonb
 from scratch_uri import scratch_uri
 
 from app import db
+from app.runtime import open_runtime_pool
 from app.config import Settings
-from app.db import build_pool
 from app.deferred import DeferredWriteWorker
 from app.ingest import IngestService
 from app.providers import (
@@ -242,8 +242,7 @@ async def probe_write_cause(pool, table: str, value: str) -> bool:
 
 async def run(uri: str) -> None:
     settings = Settings(database_uri=uri, provider_mode="fake")
-    pool = build_pool(uri)
-    await pool.open()
+    pool = await open_runtime_pool(settings)
     try:
         # ---------------- A. migration 006 shape --------------------------
         print("\n-- A. migration 006 shape")

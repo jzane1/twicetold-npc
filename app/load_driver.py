@@ -48,7 +48,7 @@ from uuid import UUID
 
 from app import db
 from app.config import Settings, load_settings
-from app.db import build_pool
+from app.runtime import open_runtime_pool
 from app.gate import GATE_SIGNAL_ENTITY, GATE_SIGNAL_NOVELTY
 from app.providers import build_providers
 from app.schemas import DialogueTurnResult, IngestResult
@@ -141,8 +141,7 @@ async def run_driver(
     empirical novelty-distance CDF. It never sets the knob.
     """
     script = script if script is not None else generate_script(sessions, turns, seed)
-    pool = build_pool(settings.database_uri, max_size=settings.db_pool_max_size)
-    await pool.open()
+    pool = await open_runtime_pool(settings)
     providers = build_providers(settings)
     turn_results: list[DialogueTurnResult] = []
     ingest_results: list[IngestResult] = []
