@@ -19,13 +19,14 @@ namespace NpcMemory
     /// scene basis move only at scene boundaries (or session start). The
     /// loaded set + damper streak and the scene context fields are
     /// caller-held and reset at boundaries. AsOf is the session's
-    /// time-travel surface: it rides retrieval's age computation AND
-    /// becomes the client timestamp of observes and corrections.
+    /// scoring clock: it rides retrieval's age computation AND becomes the
+    /// timestamp of observes and corrections. It does not restore past knowledge.
     /// </summary>
     public sealed class NpcSession
     {
         private readonly NpcMemoryClient _client;
         private readonly string _phaseTag;
+        private readonly SemaphoreSlim _sceneGate = new SemaphoreSlim(1, 1);
 
         public Guid AgentId { get; }
         public string? IdentityVersion { get; private set; }
@@ -90,6 +91,20 @@ namespace NpcMemory
 
         private DateTimeOffset Now() => AsOf ?? DateTimeOffset.UtcNow;
 
+        /// <summary>Establish the first frozen identity/time once. Set AsOf
+        /// before calling for a game clock. Turns also await this automatically.
+        /// A failed/cancelled boundary leaves scene state unchanged.</summary>
+        public async Task InitializeAsync(CancellationToken ct = default)
+        {
+            await _sceneGate.WaitAsync(ct);
+            try
+            {
+                if (IdentityVersion == null || SceneStartedAt == null)
+                    await OpenSceneAsync(null, null, ct, resetContext: false);
+            }
+            finally { _sceneGate.Release(); }
+        }
+
         private DialogueTurnRequest BuildTurnRequest(
             string text,
             int? k,
@@ -122,6 +137,7 @@ namespace NpcMemory
             WeightOverrides? weightOverrides = null,
             CancellationToken ct = default)
         {
+            await InitializeAsync(ct);
             var result = await _client
                 .DialogueTurnAsync(BuildTurnRequest(text, k, weightOverrides), ct);
             ApplyTurnResult(result);
@@ -139,6 +155,7 @@ namespace NpcMemory
             WeightOverrides? weightOverrides = null,
             CancellationToken ct = default)
         {
+            await InitializeAsync(ct);
             var result = await _client
                 .DialogueTurnStreamAsync(
                     BuildTurnRequest(text, k, weightOverrides),
@@ -304,24 +321,38 @@ namespace NpcMemory
             string? prewarmContext = null,
             CancellationToken ct = default)
         {
+            await _sceneGate.WaitAsync(ct);
+            try { return await OpenSceneAsync(sceneType, prewarmContext, ct); }
+            finally { _sceneGate.Release(); }
+        }
+
+        private async Task<SceneResult> OpenSceneAsync(
+            string? sceneType, string? prewarmContext, CancellationToken ct, bool resetContext = true)
+        {
+            var startedAt = Now();
             var result = await _client
                 .SceneBoundaryAsync(
                     new SceneBoundaryEvent
                     {
                         AgentId = AgentId,
-                        ClientTimestamp = Now(),
+                        ClientTimestamp = startedAt,
                         SceneType = sceneType,
                         PrewarmContext = prewarmContext,
                     },
                     ct);
+            if (!result.Accepted || string.IsNullOrEmpty(result.IdentityVersion))
+                throw new NpcMemoryApiException(0, "scene boundary did not establish an identity version");
             IdentityVersion = result.IdentityVersion;
-            SceneStartedAt = Now();
+            SceneStartedAt = startedAt;
             SceneType = sceneType;
             LoadedMemoryIds = null; // next turn is a loader
             GateFruitlessStreak = 0; // the damper dies with the scene
-            ContextLocation = null; // a new scene is a new place/cast
-            ContextEntities = null;
-            ContextEventTime = null;
+            if (resetContext)
+            {
+                ContextLocation = null; // a new scene is a new place/cast
+                ContextEntities = null;
+                ContextEventTime = null;
+            }
             return result;
         }
 

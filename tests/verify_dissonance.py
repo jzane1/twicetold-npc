@@ -312,7 +312,7 @@ async def run(uri: str) -> None:
             pool, "SELECT version FROM schema_migrations ORDER BY version"
         )
         check(
-            len(ledger) == 10 and ledger[-1][0] == "010_embedding_space.sql",
+            len(ledger) == 11 and ledger[-1][0] == "011_observation_receipts.sql",
             "A6 the ledger records 001-010 — C4 itself ships NO migration (ruled)",
         )
 

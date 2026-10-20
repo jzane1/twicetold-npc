@@ -7,9 +7,8 @@ exactly the serialized result the service returned (`IngestResult` /
 service return shape.
 
 Structural notes tied to the frozen migration-01 schema:
-- `phase_tag` and `event_id` are accepted but have no schema home in v1
-  (passthrough / idempotency-not-enforced per the spec); they are not stored
-  and not echoed in results.
+- `phase_tag` is passthrough. Observe `event_id` is an optional agent-scoped
+  idempotency key (migration 011); scene/confrontation event IDs remain inert.
 - `location_description`, when supplied, is embed-only (no raw column).
 - `embedding_failed` reflects that an embedding-call failure lands the write
   with a NULL embedding; the queryable signal (architecture.md §4.4) is
@@ -56,7 +55,14 @@ class ObserveEvent(BaseModel):
     event_time: datetime | None = None
     affect: AffectOverride | None = None
     pinned: bool = False
-    event_id: str | None = None  # idempotency key: accepted, not enforced in v1
+    event_id: str | None = Field(default=None, min_length=1, max_length=200)
+
+    @field_validator("event_id")
+    @classmethod
+    def _nonblank_event_id(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("event_id must not be blank")
+        return value
 
     @field_validator("client_timestamp", "event_time")
     @classmethod
@@ -497,8 +503,9 @@ class DialogueInitRequest(BaseModel):
     config). Absent fields => the term is skipped entirely and scoring is
     byte-identical to the pre-context read path. Affect is deliberately NOT
     a context field (ruled 2026-07-14) — its query-side shape is still
-    undesigned. `as_of` is the world-time override for age computation
-    (Set B / time-travel surface).
+    undesigned. `as_of` is the world-time override for age computation.
+    It changes scoring/aging, not historical visibility: reads use current
+    live versions, including memories newer than as_of (age clamped to zero).
     """
 
     agent_id: UUID

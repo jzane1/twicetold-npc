@@ -58,7 +58,9 @@ content-addressed and immutable once written).
 
 from __future__ import annotations
 
+import hashlib
 import time
+from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Literal
@@ -77,6 +79,58 @@ from app.embedding_space import (
 )
 from app.agent_config import validate_agent_config
 from app.providers import NewComponent
+
+
+class ObservationConflictError(RuntimeError):
+    """An observation key was reused with a different request (HTTP 409)."""
+
+
+class _ConnectionScope:
+    """Reuse one transaction in existing pool-based helpers; never acquire twice."""
+
+    def __init__(self, conn):
+        self.conn = conn
+
+    @asynccontextmanager
+    async def connection(self):
+        yield self.conn
+
+
+@asynccontextmanager
+async def observation_receipt(pool, agent_id: UUID, event_id: str, request_hash: str):
+    """Serialize keyed observations across processes, including provider work.
+
+    One connection is held until the memory and receipt commit together. The
+    bound scope must be used by every DB helper in this observe operation, so
+    concurrent retries cannot exhaust the pool while the winner needs a second
+    connection. Cancellation/failure rolls back both and releases the lock.
+    """
+    digest = hashlib.sha256(f"observe:{agent_id}:{event_id}".encode()).digest()
+    lock_key = int.from_bytes(digest[:8], "big", signed=True)
+    async with pool.connection() as conn, conn.transaction():
+        await conn.execute("SELECT pg_advisory_xact_lock(%s)", (lock_key,))
+        cursor = await conn.execute(
+            "SELECT request_hash, response FROM observation_receipts "
+            "WHERE agent_id = %s AND event_id = %s",
+            (agent_id, event_id),
+        )
+        row = await cursor.fetchone()
+        if row is not None and row[0] != request_hash:
+            raise ObservationConflictError(
+                "event_id already belongs to a different observation for this agent. "
+                "Retry the original payload, or use a new event_id for a new event."
+            )
+        yield _ConnectionScope(conn), row[1] if row else None
+
+
+async def save_observation_receipt(scope, agent_id, event_id, request_hash, response):
+    async with scope.connection() as conn:
+        await conn.execute(
+            "INSERT INTO observation_receipts "
+            "(agent_id, event_id, request_hash, memory_id, response) "
+            "VALUES (%s, %s, %s, %s, %s)",
+            (agent_id, event_id, request_hash, response["memory_id"], Jsonb(response)),
+        )
 
 
 async def _configure(conn) -> None:

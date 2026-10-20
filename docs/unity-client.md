@@ -14,7 +14,7 @@ The client side of twicetold-npc ships in four parts:
    telling.
 
 The client ships as an embedded Unity package at `unity\Packages\com.jacksonzane.twicetold-npc\`
-(`Runtime\Core` the engine-agnostic core, `Runtime\` the adapter). `first-npc.md` is the thirty-line
+(`Runtime\Core` the engine-agnostic core, `Runtime\` the adapter). `first-npc.md` is the starter
 integration; `shipping.md` is the hosting and platform guide.
 
 ## Principles
@@ -45,7 +45,7 @@ returns.
 | `DialogueTurnAsync` | `POST /v1/dialogue/turn` | 404 unknown agent, 422 unknown identity version |
 | `DialogueTurnStreamAsync` | `POST /v1/dialogue/turn/stream` (SSE) | 404 / 422 pre-stream; after the stream opens, an `error` **event** |
 | `DialogueInitAsync` | `POST /v1/dialogue/init` | 404, 422 |
-| `ObserveAsync` | `POST /v1/events/observe` | 404 |
+| `ObserveAsync` | `POST /v1/events/observe` | 404 / 409 reused event key with changed payload / 422 |
 | `SceneBoundaryAsync` | `POST /v1/events/scene-boundary` (carries the optional `prewarm_context` probe; `SceneResult.prewarm`, the `ScenePrewarmInstrumentation`, rides back, null without a probe) | 404 |
 | `SetPinAsync` | `PUT /v1/memories/{id}/pin` | 404 |
 | `CorrectAsync` | `POST /v1/memories/{id}/correction` | 404 / 409 CAS conflict / 422 / 502 fail-loud |
@@ -58,10 +58,13 @@ returns.
 | `AgentStateAsync` | `GET /v1/agents/{id}/state` (unscored; the composed runtime snapshot) | 404 |
 
 HTTP errors map to typed exceptions (`NpcMemoryApiException` carrying the status code), never
-swallowed and never retried silently. Timeouts are per-route config: `init` must tolerate the cold
-reconstruction pre-warm (single-digit seconds; a probed scene boundary absorbs this cost at the cut,
-but an unprobed cold init can still pay it), `turn` the full turn (about a 30 s ceiling), `observe`
-about 10 s. Fire-and-forget observe is the session's job, not hidden retry logic in the client.
+swallowed and never retried silently. Defaults are `InitTimeout = 60s`, `TurnTimeout = 60s`,
+`ObserveTimeout = 30s`, and `DefaultTimeout = 15s`. A scene boundary with nonempty
+`prewarm_context` uses `InitTimeout`; a plain boundary uses `DefaultTimeout`. Configure these
+for your provider. Streaming cancellation and `TurnTimeout` cover the entire body, including
+stalled reads after headers or an HTTP error body. A terminal `result` finishes the client call
+without waiting for the server to close the stream; EOF without it is a typed failure.
+Cancelling transport does not undo server-side work already committed.
 
 **The null-vs-absent contract is load-bearing.** On `DialogueTurnRequest`, `loaded_memory_ids = null`
 means a **loader turn** and `[]` means **a loaded set that is empty**. A serializer that emits `null`
@@ -75,7 +78,23 @@ A stateful per-NPC session over the client, porting `app\session.py` field-for-f
 snapshot refresh at boundaries, `_apply_turn_result` keyed on the server's `gate.evaluated` / `fired`
 (loader, the served IDs seed the loaded set; gated fire, gate-fetched IDs append and the streak
 resets on a productive fetch; closed, untouched), scene-boundary reset of the loaded set, streak, and
-context, and `as_of` time travel riding both retrieval and observe timestamps.
+context, and `as_of` riding both retrieval aging and observe timestamps. This clock does not
+restore historical knowledge: retrieval reads current live heads, including memories newer than
+`as_of` at age zero. See [Time](first-npc.md#4-time).
+
+`InitializeAsync(ct)` freezes the first identity and scene basis. Both turn methods await it
+automatically, and concurrent initialization shares one successful boundary. Set `AsOf` first;
+initialization preserves caller-supplied context. A later explicit boundary resets context,
+loaded IDs and the gate streak. Its frozen basis is the timestamp sent in the request, even if
+`AsOf` changes while awaiting the response. A failed boundary leaves scene state unchanged.
+Serialize turns and scene boundaries per session; initialization sharing is not turn queuing.
+
+The Unity adapter exposes `ReadyTask` / `InitializeAsync()`. It provisions or attaches, then
+initializes the first scene. `Start` and early callers share the same task, including failures;
+a failed component does not silently provision another agent. Async methods await readiness;
+`ObserveAndForget` throws until ready. `SetAsOf` can run before readiness. A caller cancellation
+stops only that caller's wait; destroying the component cancels shared initialization and
+in-flight operations. Use the [starter sample](first-npc.md) to handle errors and disable inputs.
 
 Surface: `SayAsync(text, weightOverrides)` and its streaming twin `SayStreamAsync`, `ObserveAsync`,
 `SceneBoundaryAsync`, `CorrectAsync`, `ConfrontAsync` (the diegetic-correction event at the session's
@@ -83,6 +102,14 @@ effective time), `ReflectAsync`, and `PinAsync`. `weightOverrides` carries the w
 parameters (architecture.md §9). The `(reconstructing...)` during-wait hook is available under the SSE
 verb; the non-streaming path surfaces the result's post-hoc reconstruction fields instead, never a
 faked signal.
+
+## Observation retries
+
+For retryable delivery, use the flat client's `ObserveAsync` with a persisted `ObserveEvent`
+carrying a stable, agent-scoped `EventId` and timestamp. Identical retries replay the original
+acknowledgement; changed payloads conflict with 409. The string-only session helpers remain
+unkeyed and never silently retry. See [the retry recipe](first-npc.md#7-retrying-an-observation-safely)
+for receipt lifetime, purge and deferred-write behavior.
 
 ## Async observes
 
@@ -144,3 +171,14 @@ gist/detail number on screen. It binds the same `DialogueTurnResult` / `Retrieva
 eval harness scores, so the on-screen number and the evaluation number are one object. It reads two
 deep-link params: `?agent=<uuid>` preloads the per-agent index, and `&memory=<uuid>` opens that
 memory's chain view directly.
+
+## Focused client contract checks
+
+Run `dotnet run --project client/NpcMemory.Tests` with .NET 8. It exercises the shipped core,
+adapter and starter sources over ephemeral loopback HTTP, with no backend or provider keys.
+It covers first-scene state, shared/failing readiness, cancellation after headers, terminal
+SSE events and route timeouts. Unity types are minimal test stubs: this checks C# lifecycle
+logic and sample compilation, not Unity Play Mode, IL2CPP or main-thread dispatch.
+
+The live API harness remains `dotnet run --project client/NpcMemory.Harness -- --base-url
+http://127.0.0.1:8001` against the fake Compose demo.

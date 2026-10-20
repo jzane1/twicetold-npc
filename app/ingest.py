@@ -45,6 +45,8 @@ embedding would make the memory vanish from the vector probe.
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import json
 import logging
 import time
 from dataclasses import dataclass
@@ -441,13 +443,37 @@ class IngestService:
     # ------------------------------------------------------------------ #
 
     async def ingest_observation(self, event: ObserveEvent) -> IngestResult:
+        if event.event_id is None:
+            return await self._ingest_observation(event, self._pool)
+        # Defaults and JSON object key ordering are canonicalized. The caller
+        # must keep the event timestamp and all other payload fields on retry.
+        payload = event.model_dump(mode="json", exclude={"event_id"})
+        request_hash = hashlib.sha256(
+            json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
+        async with db.observation_receipt(
+            self._pool, event.agent_id, event.event_id, request_hash
+        ) as (scope, saved):
+            if saved is not None:
+                return IngestResult.model_validate(saved)
+            result = await self._ingest_observation(event, scope)
+            await db.save_observation_receipt(
+                scope,
+                event.agent_id,
+                event.event_id,
+                request_hash,
+                result.model_dump(mode="json"),
+            )
+            return result
+
+    async def _ingest_observation(self, event: ObserveEvent, pool) -> IngestResult:
         t_total = time.perf_counter()
 
-        agent = await db.fetch_agent(self._pool, event.agent_id)
+        agent = await db.fetch_agent(pool, event.agent_id)
         if agent is None:
             raise UnknownAgentError(f"unknown agent_id {event.agent_id}")
         config: dict = agent["config"]
-        components = await db.fetch_live_components(self._pool, event.agent_id)
+        components = await db.fetch_live_components(pool, event.agent_id)
 
         # --- NLP pass (no LLM) ------------------------------------------
         t0 = time.perf_counter()
@@ -604,7 +630,7 @@ class IngestService:
         # --- atomic insert -------------------------------------------------
         t0 = time.perf_counter()
         outcome = await db.insert_observation(
-            self._pool,
+            pool,
             InsertPlan(
                 agent_id=event.agent_id,
                 observation_text=event.observation_text,

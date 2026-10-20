@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -51,93 +52,157 @@ namespace NpcMemory.Unity
         public Guid AgentId { get; private set; }
         public bool Ready { get; private set; }
 
+        private Task _initialization;
+        private readonly CancellationTokenSource _lifetime = new CancellationTokenSource();
+        private bool _destroyed;
+        private DateTimeOffset? _asOf;
+
+        /// <summary>Starts initialization if needed and shares its success/failure
+        /// with all callers, including Start. Await before enabling gameplay.</summary>
+        public Task ReadyTask => InitializeAsync();
+
         private async void Start()
         {
-            try
-            {
-                await InitializeAsync();
-            }
-            catch (Exception exc)
-            {
-                Debug.LogException(exc, this);
-            }
+            try { await ReadyTask; }
+            catch (Exception exc) { if (!_destroyed) Debug.LogException(exc, this); }
         }
 
-        /// <summary>Provision (or attach) + open the session. Loud on failure.</summary>
-        public async Task InitializeAsync()
+        /// <summary>Provision/attach + initialize the first scene exactly once.
+        /// A failure remains observable; no hidden reprovisioning or retry.</summary>
+        public Task InitializeAsync()
+        {
+            ThrowIfDestroyed();
+            return _initialization ??= InitializeCoreAsync();
+        }
+
+        private async Task InitializeCoreAsync()
         {
             Client = new NpcMemoryClient(baseUrl);
-            if (autoProvision)
+            try
             {
-                var created = await Client.CreateAgentAsync(new CreateAgentRequest
+                if (autoProvision)
                 {
-                    Name = agentName,
-                    SeedIdentity = seedIdentity,
-                    DiagnosticityGoal = diagnosticityGoal,
-                    Config = new JObject
+                    var created = await Client.CreateAgentAsync(new CreateAgentRequest
                     {
-                        ["decay_classes"] = new JObject
+                        Name = agentName,
+                        SeedIdentity = seedIdentity,
+                        DiagnosticityGoal = diagnosticityGoal,
+                        Config = new JObject
                         {
-                            ["episodic"] = episodicTauSeconds,
-                            ["semantic"] = semanticTauSeconds,
+                            ["decay_classes"] = new JObject
+                            {
+                                ["episodic"] = episodicTauSeconds,
+                                ["semantic"] = semanticTauSeconds,
+                            },
+                            ["decay_class_default"] = "episodic",
                         },
-                        ["decay_class_default"] = "episodic",
-                    },
-                });
-                AgentId = created.AgentId;
+                    }, _lifetime.Token);
+                    AgentId = created.AgentId;
+                }
+                else
+                {
+                    AgentId = Guid.Parse(agentIdOverride);
+                }
+                Session = new NpcSession(Client, AgentId, phaseTag) { AsOf = _asOf };
+                await Session.InitializeAsync(_lifetime.Token);
+                _lifetime.Token.ThrowIfCancellationRequested();
+                Ready = true;
             }
-            else
+            catch
             {
-                AgentId = Guid.Parse(agentIdOverride);
+                Client.Dispose();
+                throw;
             }
-            Session = new NpcSession(Client, AgentId, phaseTag);
-            Ready = true;
         }
 
-        // Thin passthroughs — the session owns all bookkeeping.
+        private void ThrowIfDestroyed()
+        {
+            if (_destroyed) throw new ObjectDisposedException(nameof(NpcMemoryNpc));
+        }
 
-        public Task<DialogueTurnResult> SayAsync(string text) =>
-            Session.SayAsync(text);
+        // Cancelling one caller stops only its wait, not shared initialization.
+        private async Task WaitForReadyAsync(CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+            var ready = ReadyTask;
+            if (!ct.CanBeCanceled) { await ready; return; }
+            var cancelled = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            using (ct.Register(() => cancelled.TrySetCanceled(ct)))
+                await await Task.WhenAny(ready, cancelled.Task);
+            ct.ThrowIfCancellationRequested();
+        }
 
-        public Task<DialogueTurnResult> SayStreamAsync(
-            string text, Action<string> onChunk, Action onReconstructing = null) =>
-            Session.SayStreamAsync(text, onChunk, onReconstructing);
+        public async Task<DialogueTurnResult> SayAsync(string text, CancellationToken ct = default)
+        {
+            await WaitForReadyAsync(ct);
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, _lifetime.Token);
+            return await Session.SayAsync(text, ct: linked.Token);
+        }
 
-        public Task<IngestResult> ObserveAsync(string text) =>
-            Session.ObserveAsync(text);
+        public async Task<DialogueTurnResult> SayStreamAsync(
+            string text, Action<string> onChunk, Action onReconstructing = null,
+            CancellationToken ct = default)
+        {
+            await WaitForReadyAsync(ct);
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, _lifetime.Token);
+            return await Session.SayStreamAsync(text, onChunk, onReconstructing, ct: linked.Token);
+        }
 
-        /// <summary>Fire-and-forget observe (C5): returns immediately, the
-        /// timestamp already stamped. Failures surface on the session's
-        /// OnObserveFailed event and re-throw at the next drain — subscribe
-        /// via Session.OnObserveFailed if the game wants the signal.</summary>
-        public void ObserveAndForget(string text) =>
+        public async Task<IngestResult> ObserveAsync(string text, CancellationToken ct = default)
+        {
+            await WaitForReadyAsync(ct);
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, _lifetime.Token);
+            return await Session.ObserveAsync(text, linked.Token);
+        }
+
+        /// <summary>Await ReadyTask first: a synchronous fire-and-forget event
+        /// must retain its call-time timestamp, never wait and stamp it later.</summary>
+        public void ObserveAndForget(string text)
+        {
+            ThrowIfDestroyed();
+            if (!Ready) throw new InvalidOperationException("Await ReadyTask before ObserveAndForget.");
             Session.ObserveAndForget(text);
+        }
 
-        /// <summary>The explicit join for in-flight observes (no verb
-        /// auto-drains, by ruling — place drains at scene edges).</summary>
-        public Task DrainObservesAsync() =>
-            Session.DrainObservesAsync();
+        public async Task DrainObservesAsync(CancellationToken ct = default)
+        {
+            await WaitForReadyAsync(ct);
+            await Session.DrainObservesAsync(ct);
+        }
 
-        /// <summary>In-flight fire-and-forget observes (0 when idle).</summary>
-        public int PendingObserves =>
-            Session != null ? Session.PendingObserves : 0;
+        public int PendingObserves => Session != null ? Session.PendingObserves : 0;
 
-        public Task<SceneResult> SceneBoundaryAsync(
-            string sceneType = null, string prewarmContext = null) =>
-            Session.SceneBoundaryAsync(sceneType, prewarmContext);
+        public async Task<SceneResult> SceneBoundaryAsync(
+            string sceneType = null, string prewarmContext = null, CancellationToken ct = default)
+        {
+            await WaitForReadyAsync(ct);
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, _lifetime.Token);
+            return await Session.SceneBoundaryAsync(sceneType, prewarmContext, linked.Token);
+        }
 
-        public Task<CorrectionResult> CorrectAsync(Guid memoryId, string content) =>
-            Session.CorrectAsync(memoryId, content);
+        public async Task<CorrectionResult> CorrectAsync(Guid memoryId, string content, CancellationToken ct = default)
+        {
+            await WaitForReadyAsync(ct);
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, _lifetime.Token);
+            return await Session.CorrectAsync(memoryId, content, ct: linked.Token);
+        }
 
-        /// <summary>The session's time-travel surface (null = wall clock).</summary>
+        /// <summary>Set before ReadyTask for the first scene's game clock.
+        /// This changes aging/scoring, not historical visibility.</summary>
         public void SetAsOf(DateTimeOffset? asOf)
         {
-            Session.AsOf = asOf;
+            ThrowIfDestroyed();
+            _asOf = asOf;
+            if (Session != null) Session.AsOf = asOf;
         }
 
         private void OnDestroy()
         {
+            _destroyed = true;
+            Ready = false;
+            _lifetime.Cancel();
             Client?.Dispose();
+            // Keep the cancelled source valid for in-flight continuations.
         }
     }
 }

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <NoWarn>$(NoWarn);CS0649</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../NpcMemory.Core/NpcMemory.Core.csproj" />
+    <!-- Compile shipped sources with Unity UI type stubs, not a Play Mode test. -->
+    <Compile Include="../../unity/Packages/com.jacksonzane.twicetold-npc/Runtime/NpcMemoryNpc.cs" Link="NpcMemoryNpc.cs" />
+    <Compile Include="../../unity/Packages/com.jacksonzane.twicetold-npc/Samples~/FirstNpc/*.cs" Link="Sample/%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

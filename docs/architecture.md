@@ -164,9 +164,10 @@ a separate escalation LLM pass added more, biased loose; that over-froze memorie
 
 Decay applies to **non-gist detail only**, which decays to fully hidden; **gist never decays**. Decay
 is computed at read time; the original observation stays intact on disk forever, and decay only
-controls how much detail the reconstructor is shown, so any past state is re-derivable (debugging,
-eval harness). Each memory carries a **decay class**: an integrator-vocabulary label selecting which
-base time-constant applies, used by both detail decay and the recency term in retrieval scoring.
+controls how much detail the reconstructor is shown. Stored chains support history inspection;
+the dialogue API does not restore a historical knowledge snapshot. Each memory carries a
+**decay class**: an integrator-vocabulary label selecting which base time-constant applies, used
+by both detail decay and the recency term in retrieval scoring.
 
 **Consequence to remember:** the identity components table is the *only* control on long-term durable
 content. Its reflection-time trim (with silent cache invalidation, chosen deliberately) is the sole
@@ -229,7 +230,33 @@ else the first sentence), so deferral never adds a lost-write rung.
   gives entities a fact-chain home; observe writes the fact head only, and the GIN lives on live fact
   heads.
 
+### Observation retry receipts (migration 011)
+
+An optional `event_id` (1-200 characters, nonblank) makes observe delivery idempotent within
+one agent. The service fingerprints the validated payload including timestamp, context and
+phase tag, normalizing field defaults and JSON object order. Same key and fingerprint returns
+the original `IngestResult`; a changed payload returns 409. Omitted/null keys remain independent
+writes. Other event types do not implement idempotency.
+
+A transaction-scoped advisory lock serializes competing requests across API processes. The
+memory, its child rows and the receipt commit together; failure/cancellation before commit
+rolls them all back. One connection is retained through the keyed write's NLP/provider work,
+so pool size also bounds active keyed writes. All helpers reuse that connection to avoid pool
+exhaustion deadlocks. Provider work can repeat after rollback, but a committed keyed write is
+not executed again. See [the integrator retry recipe](first-npc.md#7-retrying-an-observation-safely).
+
+Receipts record the original acknowledgement, including degraded/pending flags and timings;
+they are not current-state reads. They survive corrections and enrichment, with no expiration,
+but cascade-delete on memory purge. Stop retries before purge: removal releases the key.
+Existing pre-011 observations have no receipt and cannot be deduplicated retroactively.
+
 ## 6. Read path
+
+**Clock contract:** `as_of` controls scoring/aging over current live heads, not historical
+visibility. Memories newer than `as_of` remain eligible with age clamped to zero. A backward
+clock does not restore superseded detail/fact heads, old identity or prior reconstruction
+state. Inspect stored history through the chain endpoint; historical dialogue retrieval is
+not implemented.
 
 **Dialogue initialization:** top-k retrieval. Endpoints that run retrieval return **memory IDs and
 scores alongside prose**; this is load-bearing, and it is what makes the test suite assertable. Four

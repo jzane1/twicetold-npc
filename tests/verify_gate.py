@@ -590,6 +590,7 @@ async def main(database_uri: str) -> None:
             # walker verifies are untouched by 009.
             "009_gist_flag.sql",
             "010_embedding_space.sql",
+            "011_observation_receipts.sql",
         ],
         "the ledger records 001 through 010",
     )

@@ -23,7 +23,7 @@ Copy-Item .env.example .env    # then edit it, or keep the fake-mode defaults
 docker compose up -d --build
 ```
 
-This builds the API image, starts Postgres with pgvector, runs migrations 001 through 010 as a
+This builds the API image, starts Postgres with pgvector, runs migrations 001 through 011 as a
 one-shot `migrate` service, and starts the API, in dependency order. `docker compose ps` shows
 progress; the `api` service reports `healthy` once its pipelines have warmed, within about a
 minute of a cached `up`. The first build is a one-time few minutes (the image is about 4.9 GB on

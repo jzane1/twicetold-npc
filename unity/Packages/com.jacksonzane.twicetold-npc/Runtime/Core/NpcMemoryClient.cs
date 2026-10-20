@@ -100,7 +100,8 @@ namespace NpcMemory
 
         public Task<SceneResult> SceneBoundaryAsync(
             SceneBoundaryEvent evt, CancellationToken ct = default) =>
-            PostAsync<SceneResult>("/v1/events/scene-boundary", evt, DefaultTimeout, ct);
+            PostAsync<SceneResult>("/v1/events/scene-boundary", evt,
+                string.IsNullOrEmpty(evt.PrewarmContext) ? DefaultTimeout : InitTimeout, ct);
 
         /// <summary>The diegetic-correction event (architecture.md §8): one
         /// retell model call rides it server-side, so it takes the
@@ -193,69 +194,82 @@ namespace NpcMemory
             };
             using var response = await _http
                 .SendAsync(message, HttpCompletionOption.ResponseHeadersRead, cts.Token);
-            if (!response.IsSuccessStatusCode)
+            // netstandard2.1 has no cancellable StreamReader.ReadLineAsync.
+            // Disposing the response aborts an in-flight body read after headers,
+            // including an error response whose body never finishes.
+            using var cancellation = cts.Token.Register(() => response.Dispose());
+            try
             {
-                var detail = await response.Content.ReadAsStringAsync();
-                throw new NpcMemoryApiException((int)response.StatusCode, detail);
-            }
+                if (!response.IsSuccessStatusCode)
+                {
+                    var detail = await response.Content.ReadAsStringAsync();
+                    throw new NpcMemoryApiException((int)response.StatusCode, detail);
+                }
 
-            using var stream = await response.Content.ReadAsStreamAsync();
-            using var reader = new StreamReader(stream, Encoding.UTF8);
+                using var stream = await response.Content.ReadAsStreamAsync();
+                using var reader = new StreamReader(stream, Encoding.UTF8);
 
-            DialogueTurnResult? result = null;
-            string? eventName = null;
-            string? data = null;
-            // Driven purely off the async read's null sentinel. `EndOfStream`
-            // would be a SYNCHRONOUS read whenever the buffer is empty — on a
-            // live SSE stream that blocks the caller until the server sends
-            // the next byte, i.e. it stalls Unity's main thread between
-            // chunks (this type deliberately has no ConfigureAwait(false), so
-            // every continuation resumes there). Never reintroduce it.
-            while (true)
-            {
-                var line = await reader.ReadLineAsync();
-                if (line == null)
+                DialogueTurnResult? result = null;
+                string? eventName = null;
+                string? data = null;
+                // Driven purely off the async read's null sentinel. `EndOfStream`
+                // would be a SYNCHRONOUS read whenever the buffer is empty — on a
+                // live SSE stream that blocks the caller until the server sends
+                // the next byte, i.e. it stalls Unity's main thread between
+                // chunks (this type deliberately has no ConfigureAwait(false), so
+                // every continuation resumes there). Never reintroduce it.
+                while (result == null)
                 {
-                    break;
-                }
-                if (line.StartsWith("event: ", StringComparison.Ordinal))
-                {
-                    eventName = line.Substring(7);
-                }
-                else if (line.StartsWith("data: ", StringComparison.Ordinal))
-                {
-                    data = line.Substring(6);
-                }
-                else if (line.Length == 0 && eventName != null)
-                {
-                    switch (eventName)
+                    cts.Token.ThrowIfCancellationRequested();
+                    var line = await reader.ReadLineAsync();
+                    cts.Token.ThrowIfCancellationRequested();
+                    if (line == null)
                     {
-                        case "chunk":
-                            onChunk(NpcJson.Deserialize<string>(data ?? "\"\""));
-                            break;
-                        case "reconstructing":
-                            onReconstructing?.Invoke();
-                            break;
-                        case "result":
-                            result = NpcJson.Deserialize<DialogueTurnResult>(data ?? "");
-                            break;
-                        case "error":
-                            throw new NpcMemoryApiException(
-                                0, NpcJson.Deserialize<string>(data ?? "\"stream error\""));
+                        break;
                     }
-                    eventName = null;
-                    data = null;
+                    if (line.StartsWith("event: ", StringComparison.Ordinal))
+                    {
+                        eventName = line.Substring(7);
+                    }
+                    else if (line.StartsWith("data: ", StringComparison.Ordinal))
+                    {
+                        data = line.Substring(6);
+                    }
+                    else if (line.Length == 0 && eventName != null)
+                    {
+                        switch (eventName)
+                        {
+                            case "chunk":
+                                onChunk(NpcJson.Deserialize<string>(data ?? "\"\""));
+                                break;
+                            case "reconstructing":
+                                onReconstructing?.Invoke();
+                                break;
+                            case "result":
+                                result = NpcJson.Deserialize<DialogueTurnResult>(data ?? "");
+                                break;
+                            case "error":
+                                throw new NpcMemoryApiException(
+                                    0, NpcJson.Deserialize<string>(data ?? "\"stream error\""));
+                        }
+                        eventName = null;
+                        data = null;
+                    }
                 }
+                if (result == null)
+                {
+                    throw new NpcMemoryApiException(0, "stream ended without a result event");
+                }
+                // Whole-stream wall time: first byte to terminal result. The
+                // server's first_word_ms / perceived_first_word_ms ride inside
+                // the payload; this is the transport envelope around them.
+                Measure("/v1/dialogue/turn/stream", started);
+                return result;
             }
-            if (result == null)
+            catch (Exception exc) when (cts.IsCancellationRequested)
             {
-                throw new NpcMemoryApiException(0, "stream ended without a result event");
+                throw new OperationCanceledException("Dialogue stream cancelled or timed out.", exc, cts.Token);
             }
-            // Whole-stream wall time: first byte to terminal result. The
-            // server's first_word_ms / perceived_first_word_ms ride inside
-            // the payload; this is the transport envelope around them.
-            Measure("/v1/dialogue/turn/stream", started);
-            return result;
         }
 
         // -- transport ---------------------------------------------------

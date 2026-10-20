@@ -215,6 +215,7 @@ async def run_demo(
             {
                 "agent_id": agent,
                 "observation_text": text,
+                "event_id": "first-run-pinned" if pinned else "first-run-observation",
                 "client_timestamp": start.isoformat(),
                 "phase_tag": "first-run",
                 "provenance": "lived",

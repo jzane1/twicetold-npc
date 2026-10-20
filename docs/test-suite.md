@@ -1,9 +1,9 @@
 # twicetold-npc: Test suite
 
-The pytest suite in `tests\test_*.py` collects 317 cases across Sets A through Q plus the
+The pytest suite in `tests\test_*.py` collects 327 cases across Sets A through Q plus the
 route-contract, degradation, setup and first-run scenarios. Seventeen carry the `nlp` marker (they call the write pass at
 the service level and pay the lazy spaCy and fastcoref load), so the turn-end subset that runs on every
-edit is `-m "not nlp"`, 300 cases. The full suite runs on demand and at verification. The
+edit is `-m "not nlp"`, 310 cases. The full suite runs on demand and at verification. The
 suite is offline, keyless, deterministic, and self-managing (it creates and drops its own scratch
 database, `twicetold_suite_<pid>`); when Postgres is unreachable it skips loudly and exits green, so it is
 CI-ready.
@@ -31,6 +31,17 @@ no automatic write retries, URL/timeout validation and an early mode-mismatch fa
 stability checks allow query-score/ranking variation while rejecting changed stored tellings. Compose
 startup and real-provider behavior are additionally verified by running `docs/first-run.md`'s
 commands; the offline suite itself never sends paid requests.
+
+## Integration contracts
+
+`test_integration_contracts.py` covers observation replay, concurrent requests through separate
+services with one- and two-connection pools, changed-payload conflicts, agent-scoped keys,
+unkeyed writes, rollback/cancellation, degraded/deferred acknowledgements and receipt purge.
+It uses fake providers, a stub NLP result and the real database/HTTP routes. A backward-clock
+regression proves newer memories remain eligible and retrieval uses the current corrected head.
+`client/NpcMemory.Tests` adds loopback HTTP checks for the shipped C# core and Unity adapter;
+see [client verification](unity-client.md#focused-client-contract-checks). These checks do not
+substitute for Unity Play Mode verification.
 
 ## The one rule
 

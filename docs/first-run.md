@@ -128,6 +128,11 @@ scene boundary → recall sequence into your integration. It keeps the scene's r
 them explicitly at the next boundary. `as_of` controls decay/scoring; it is **not** a historical
 snapshot API. The demo advances world time without waiting seven real days.
 
+Each observation includes an agent-scoped `event_id`. For retryable delivery, save the whole
+payload and resend it unchanged after a transport failure; the receipt prevents a second
+committed memory. The walkthrough itself does not retry automatically. See the
+[retry contract](first-npc.md#7-retrying-an-observation-safely) for conflicts and purge behavior.
+
 The only agent tuning is an explicitly named one-day episodic decay class. Reconstruction,
 drift checking and all other thresholds retain service defaults. The authorial correction is
 stored verbatim as the new fact basis; a later aged recall can reconstruct its telling again.

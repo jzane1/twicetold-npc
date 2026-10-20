@@ -233,7 +233,7 @@ def test_provision_drop_roundtrip(suite_env):
         uri = provision_scratch(base, name)
         with psycopg.connect(uri, connect_timeout=3) as conn:
             applied = conn.execute("SELECT count(*) FROM schema_migrations").fetchone()
-        assert applied[0] == 10  # 010: database-wide embedding configuration
+        assert applied[0] == 11  # 011: observation retry receipts
         drop_scratch(base, name)
         admin = scratch_uri(base, "postgres")
         with psycopg.connect(admin, connect_timeout=3, autocommit=True) as conn:
@@ -424,6 +424,7 @@ async def _assert_no_eval_rows(ctx):
         "memory_enrichment_runs",
         "memory_fact_versions",
         "memory_gist_spans",
+        "observation_receipts",
         "reconstruction_cache",
         # 007 (reflection, 2026-08-15) added the worker run-log table — the
         # same mechanical census bump (sorts BEFORE 'reflections' under the

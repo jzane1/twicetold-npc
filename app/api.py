@@ -30,6 +30,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from app.compiler import CompilerWorker
 from app.config import load_allowed_hosts, load_settings
 from app.runtime import open_runtime_pool
+from app.db import ObservationConflictError
 from app.deferred import DeferredWriteWorker
 from app.dialogue import DialogueService
 from app.dissonance import DissonanceCallError, DissonanceService
@@ -302,6 +303,8 @@ async def observe(event: ObserveEvent) -> IngestResult:
         return await app.state.service.ingest_observation(event)
     except UnknownAgentError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ObservationConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 @app.post("/v1/events/scene-boundary", response_model=SceneResult)

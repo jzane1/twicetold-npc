@@ -297,7 +297,7 @@ async def run(uri: str) -> None:
             "SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1",
         )
         check(
-            top is not None and top[0] == "010_embedding_space.sql",
+            top is not None and top[0] == "011_observation_receipts.sql",
             "A1 the migration ledger ends at 010 (database embedding configuration)",
             detail=top[0] if top else "empty ledger",
         )

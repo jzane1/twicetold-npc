@@ -411,8 +411,8 @@ async def run(uri: str) -> None:
             pool, "SELECT version FROM schema_migrations ORDER BY version"
         )
         check(
-            [row[0] for row in ledger][-1] == "010_embedding_space.sql"
-            and len(ledger) == 10,
+            [row[0] for row in ledger][-1] == "011_observation_receipts.sql"
+            and len(ledger) == 11,
             "A6 the ledger records 001-010",
         )
 
