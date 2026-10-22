@@ -3,6 +3,9 @@
 To try the whole lifecycle before writing client code, run [the first-run Compose demo](first-run.md).
 It includes a small executable Python HTTP example, fake and real providers, and a populated Ledger.
 
+For an existing application that owns its dialogue model and recent conversation, use the
+[standalone Python integration](python-integration.md). This page covers the Unity client path.
+
 This is the page for the person wiring twicetold-npc into a game. The starter C# sample includes
 readiness and failure handling. The order of the calls matters more than the calls themselves,
 so I'll give you the order and the why. `SETUP.md` gets the service running;

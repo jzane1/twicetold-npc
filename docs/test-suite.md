@@ -1,9 +1,10 @@
 # twicetold-npc: Test suite
 
-The pytest suite in `tests\test_*.py` collects 327 cases across Sets A through Q plus the
-route-contract, degradation, setup and first-run scenarios. Seventeen carry the `nlp` marker (they call the write pass at
-the service level and pay the lazy spaCy and fastcoref load), so the turn-end subset that runs on every
-edit is `-m "not nlp"`, 310 cases. The full suite runs on demand and at verification. The
+The pytest suite in `tests\test_*.py` collects 362 cases across Sets A through Q plus the
+route-contract, degradation, setup, first-run and application-integration scenarios. Eighteen carry
+the `nlp` marker (they call the write pass at the service level and pay the lazy spaCy and fastcoref
+load), so the turn-end subset that runs on every edit is `-m "not nlp"`, 344 cases. The full suite
+runs on demand and at verification. The
 suite is offline, keyless, deterministic, and self-managing (it creates and drops its own scratch
 database, `twicetold_suite_<pid>`); when Postgres is unreachable it skips loudly and exits green, so it is
 CI-ready.
@@ -42,6 +43,17 @@ regression proves newer memories remain eligible and retrieval uses the current 
 `client/NpcMemory.Tests` adds loopback HTTP checks for the shipped C# core and Unity adapter;
 see [client verification](unity-client.md#focused-client-contract-checks). These checks do not
 substitute for Unity Play Mode verification.
+
+## Application integration example
+
+`test_python_integration.py` adds 35 cases for the standalone HTTP client in `examples\`.
+It checks bounded conversation pairs and whole memory records, follow-up context, scene/correction
+resets, model failure and cancellation, explicit degradation, stable observation retries, durable
+outbox recovery, secret-safe configuration errors and the optional dialogue adapter's wire format.
+One full-route scenario runs the CLI demo against the disposable database with a fake memory
+provider and a mock external dialogue server. It loses an acknowledgement after commit and proves
+retries produce one memory and one receipt, corrections preserve the chain, and a new application
+session reuses the saved agent. No test contacts a live dialogue provider or grades model prose.
 
 ## The one rule
 

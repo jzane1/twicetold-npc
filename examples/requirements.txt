@@ -1,0 +1,2 @@
+# The application example does not need the backend's NLP/database dependencies.
+httpx==0.28.1

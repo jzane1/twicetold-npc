@@ -4,6 +4,7 @@
 # data/eval/, "Research Papers"/ (~117MB), media. Keeps the context small.
 *
 !app/
+!examples/
 !db/
 !data/lexicons/
 !ledger/index.html

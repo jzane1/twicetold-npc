@@ -137,3 +137,10 @@ The only agent tuning is an explicitly named one-day episodic decay class. Recon
 drift checking and all other thresholds retain service defaults. The authorial correction is
 stored verbatim as the new fact basis; a later aged recall can reconstruct its telling again.
 The original observation and superseded versions remain available through `/chain`.
+
+## Put it behind your application
+
+The [standalone Python integration](python-integration.md) adds the application layer: bounded
+recent conversation, your own dialogue model, a saved agent UUID, and durable observation retries.
+It includes an interactive terminal and a second executable Compose scenario, with only `httpx`
+required on the client. Use it to replace the sample input/output with your application's UI.

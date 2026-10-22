@@ -45,6 +45,7 @@ ENV HF_HUB_OFFLINE=1 \
 
 # Layer 3: the application (changes often; never invalidates layers 1 and 2).
 COPY app/ app/
+COPY examples/ examples/
 COPY db/ db/
 COPY data/lexicons/ data/lexicons/
 COPY ledger/index.html ledger/index.html
