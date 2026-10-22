@@ -18,9 +18,9 @@ per process) — and the hook runs `-m "not nlp"`. Unmarked scenarios seed at
 the db layer through the real `db.insert_observation` with the pure fake
 embedding, so they never touch the loaders.
 
-Postgres unreachable => every test SKIPS with a loud warning and the run
-exits green (ruled 2026-07-20 — the Stop hook's existing
-dormant-when-prerequisites-missing philosophy).
+With --require-db (also the default when CI=true), unavailable Postgres is a
+test failure. Local runs without that option retain the explicit warning/skip
+behavior for developers running only the non-database checks.
 
 Per-scenario isolation: product tables on the scratch DB are truncated
 before each test. That is test-harness reset of a disposable scratch store —
@@ -123,51 +123,74 @@ class SuiteEnv:
     settings: Settings
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        "--require-db",
+        action="store_true",
+        default=os.environ.get("CI", "").strip().lower()
+        not in {"", "0", "false", "no"},
+        help="Fail database-dependent tests when Postgres is unavailable (default in CI).",
+    )
+
+
+def _database_unavailable(request, reason):
+    if request.config.getoption("--require-db"):
+        # Also suppress the chained psycopg error, which can contain connection details.
+        raise pytest.fail.Exception(
+            f"STRUCTURAL DATABASE REQUIRED: {reason}", pytrace=False
+        ) from None
+    warnings.warn(f"STRUCTURAL DATABASE TESTS SKIPPED: {reason}", stacklevel=2)
+    pytest.skip(reason)
+
+
 @pytest.fixture(scope="session")
-def suite_env():
+def suite_env(request):
     """Create + migrate the scratch suite DB once; drop it at session end.
-    Unreachable Postgres => loud warning + session-wide skip, exit green."""
+    Missing infrastructure fails in required mode; cleanup also covers setup failure."""
     base = _base_uri()
     if base is None:
-        warnings.warn(
-            "STRUCTURAL SUITE SKIPPED: no DATABASE_URI (.env or process env)",
-            stacklevel=1,
+        _database_unavailable(
+            request, "no DATABASE_URI configured (.env or process environment)"
         )
-        pytest.skip("postgres unreachable: no DATABASE_URI configured")
     admin_uri = _swap_db(base, "postgres")
     try:
         admin = psycopg.connect(admin_uri, connect_timeout=3, autocommit=True)
     except psycopg.OperationalError:
-        warnings.warn(
-            "STRUCTURAL SUITE SKIPPED: postgres unreachable — 0 scenarios ran "
-            "(start the twicetold-pg container to run the suite)",
-            stacklevel=1,
+        _database_unavailable(
+            request,
+            "Postgres connection failed; start the database and check DATABASE_URI",
         )
-        pytest.skip("postgres unreachable")
     with admin:
         admin.execute(f"DROP DATABASE IF EXISTS {SUITE_DB} WITH (FORCE)")
         admin.execute(f"CREATE DATABASE {SUITE_DB}")
     suite_uri = _swap_db(base, SUITE_DB)
-    proc = subprocess.run(
-        [
-            sys.executable,
-            str(REPO_ROOT / "db" / "migrate.py"),
-            "--database-uri",
-            suite_uri,
-        ],
-        capture_output=True,
-        text=True,
-        cwd=str(REPO_ROOT),
-    )
-    if proc.returncode != 0:
-        # migrate.py never echoes the URI, so its output is safe to surface.
-        pytest.fail(f"scratch migrate failed:\n{proc.stdout}\n{proc.stderr}")
-    yield SuiteEnv(
-        database_uri=suite_uri,
-        settings=Settings(database_uri=suite_uri, provider_mode="fake"),
-    )
-    with psycopg.connect(admin_uri, connect_timeout=3, autocommit=True) as conn:
-        conn.execute(f"DROP DATABASE IF EXISTS {SUITE_DB} WITH (FORCE)")
+    try:
+        try:
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    str(REPO_ROOT / "db" / "migrate.py"),
+                    "--database-uri",
+                    suite_uri,
+                ],
+                capture_output=True,
+                text=True,
+                cwd=str(REPO_ROOT),
+                timeout=120,
+            )
+        except subprocess.TimeoutExpired:
+            raise pytest.fail.Exception(
+                "Scratch migration timed out after 120 seconds.", pytrace=False
+            ) from None
+        if proc.returncode != 0:
+            pytest.fail(f"scratch migrate failed:\n{proc.stdout}\n{proc.stderr}")
+        yield SuiteEnv(
+            database_uri=suite_uri,
+            settings=Settings(database_uri=suite_uri, provider_mode="fake"),
+        )
+    finally:
+        with psycopg.connect(admin_uri, connect_timeout=3, autocommit=True) as conn:
+            conn.execute(f"DROP DATABASE IF EXISTS {SUITE_DB} WITH (FORCE)")
 
 
 @pytest.fixture()

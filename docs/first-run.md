@@ -144,3 +144,6 @@ The [standalone Python integration](python-integration.md) adds the application 
 recent conversation, your own dialogue model, a saved agent UUID, and durable observation retries.
 It includes an interactive terminal and a second executable Compose scenario, with only `httpx`
 required on the client. Use it to replace the sample input/output with your application's UI.
+
+The [verification workflow](verification.md) executes both examples against a fresh database in CI.
+That guide also records the dated Haiku/OpenAI reference run and explains what it proves.

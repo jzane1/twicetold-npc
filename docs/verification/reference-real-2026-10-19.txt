@@ -1,0 +1,41 @@
+First-run demo: real providers. Live provider calls; wording and token usage will vary.
+Agent: dad67a38-e9ae-411f-a3e7-81421138535f
+Inspector: http://127.0.0.1:8002/ledger?agent=dad67a38-e9ae-411f-a3e7-81421138535f
+Recorded memory: 97e5fbfd-d2b3-4869-9479-2efde7049896
+Recorded memory: 63633f1e-5846-4e7e-8441-6d59c350b975
+PASS agent and two observations created without degradation
+
+fresh (2026-10-20T00:53:51+00:00):
+  97e5fbfd-d2b3-4869-9479-2efde7049896 | verbatim | score=0.637892 | pinned=False
+  Mara brought my ledger back to me here at the inn—she'd found it by the well and kept every page dry through her care. I thanked her proper and promised I'd help her fix up her market stall. Rain was tapping at the shutters and there was a fiddler playing by the fire, but what mattered was that she'd looked out for me when I needed it.
+  63633f1e-5846-4e7e-8441-6d59c350b975 | verbatim | score=0.165386 | pinned=True
+  Mara runs the market stall beside the Waystone Inn. We agreed to meet there on market mornings.
+PASS fresh recall serves stored tellings with IDs and scores
+
+aged (2026-10-27T00:53:51+00:00):
+  63633f1e-5846-4e7e-8441-6d59c350b975 | verbatim | score=0.165386 | pinned=True
+  Mara runs the market stall beside the Waystone Inn. We agreed to meet there on market mornings.
+  97e5fbfd-d2b3-4869-9479-2efde7049896 | reconstructed | score=0.016649 | pinned=False
+  Mara found my ledger by the well and brought it back to me here at the inn—kept every page dry, which spoke well of her. I thanked her and promised to help repair her market stall. That's the sort of kindness you remember and repay in kind.
+PASS seven days later: reconstruction persisted; pinned memory stays verbatim
+
+repeat (2026-10-27T00:53:51+00:00):
+  63633f1e-5846-4e7e-8441-6d59c350b975 | verbatim | score=0.165386 | pinned=True
+  Mara runs the market stall beside the Waystone Inn. We agreed to meet there on market mornings.
+  97e5fbfd-d2b3-4869-9479-2efde7049896 | reconstructed | score=0.016649 | pinned=False
+  Mara found my ledger by the well and brought it back to me here at the inn—kept every page dry, which spoke well of her. I thanked her and promised to help repair her market stall. That's the sort of kindness you remember and repay in kind.
+PASS same scene returns identical stored tellings from cache
+
+Dialogue: I found my ledger by the well—every page would've been ruined if not for Mara. She brought it straight to me here at the inn, kept it dry as though it were her own. A kindness like that doesn't go forgotten. We'd made plans to meet mornings at her market stall, and I gave her my word I'd help her repair it. That's how things work between neighbors—you remember who stands by you when it matters, and you repay it in kind.
+PASS dialogue uses the recalled memories
+
+corrected (2026-10-27T00:53:53+00:00):
+  63633f1e-5846-4e7e-8441-6d59c350b975 | verbatim | score=0.165380 | pinned=True
+  Mara runs the market stall beside the Waystone Inn. We agreed to meet there on market mornings.
+  97e5fbfd-d2b3-4869-9479-2efde7049896 | reconstructed | score=0.017142 | pinned=False
+  Mara brought back my ledger—found it in the market, she said. I was grateful for that, grateful enough to promise her I'd help mend her stall. That's the kind of kindness you remember and repay.
+PASS correction replaces the fact head; subsequent recall serves the new chain; history survives
+
+PASS first-run demo (real)
+Inspector: http://127.0.0.1:8002/ledger?agent=dad67a38-e9ae-411f-a3e7-81421138535f&memory=97e5fbfd-d2b3-4869-9479-2efde7049896
+Token usage (fake counts are synthetic): {"embedding_tokens": 221, "escalation_input_tokens": 0, "escalation_output_tokens": 0, "haiku_input_tokens": 845, "haiku_output_tokens": 260, "reconstruction_embed_tokens": 216, "reconstruction_input_tokens": 1063, "reconstruction_output_tokens": 190, "sonnet_input_tokens": 191, "sonnet_output_tokens": 110}

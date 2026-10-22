@@ -1,13 +1,18 @@
 # twicetold-npc: Test suite
 
-The pytest suite in `tests\test_*.py` collects 362 cases across Sets A through Q plus the
+The pytest suite in `tests\test_*.py` collects 373 cases across Sets A through Q plus the
 route-contract, degradation, setup, first-run and application-integration scenarios. Eighteen carry
 the `nlp` marker (they call the write pass at the service level and pay the lazy spaCy and fastcoref
-load), so the turn-end subset that runs on every edit is `-m "not nlp"`, 344 cases. The full suite
-runs on demand and at verification. The
-suite is offline, keyless, deterministic, and self-managing (it creates and drops its own scratch
-database, `twicetold_suite_<pid>`); when Postgres is unreachable it skips loudly and exits green, so it is
-CI-ready.
+load), so the turn-end subset that runs on every edit is `-m "not nlp"`, 355 cases. The full suite
+runs in CI and at verification. It is offline, keyless, deterministic, and self-managing (it creates
+and drops its own scratch database, `twicetold_suite_<pid>`). With `--require-db`, or `CI=true`,
+missing database infrastructure fails the run. Local runs outside required mode warn and skip
+database-dependent cases; that is not a passing backend verification.
+
+See [clean-checkout verification](verification.md) for the CI workflow, the Docker-only backend
+runner, independent C# checks and the dated real-provider reference. `test_infrastructure.py`
+adds 11 focused cases for availability policy, CI defaults, safe errors and scratch cleanup
+after migration failure or timeout.
 
 The scenario suite is a first-class deliverable, with its own fixture and runner in `tests\`, not an
 afterthought.

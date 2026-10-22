@@ -19,6 +19,9 @@ To connect your own application's conversation and dialogue model, continue with
 [standalone Python integration](python-integration.md). Its client needs only `httpx` and includes
 an executable demo, bounded recent chat, persistent agent identity and safe observation retries.
 
+[Clean-checkout verification](verification.md) runs the build, migrations, tests and both examples
+in an isolated stack. It also describes the separate C# checks and recorded real-provider run.
+
 The fastest path to a running backend, and the one an integrator should use, is docker compose.
 It needs only Docker Desktop, no host Python:
 

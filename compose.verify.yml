@@ -1,0 +1,33 @@
+# Overlay for scripts/verify-backend.ps1. Compose >= 2.24.4; no host ports.
+# Each invocation chooses a unique project, image and database volume.
+services:
+  migrate:
+    image: ${COMPOSE_PROJECT_NAME}-app:verify
+  api:
+    image: ${COMPOSE_PROJECT_NAME}-app:verify
+    ports: !reset []
+  demo:
+    image: ${COMPOSE_PROJECT_NAME}-app:verify
+  tests:
+    image: ${COMPOSE_PROJECT_NAME}-app:verify
+    environment:
+      CI: "true"
+      DATABASE_URI: postgresql://demo:demo@db:5432/demo
+      TWICETOLD_PROVIDER_MODE: fake
+      PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+      RUFF_CACHE_DIR: /tmp/ruff-cache
+    # The runtime image is the system under test. Only test inputs are mounted;
+    # the developer's .env, installed Python packages and model cache are absent.
+    volumes:
+      - ./tests:/app/tests:ro
+      - ./pytest.ini:/app/pytest.ini:ro
+      - ./ruff.toml:/app/ruff.toml:ro
+      - ./.env.example:/app/.env.example:ro
+      - ./docs/SETUP.md:/app/docs/SETUP.md:ro
+      - ./data/eval/arms:/app/data/eval/arms:ro
+      - ./data/eval/corpora:/app/data/eval/corpora:ro
+      - ./data/eval/scenarios:/app/data/eval/scenarios:ro
+    command: [python, -m, pytest, tests, --require-db, -x, -q, --junitxml=/tmp/pytest.xml]

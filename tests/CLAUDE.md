@@ -15,9 +15,9 @@ similarity checks. A model's wording is not a test surface.
 - Time travel = injected valid_at timestamps, plus the read path's `as_of` request override
   (adopted 2026-07-14). Tests never sleep() and never depend on wall clock.
 - No fixture modes. Correction scenarios are verb-forked structural pairs keyed on write_cause.
-- Deterministic: the suite must pass every run, and must stay CI-ready — offline, keyless,
-  self-managing its scratch DB. The CI workflow itself lands in the public-flip sprint (ruled
-  2026-07-20: "CI-ready now, workflow later"); until then the Stop hook is the on-machine gate.
+- Deterministic: the suite must pass every run — offline, keyless, self-managing its scratch DB.
+  `.github/workflows/verify.yml` runs the full suite with required database infrastructure;
+  missing Postgres must fail in CI, never silently skip. The Stop hook remains the local subset.
 - Judged or LLM-graded evals do not live in this folder — they belong to the separate eval story.
 
 ## When blocked

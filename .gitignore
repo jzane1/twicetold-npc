@@ -54,6 +54,9 @@ data/demo/output/
 # Application example: agent identity and pending observation outbox are private.
 /data/integration-example/
 
+# Local/CI verification logs, reports, and disposable clean-checkout snapshots.
+/artifacts/
+
 # THE AI-PAIR APPARATUS — untracked-local by ruling (2026-09-13). The operating
 # rules (CLAUDE.md) and the .claude\ tooling (auditor agents, verification hooks,
 # session commands, settings) are internal build process, not part of the
