@@ -22,6 +22,10 @@ an executable demo, bounded recent chat, persistent agent identity and safe obse
 [Clean-checkout verification](verification.md) runs the build, migrations, tests and both examples
 in an isolated stack. It also describes the separate C# checks and recorded real-provider run.
 
+For a persistent service, read [deployment](deployment.md): one private API process per database,
+readiness checks, worker/concurrency limits and backup/restore. [Evidence](evidence.md) contains
+reproducible checks, representative model outputs and explicit quality limitations.
+
 The fastest path to a running backend, and the one an integrator should use, is docker compose.
 It needs only Docker Desktop, no host Python:
 
@@ -32,7 +36,8 @@ docker compose up -d --build
 
 This builds the API image, starts Postgres with pgvector, runs migrations 001 through 011 as a
 one-shot `migrate` service, and starts the API, in dependency order. `docker compose ps` shows
-progress; the `api` service reports `healthy` once its pipelines have warmed, within about a
+progress; the `api` service reports `healthy` after its pipelines warm and database/schema/embedding
+and worker readiness checks pass, within about a
 minute of a cached `up`. The first build is a one-time few minutes (the image is about 4.9 GB on
 disk, 1.7 GB to pull; the fastcoref weights are baked in, so a cold container needs no network).
 Then open `http://127.0.0.1:8000/ledger` (The Ledger) or `/docs` (the OpenAPI surface). Both

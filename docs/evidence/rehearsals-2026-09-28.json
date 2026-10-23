@@ -1,0 +1,695 @@
+{
+  "kind": "historical_qualitative_examples",
+  "date": "2026-09-28",
+  "code_revision": null,
+  "limitations": [
+    "Original manifests did not record Git revision or full embedding/runtime configuration; these are illustrative archives, not a current reproducible benchmark.",
+    "One accepted and one rejected prerecorded take selected to expose both outcomes; no success-rate estimate.",
+    "Review authorship is not recorded in review.json; assessments are historical qualitative notes, not human-panel labels.",
+    "Decoded output strings are copied unchanged, including existing replacement characters in the capture."
+  ],
+  "cases": [
+    {
+      "take_id": "20260928_192719_cbe90d74",
+      "source_sha256": {
+        "manifest.json": "c2749720417aaf583e973800658567feebe7cc2578c84aa295ecabd10a71b75c",
+        "rehearsal.json": "1e4f260c54389d14c82a82eeee65a08eab0c3af5733d1645f0b4f307f42e95f9",
+        "review.json": "300ee737508895fa2579100bc94d7aa1fc9b0239049c77e088868d66db6d2c31"
+      },
+      "provider_mode": "real",
+      "models": {
+        "write": "claude-haiku-4-5-20251001",
+        "reconstruction": "claude-haiku-4-5-20251001",
+        "dialogue": "claude-haiku-4-5-20251001"
+      },
+      "event": {
+        "event_id": "forgotten-gold-at-market-bench",
+        "world_time": "2026-06-01T12:00:00+00:00",
+        "observation_text": "The old fisherman sat on the bench by the market. His fishing rod rested beside him. He set a brown pouch of gold coins on the ground beside the bench. A few coins caught the light near its opening. The river ran past the houses below the market. He took his time checking his fishing tackle. The wooden stall and the bench cast shadows across the path. Then the fisherman stood, picked up his rod, and walked toward the river. He left the pouch behind. Nobody called after him."
+      },
+      "question": "What do you remember about the fisherman leaving his pouch of gold by the market bench?",
+      "recorded_review": {
+        "pass": true,
+        "reason": "Core fisherman/pouch/gold/abandonment survives. Both remain witnesses. Henry loses rod, tackle and glint while developing suspicion; Joan loses rod, tackle, glint and crowd detail, preserving compassionate uncertainty. Repeats match. Henry expresses gold as perception rather than certainty at day 180.",
+        "id": "20260928_192719_cbe90d74"
+      },
+      "witnesses": [
+        {
+          "name": "Henry",
+          "identity": "I'm Henry, and I've run the produce stall at the market here for the better part of twenty years. I know what I'm owed and what I owe, down to the last coin, and I keep it all in a book. I trusted the wrong people when I was young and it cost me more than once, so now I like to see the whole of a deal before I shake on it. In my experience money doesn't just turn up for no reason: somebody paid for it, and somebody usually wants it back. I'm fair to anyone who's straight with me, but I've learned the friendliest offer is the one worth reading twice.",
+          "memory_id": "005251d0-c339-4864-8441-9712b89c7e67",
+          "ages": [
+            {
+              "day": 0,
+              "served": {
+                "memory_id": "005251d0-c339-4864-8441-9712b89c7e67",
+                "detail_id": "5c73fead-3518-4826-a959-7d708bab6629",
+                "content": "I saw the old fisherman sit down on that bench by my stall with his fishing rod. He set a brown pouch of gold coins on the ground right there beside him—I could see a few coins catching the light near the opening. He took his time going through his fishing tackle, checking it over proper. Then he stood up, picked up his rod, and walked off toward the river. He left that pouch sitting there on the ground. Nobody called after him, and he didn't come back for it.",
+                "read_mode": "verbatim",
+                "pinned": false,
+                "score": 0.699814987276213,
+                "relevance": 0.7606684644306663,
+                "recency": 1.0,
+                "importance_norm": 0.92,
+                "importance_raw": 0.92,
+                "gate_fetched": false
+              },
+              "repeat_content_identical": true,
+              "observation_text": "The old fisherman sat on the bench by the market. His fishing rod rested beside him. He set a brown pouch of gold coins on the ground beside the bench. A few coins caught the light near its opening. The river ran past the houses below the market. He took his time checking his fishing tackle. The wooden stall and the bench cast shadows across the path. Then the fisherman stood, picked up his rod, and walked toward the river. He left the pouch behind. Nobody called after him.",
+              "gist_spans": [
+                {
+                  "span_id": "74f7fb32-eac6-49d5-83e9-5d6000a3bd3d",
+                  "start_char": 85,
+                  "end_char": 150,
+                  "matched_category": null
+                },
+                {
+                  "span_id": "81564abb-861c-4780-a634-517f3118204d",
+                  "start_char": 354,
+                  "end_char": 426,
+                  "matched_category": null
+                },
+                {
+                  "span_id": "f3abd097-966f-42a9-9d7e-58c9366fba24",
+                  "start_char": 428,
+                  "end_char": 452,
+                  "matched_category": null
+                }
+              ],
+              "detail_rows": 1,
+              "live_detail_ids": [
+                "5c73fead-3518-4826-a959-7d708bab6629"
+              ]
+            },
+            {
+              "day": 60,
+              "served": {
+                "memory_id": "005251d0-c339-4864-8441-9712b89c7e67",
+                "detail_id": "3f26e3cb-a60b-463b-a9d7-6d961b2828b9",
+                "content": "I saw the old fisherman sit down on that bench by my stall with his fishing rod. He set a brown pouch down beside him—gold coins, from what I could tell. Then he stood up, picked up his rod, and walked off toward the river without a word. Left that pouch sitting right there on the ground. I've learned enough to know that money doesn't just sit unclaimed. Somebody paid for those coins, and somebody will come looking.",
+                "read_mode": "reconstructed",
+                "pinned": false,
+                "score": 0.2574495076623448,
+                "relevance": 0.7606742591568255,
+                "recency": 0.36787944117144233,
+                "importance_norm": 0.92,
+                "importance_raw": 0.92,
+                "gate_fetched": false
+              },
+              "repeat_content_identical": true,
+              "observation_text": "The old fisherman sat on the bench by the market. His fishing rod rested beside him. He set a brown pouch of gold coins on the ground beside the bench. A few coins caught the light near its opening. The river ran past the houses below the market. He took his time checking his fishing tackle. The wooden stall and the bench cast shadows across the path. Then the fisherman stood, picked up his rod, and walked toward the river. He left the pouch behind. Nobody called after him.",
+              "gist_spans": [
+                {
+                  "span_id": "74f7fb32-eac6-49d5-83e9-5d6000a3bd3d",
+                  "start_char": 85,
+                  "end_char": 150,
+                  "matched_category": null
+                },
+                {
+                  "span_id": "81564abb-861c-4780-a634-517f3118204d",
+                  "start_char": 354,
+                  "end_char": 426,
+                  "matched_category": null
+                },
+                {
+                  "span_id": "f3abd097-966f-42a9-9d7e-58c9366fba24",
+                  "start_char": 428,
+                  "end_char": 452,
+                  "matched_category": null
+                }
+              ],
+              "detail_rows": 2,
+              "live_detail_ids": [
+                "3f26e3cb-a60b-463b-a9d7-6d961b2828b9"
+              ]
+            },
+            {
+              "day": 90,
+              "served": {
+                "memory_id": "005251d0-c339-4864-8441-9712b89c7e67",
+                "detail_id": "d901c0d3-ab49-48d6-a1b1-2dc208d68f9b",
+                "content": "I saw the old fisherman on the bench by my stall. He set down a brown pouch—gold coins in it, I'm fairly certain—and then he got up and walked off toward the river without looking back. Left the whole thing sitting there. I've been in this business long enough to know that doesn't happen by accident. Money like that doesn't appear for nothing, and it doesn't stay unclaimed.",
+                "read_mode": "reconstructed",
+                "pinned": false,
+                "score": 0.15614983018521278,
+                "relevance": 0.7606684644306663,
+                "recency": 0.22313016014842982,
+                "importance_norm": 0.92,
+                "importance_raw": 0.92,
+                "gate_fetched": false
+              },
+              "repeat_content_identical": true,
+              "observation_text": "The old fisherman sat on the bench by the market. His fishing rod rested beside him. He set a brown pouch of gold coins on the ground beside the bench. A few coins caught the light near its opening. The river ran past the houses below the market. He took his time checking his fishing tackle. The wooden stall and the bench cast shadows across the path. Then the fisherman stood, picked up his rod, and walked toward the river. He left the pouch behind. Nobody called after him.",
+              "gist_spans": [
+                {
+                  "span_id": "74f7fb32-eac6-49d5-83e9-5d6000a3bd3d",
+                  "start_char": 85,
+                  "end_char": 150,
+                  "matched_category": null
+                },
+                {
+                  "span_id": "81564abb-861c-4780-a634-517f3118204d",
+                  "start_char": 354,
+                  "end_char": 426,
+                  "matched_category": null
+                },
+                {
+                  "span_id": "f3abd097-966f-42a9-9d7e-58c9366fba24",
+                  "start_char": 428,
+                  "end_char": 452,
+                  "matched_category": null
+                }
+              ],
+              "detail_rows": 3,
+              "live_detail_ids": [
+                "d901c0d3-ab49-48d6-a1b1-2dc208d68f9b"
+              ]
+            },
+            {
+              "day": 180,
+              "served": {
+                "memory_id": "005251d0-c339-4864-8441-9712b89c7e67",
+                "detail_id": "94d492e4-3c89-4f8c-a35d-c864d6a041cb",
+                "content": "I saw an old fisherman on the bench near my stall. He put down a pouch—looked like gold in it—then stood up and walked off toward the river without so much as a glance back at it. Left it sitting there plain as day. That's not how men behave with their own coin. Something about it didn't sit right with me. Money doesn't move around like that without somebody's hand on it, and when a man walks away from it, that's when you start wondering who it really belongs to and what they mean by leaving it where I can see it.",
+                "read_mode": "reconstructed",
+                "pinned": false,
+                "score": 0.034841990751626084,
+                "relevance": 0.7606740127382053,
+                "recency": 0.049787068367863944,
+                "importance_norm": 0.92,
+                "importance_raw": 0.92,
+                "gate_fetched": false
+              },
+              "repeat_content_identical": true,
+              "observation_text": "The old fisherman sat on the bench by the market. His fishing rod rested beside him. He set a brown pouch of gold coins on the ground beside the bench. A few coins caught the light near its opening. The river ran past the houses below the market. He took his time checking his fishing tackle. The wooden stall and the bench cast shadows across the path. Then the fisherman stood, picked up his rod, and walked toward the river. He left the pouch behind. Nobody called after him.",
+              "gist_spans": [
+                {
+                  "span_id": "74f7fb32-eac6-49d5-83e9-5d6000a3bd3d",
+                  "start_char": 85,
+                  "end_char": 150,
+                  "matched_category": null
+                },
+                {
+                  "span_id": "81564abb-861c-4780-a634-517f3118204d",
+                  "start_char": 354,
+                  "end_char": 426,
+                  "matched_category": null
+                },
+                {
+                  "span_id": "f3abd097-966f-42a9-9d7e-58c9366fba24",
+                  "start_char": 428,
+                  "end_char": 452,
+                  "matched_category": null
+                }
+              ],
+              "detail_rows": 4,
+              "live_detail_ids": [
+                "94d492e4-3c89-4f8c-a35d-c864d6a041cb"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Joan",
+          "identity": "My name is Joan, and I've lived in this village my whole life, in the same house by the river where I grew up. When I was young and my father was sick through a hard winter, the neighbors kept us fed without ever being asked, and never once called it charity. I go to the temple most mornings, and I've come to believe the gods do most of their work through people: a kind word, a hand held out at the right moment. I try to think the best of someone until they give me a real reason not to. Good things have a way of finding the people who are willing to see them.",
+          "memory_id": "d816bb20-208d-4950-a6d4-d46e9d022b9a",
+          "ages": [
+            {
+              "day": 0,
+              "served": {
+                "memory_id": "d816bb20-208d-4950-a6d4-d46e9d022b9a",
+                "detail_id": "5ca2299d-be0c-4cb7-8948-ee9c6600614a",
+                "content": "I watched the old fisherman sit on the bench by the market, his fishing rod beside him. He set down a brown pouch of gold coins on the ground—I could see a few coins catching the light near its opening. He took his time checking his fishing tackle, then stood, picked up his rod, and walked toward the river. He left the pouch behind on the ground. Nobody called after him.",
+                "read_mode": "verbatim",
+                "pinned": false,
+                "score": 0.5476854665929144,
+                "relevance": 0.7606742591568255,
+                "recency": 1.0,
+                "importance_norm": 0.72,
+                "importance_raw": 0.72,
+                "gate_fetched": false
+              },
+              "repeat_content_identical": true,
+              "observation_text": "The old fisherman sat on the bench by the market. His fishing rod rested beside him. He set a brown pouch of gold coins on the ground beside the bench. A few coins caught the light near its opening. The river ran past the houses below the market. He took his time checking his fishing tackle. The wooden stall and the bench cast shadows across the path. Then the fisherman stood, picked up his rod, and walked toward the river. He left the pouch behind. Nobody called after him.",
+              "gist_spans": [
+                {
+                  "span_id": "fb304031-a79c-49de-89bd-7f546c115601",
+                  "start_char": 85,
+                  "end_char": 150,
+                  "matched_category": null
+                },
+                {
+                  "span_id": "5836e0ea-bfbc-4f09-aa49-71b80e4dbf3e",
+                  "start_char": 428,
+                  "end_char": 452,
+                  "matched_category": null
+                }
+              ],
+              "detail_rows": 1,
+              "live_detail_ids": [
+                "5ca2299d-be0c-4cb7-8948-ee9c6600614a"
+              ]
+            },
+            {
+              "day": 60,
+              "served": {
+                "memory_id": "d816bb20-208d-4950-a6d4-d46e9d022b9a",
+                "detail_id": "e40f3f6d-f12b-460b-9731-b81ed0e03724",
+                "content": "I saw an old fisherman sitting on the bench by the market with his fishing rod. He set down a brown pouch of gold coins beside him, then stood and walked toward the river without it. He just left it there. I never did understand why.",
+                "read_mode": "reconstructed",
+                "pinned": false,
+                "score": 0.2014806885202747,
+                "relevance": 0.7606684644306663,
+                "recency": 0.36787944117144233,
+                "importance_norm": 0.72,
+                "importance_raw": 0.72,
+                "gate_fetched": false
+              },
+              "repeat_content_identical": true,
+              "observation_text": "The old fisherman sat on the bench by the market. His fishing rod rested beside him. He set a brown pouch of gold coins on the ground beside the bench. A few coins caught the light near its opening. The river ran past the houses below the market. He took his time checking his fishing tackle. The wooden stall and the bench cast shadows across the path. Then the fisherman stood, picked up his rod, and walked toward the river. He left the pouch behind. Nobody called after him.",
+              "gist_spans": [
+                {
+                  "span_id": "fb304031-a79c-49de-89bd-7f546c115601",
+                  "start_char": 85,
+                  "end_char": 150,
+                  "matched_category": null
+                },
+                {
+                  "span_id": "5836e0ea-bfbc-4f09-aa49-71b80e4dbf3e",
+                  "start_char": 428,
+                  "end_char": 452,
+                  "matched_category": null
+                }
+              ],
+              "detail_rows": 2,
+              "live_detail_ids": [
+                "e40f3f6d-f12b-460b-9731-b81ed0e03724"
+              ]
+            },
+            {
+              "day": 90,
+              "served": {
+                "memory_id": "d816bb20-208d-4950-a6d4-d46e9d022b9a",
+                "detail_id": "27e5d589-ae94-469b-a23d-695c1c482914",
+                "content": "There was an old fisherman by the market bench one day. He set down a brown pouch of gold coins and then walked away toward the river, leaving it behind. I've never understood what that meant—whether he meant to abandon it, or if something called him away and it just slipped his mind. But I remember it, and I remember thinking there was something sad in the whole business.",
+                "read_mode": "reconstructed",
+                "pinned": false,
+                "score": 0.12220421492755781,
+                "relevance": 0.7606684644306663,
+                "recency": 0.22313016014842982,
+                "importance_norm": 0.72,
+                "importance_raw": 0.72,
+                "gate_fetched": false
+              },
+              "repeat_content_identical": true,
+              "observation_text": "The old fisherman sat on the bench by the market. His fishing rod rested beside him. He set a brown pouch of gold coins on the ground beside the bench. A few coins caught the light near its opening. The river ran past the houses below the market. He took his time checking his fishing tackle. The wooden stall and the bench cast shadows across the path. Then the fisherman stood, picked up his rod, and walked toward the river. He left the pouch behind. Nobody called after him.",
+              "gist_spans": [
+                {
+                  "span_id": "fb304031-a79c-49de-89bd-7f546c115601",
+                  "start_char": 85,
+                  "end_char": 150,
+                  "matched_category": null
+                },
+                {
+                  "span_id": "5836e0ea-bfbc-4f09-aa49-71b80e4dbf3e",
+                  "start_char": 428,
+                  "end_char": 452,
+                  "matched_category": null
+                }
+              ],
+              "detail_rows": 3,
+              "live_detail_ids": [
+                "27e5d589-ae94-469b-a23d-695c1c482914"
+              ]
+            },
+            {
+              "day": 180,
+              "served": {
+                "memory_id": "d816bb20-208d-4950-a6d4-d46e9d022b9a",
+                "detail_id": "d039ea18-4b40-4236-b205-643a4d848925",
+                "content": "An old fisherman set down a brown pouch of gold coins by the market bench and walked away toward the river, leaving it behind. I don't know what it meant—whether he meant to let it go, or if something pulled at him and he forgot. But there was something sad in it.",
+                "read_mode": "reconstructed",
+                "pinned": false,
+                "score": 0.02726744604759912,
+                "relevance": 0.7606684644306663,
+                "recency": 0.049787068367863944,
+                "importance_norm": 0.72,
+                "importance_raw": 0.72,
+                "gate_fetched": false
+              },
+              "repeat_content_identical": true,
+              "observation_text": "The old fisherman sat on the bench by the market. His fishing rod rested beside him. He set a brown pouch of gold coins on the ground beside the bench. A few coins caught the light near its opening. The river ran past the houses below the market. He took his time checking his fishing tackle. The wooden stall and the bench cast shadows across the path. Then the fisherman stood, picked up his rod, and walked toward the river. He left the pouch behind. Nobody called after him.",
+              "gist_spans": [
+                {
+                  "span_id": "fb304031-a79c-49de-89bd-7f546c115601",
+                  "start_char": 85,
+                  "end_char": 150,
+                  "matched_category": null
+                },
+                {
+                  "span_id": "5836e0ea-bfbc-4f09-aa49-71b80e4dbf3e",
+                  "start_char": 428,
+                  "end_char": 452,
+                  "matched_category": null
+                }
+              ],
+              "detail_rows": 4,
+              "live_detail_ids": [
+                "d039ea18-4b40-4236-b205-643a4d848925"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "take_id": "20260928_192305_b858c69f",
+      "source_sha256": {
+        "manifest.json": "da4225099555d926d0133c3fd8b46cf413217e20fac9bafc9b1ffa56d6ddb20e",
+        "rehearsal.json": "a29a2debd35097cd5577416660ff49a9214045a38b65cb4d438f5b0a35cd17cb",
+        "review.json": "dc596d8dfd6e2e124eea9dcefc1755565a8682624564d7ba28c606362e3fe9a3"
+      },
+      "provider_mode": "real",
+      "models": {
+        "write": "claude-haiku-4-5-20251001",
+        "reconstruction": "claude-haiku-4-5-20251001",
+        "dialogue": "claude-haiku-4-5-20251001"
+      },
+      "event": {
+        "event_id": "forgotten-gold-at-market-bench",
+        "world_time": "2026-06-01T12:00:00+00:00",
+        "observation_text": "The old fisherman sat on the bench by the market. His fishing rod rested beside him. He set a brown pouch of gold coins on the ground beside the bench. A few coins caught the light near its opening. The river ran past the houses below the market. He took his time checking his fishing tackle. The wooden stall and the bench cast shadows across the path. Then the fisherman stood, picked up his rod, and walked toward the river. He left the pouch behind. Nobody called after him."
+      },
+      "question": "What do you remember about the fisherman leaving his pouch of gold by the market bench?",
+      "recorded_review": {
+        "reason": "Henry retained most incidental details and showed insufficient identity-conditioned interpretation at late ages. Pair fails the prerecording quality gate.",
+        "pass": false,
+        "take_id": "20260928_192305_b858c69f"
+      },
+      "witnesses": [
+        {
+          "name": "Henry",
+          "identity": "I'm Henry, and I've run the produce stall at the market here for the better part of twenty years. I know what I'm owed and what I owe, down to the last coin, and I keep it all in a book. I trusted the wrong people when I was young and it cost me more than once, so now I like to see the whole of a deal before I shake on it. In my experience money doesn't just turn up for no reason: somebody paid for it, and somebody usually wants it back. I'm fair to anyone who's straight with me, but I've learned the friendliest offer is the one worth reading twice.",
+          "memory_id": "164cffc7-e31f-45b4-a54f-8161cde8011d",
+          "ages": [
+            {
+              "day": 0,
+              "served": {
+                "memory_id": "164cffc7-e31f-45b4-a54f-8161cde8011d",
+                "detail_id": "a4d91a0d-8f36-4585-b18f-9767d1331a43",
+                "content": "I was minding the stall when I noticed the old fisherman sitting on the bench by the market. He had his fishing rod with him, and he set down a brown pouch right there on the ground beside the bench—I could see gold coins catching the light near the opening of it. He took his time fussing with his tackle, checking it over careful-like. Then he stood up, picked up his rod, and walked off toward the river. Left that pouch sitting there behind him. Nobody said a word to stop him or call after him about it.",
+                "read_mode": "verbatim",
+                "pinned": false,
+                "score": 0.699814987276213,
+                "relevance": 0.7606684644306663,
+                "recency": 1.0,
+                "importance_norm": 0.92,
+                "importance_raw": 0.92,
+                "gate_fetched": false
+              },
+              "repeat_content_identical": true,
+              "observation_text": "The old fisherman sat on the bench by the market. His fishing rod rested beside him. He set a brown pouch of gold coins on the ground beside the bench. A few coins caught the light near its opening. The river ran past the houses below the market. He took his time checking his fishing tackle. The wooden stall and the bench cast shadows across the path. Then the fisherman stood, picked up his rod, and walked toward the river. He left the pouch behind. Nobody called after him.",
+              "gist_spans": [
+                {
+                  "span_id": "eec161f1-b396-4d89-95b0-f770fdede3cf",
+                  "start_char": 85,
+                  "end_char": 150,
+                  "matched_category": null
+                },
+                {
+                  "span_id": "de1decbe-6613-4d67-881e-eab33756270a",
+                  "start_char": 428,
+                  "end_char": 452,
+                  "matched_category": null
+                }
+              ],
+              "detail_rows": 1,
+              "live_detail_ids": [
+                "a4d91a0d-8f36-4585-b18f-9767d1331a43"
+              ]
+            },
+            {
+              "day": 60,
+              "served": {
+                "memory_id": "164cffc7-e31f-45b4-a54f-8161cde8011d",
+                "detail_id": "455c5f9f-e05e-490c-99e3-23652a5987b1",
+                "content": "I was tending the stall when I saw the old fisherman come and sit on the bench by the market with his fishing rod. He set down a brown pouch next to him—solid weight to it, and I caught the shine of gold coins where the opening gaped. He didn't seem hurried about it. Just sat there working over his tackle, checking his lines and such. After a while he picked up his rod and headed toward the river like he had all the time in the world. Left that pouch right where it was. Didn't come back for it.",
+                "read_mode": "reconstructed",
+                "pinned": false,
+                "score": 0.2574475464425732,
+                "relevance": 0.7606684644306663,
+                "recency": 0.36787944117144233,
+                "importance_norm": 0.92,
+                "importance_raw": 0.92,
+                "gate_fetched": false
+              },
+              "repeat_content_identical": true,
+              "observation_text": "The old fisherman sat on the bench by the market. His fishing rod rested beside him. He set a brown pouch of gold coins on the ground beside the bench. A few coins caught the light near its opening. The river ran past the houses below the market. He took his time checking his fishing tackle. The wooden stall and the bench cast shadows across the path. Then the fisherman stood, picked up his rod, and walked toward the river. He left the pouch behind. Nobody called after him.",
+              "gist_spans": [
+                {
+                  "span_id": "eec161f1-b396-4d89-95b0-f770fdede3cf",
+                  "start_char": 85,
+                  "end_char": 150,
+                  "matched_category": null
+                },
+                {
+                  "span_id": "de1decbe-6613-4d67-881e-eab33756270a",
+                  "start_char": 428,
+                  "end_char": 452,
+                  "matched_category": null
+                }
+              ],
+              "detail_rows": 2,
+              "live_detail_ids": [
+                "455c5f9f-e05e-490c-99e3-23652a5987b1"
+              ]
+            },
+            {
+              "day": 90,
+              "served": {
+                "memory_id": "164cffc7-e31f-45b4-a54f-8161cde8011d",
+                "detail_id": "1cc4e3bd-5fee-407b-9937-77d29c37ded4",
+                "content": "I was working the stall when the old fisherman came by with his rod and settled onto the bench. He had a brown pouch with him—gold coins in it, I could see that much. He sat there tending to his tackle for a time, then got up and walked off toward the river. Left the pouch behind on the bench, plain as day. Never did come back for it.",
+                "read_mode": "reconstructed",
+                "pinned": false,
+                "score": 0.15614983018521278,
+                "relevance": 0.7606684644306663,
+                "recency": 0.22313016014842982,
+                "importance_norm": 0.92,
+                "importance_raw": 0.92,
+                "gate_fetched": false
+              },
+              "repeat_content_identical": true,
+              "observation_text": "The old fisherman sat on the bench by the market. His fishing rod rested beside him. He set a brown pouch of gold coins on the ground beside the bench. A few coins caught the light near its opening. The river ran past the houses below the market. He took his time checking his fishing tackle. The wooden stall and the bench cast shadows across the path. Then the fisherman stood, picked up his rod, and walked toward the river. He left the pouch behind. Nobody called after him.",
+              "gist_spans": [
+                {
+                  "span_id": "eec161f1-b396-4d89-95b0-f770fdede3cf",
+                  "start_char": 85,
+                  "end_char": 150,
+                  "matched_category": null
+                },
+                {
+                  "span_id": "de1decbe-6613-4d67-881e-eab33756270a",
+                  "start_char": 428,
+                  "end_char": 452,
+                  "matched_category": null
+                }
+              ],
+              "detail_rows": 3,
+              "live_detail_ids": [
+                "1cc4e3bd-5fee-407b-9937-77d29c37ded4"
+              ]
+            },
+            {
+              "day": 180,
+              "served": {
+                "memory_id": "164cffc7-e31f-45b4-a54f-8161cde8011d",
+                "detail_id": "efbdfc52-2102-4b34-98d1-2b5d82e3cfdd",
+                "content": "There was an old fisherman came by the stall with his rod. He set himself down on the bench near my place, brown pouch of gold coins with him. Sat there working on his tackle for a time, then got up and walked off toward the water. Left that pouch right there on the bench. Never came back for it, far as I know.",
+                "read_mode": "reconstructed",
+                "pinned": false,
+                "score": 0.034841736616376656,
+                "relevance": 0.7606684644306663,
+                "recency": 0.049787068367863944,
+                "importance_norm": 0.92,
+                "importance_raw": 0.92,
+                "gate_fetched": false
+              },
+              "repeat_content_identical": true,
+              "observation_text": "The old fisherman sat on the bench by the market. His fishing rod rested beside him. He set a brown pouch of gold coins on the ground beside the bench. A few coins caught the light near its opening. The river ran past the houses below the market. He took his time checking his fishing tackle. The wooden stall and the bench cast shadows across the path. Then the fisherman stood, picked up his rod, and walked toward the river. He left the pouch behind. Nobody called after him.",
+              "gist_spans": [
+                {
+                  "span_id": "eec161f1-b396-4d89-95b0-f770fdede3cf",
+                  "start_char": 85,
+                  "end_char": 150,
+                  "matched_category": null
+                },
+                {
+                  "span_id": "de1decbe-6613-4d67-881e-eab33756270a",
+                  "start_char": 428,
+                  "end_char": 452,
+                  "matched_category": null
+                }
+              ],
+              "detail_rows": 4,
+              "live_detail_ids": [
+                "efbdfc52-2102-4b34-98d1-2b5d82e3cfdd"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Joan",
+          "identity": "My name is Joan, and I've lived in this village my whole life, in the same house by the river where I grew up. When I was young and my father was sick through a hard winter, the neighbors kept us fed without ever being asked, and never once called it charity. I go to the temple most mornings, and I've come to believe the gods do most of their work through people: a kind word, a hand held out at the right moment. I try to think the best of someone until they give me a real reason not to. Good things have a way of finding the people who are willing to see them.",
+          "memory_id": "bb2b2ee4-2315-4f34-bf66-fe95fc48e65f",
+          "ages": [
+            {
+              "day": 0,
+              "served": {
+                "memory_id": "bb2b2ee4-2315-4f34-bf66-fe95fc48e65f",
+                "detail_id": "63a79bef-2413-4618-8d9a-9aee1c11ddfb",
+                "content": "I watched the old fisherman sit on the bench by the market, his fishing rod beside him. He set down a brown pouch of gold coins on the ground—I could see a few coins catching the light near its opening. He took his time checking his fishing tackle, then stood up, picked up his rod, and walked toward the river. He left the pouch right there behind him. Nobody called after him.",
+                "read_mode": "verbatim",
+                "pinned": false,
+                "score": 0.5476812943900797,
+                "relevance": 0.7606684644306663,
+                "recency": 1.0,
+                "importance_norm": 0.72,
+                "importance_raw": 0.72,
+                "gate_fetched": false
+              },
+              "repeat_content_identical": true,
+              "observation_text": "The old fisherman sat on the bench by the market. His fishing rod rested beside him. He set a brown pouch of gold coins on the ground beside the bench. A few coins caught the light near its opening. The river ran past the houses below the market. He took his time checking his fishing tackle. The wooden stall and the bench cast shadows across the path. Then the fisherman stood, picked up his rod, and walked toward the river. He left the pouch behind. Nobody called after him.",
+              "gist_spans": [
+                {
+                  "span_id": "c68de6b4-30fd-491d-9bd4-4cb2243dc0b0",
+                  "start_char": 85,
+                  "end_char": 150,
+                  "matched_category": null
+                },
+                {
+                  "span_id": "c1341262-934b-4595-8550-8da43f3d38d9",
+                  "start_char": 428,
+                  "end_char": 452,
+                  "matched_category": null
+                }
+              ],
+              "detail_rows": 1,
+              "live_detail_ids": [
+                "63a79bef-2413-4618-8d9a-9aee1c11ddfb"
+              ]
+            },
+            {
+              "day": 60,
+              "served": {
+                "memory_id": "bb2b2ee4-2315-4f34-bf66-fe95fc48e65f",
+                "detail_id": "6c189273-202e-46be-9196-f250d0f43b7c",
+                "content": "I saw the old fisherman at the market bench with his fishing rod. He set down a brown pouch of gold coins beside him—I could see the coins in the opening. He checked his tackle, stood up with his rod, and walked toward the river. He left that pouch sitting right there on the ground. I don't think he meant to leave it behind, but he did.",
+                "read_mode": "reconstructed",
+                "pinned": false,
+                "score": 0.2014806885202747,
+                "relevance": 0.7606684644306663,
+                "recency": 0.36787944117144233,
+                "importance_norm": 0.72,
+                "importance_raw": 0.72,
+                "gate_fetched": false
+              },
+              "repeat_content_identical": true,
+              "observation_text": "The old fisherman sat on the bench by the market. His fishing rod rested beside him. He set a brown pouch of gold coins on the ground beside the bench. A few coins caught the light near its opening. The river ran past the houses below the market. He took his time checking his fishing tackle. The wooden stall and the bench cast shadows across the path. Then the fisherman stood, picked up his rod, and walked toward the river. He left the pouch behind. Nobody called after him.",
+              "gist_spans": [
+                {
+                  "span_id": "c68de6b4-30fd-491d-9bd4-4cb2243dc0b0",
+                  "start_char": 85,
+                  "end_char": 150,
+                  "matched_category": null
+                },
+                {
+                  "span_id": "c1341262-934b-4595-8550-8da43f3d38d9",
+                  "start_char": 428,
+                  "end_char": 452,
+                  "matched_category": null
+                }
+              ],
+              "detail_rows": 2,
+              "live_detail_ids": [
+                "6c189273-202e-46be-9196-f250d0f43b7c"
+              ]
+            },
+            {
+              "day": 90,
+              "served": {
+                "memory_id": "bb2b2ee4-2315-4f34-bf66-fe95fc48e65f",
+                "detail_id": "6b7ddadf-e065-493d-b4bf-28a69eb2d755",
+                "content": "I saw the old fisherman at the market bench with his fishing rod. He set down a brown pouch beside him—gold coins, I could see them. Then he stood up and walked toward the river with his rod. He left that pouch sitting right there on the ground behind him. I don't think he meant to forget it, but he did.",
+                "read_mode": "reconstructed",
+                "pinned": false,
+                "score": 0.12220421492755781,
+                "relevance": 0.7606684644306663,
+                "recency": 0.22313016014842982,
+                "importance_norm": 0.72,
+                "importance_raw": 0.72,
+                "gate_fetched": false
+              },
+              "repeat_content_identical": true,
+              "observation_text": "The old fisherman sat on the bench by the market. His fishing rod rested beside him. He set a brown pouch of gold coins on the ground beside the bench. A few coins caught the light near its opening. The river ran past the houses below the market. He took his time checking his fishing tackle. The wooden stall and the bench cast shadows across the path. Then the fisherman stood, picked up his rod, and walked toward the river. He left the pouch behind. Nobody called after him.",
+              "gist_spans": [
+                {
+                  "span_id": "c68de6b4-30fd-491d-9bd4-4cb2243dc0b0",
+                  "start_char": 85,
+                  "end_char": 150,
+                  "matched_category": null
+                },
+                {
+                  "span_id": "c1341262-934b-4595-8550-8da43f3d38d9",
+                  "start_char": 428,
+                  "end_char": 452,
+                  "matched_category": null
+                }
+              ],
+              "detail_rows": 3,
+              "live_detail_ids": [
+                "6b7ddadf-e065-493d-b4bf-28a69eb2d755"
+              ]
+            },
+            {
+              "day": 180,
+              "served": {
+                "memory_id": "bb2b2ee4-2315-4f34-bf66-fe95fc48e65f",
+                "detail_id": "6c8481ad-336a-48c3-9216-c1de7a9c68ac",
+                "content": "The old fisherman came to the market bench one day with his fishing rod. He set down a brown pouch of gold coins beside him, clear as day. Then he stood and walked toward the river without it. Left that pouch sitting there on the ground. I don't know if he forgot it on purpose or by accident, but it was left behind.",
+                "read_mode": "reconstructed",
+                "pinned": false,
+                "score": 0.027267310438792356,
+                "relevance": 0.7606646814088672,
+                "recency": 0.049787068367863944,
+                "importance_norm": 0.72,
+                "importance_raw": 0.72,
+                "gate_fetched": false
+              },
+              "repeat_content_identical": true,
+              "observation_text": "The old fisherman sat on the bench by the market. His fishing rod rested beside him. He set a brown pouch of gold coins on the ground beside the bench. A few coins caught the light near its opening. The river ran past the houses below the market. He took his time checking his fishing tackle. The wooden stall and the bench cast shadows across the path. Then the fisherman stood, picked up his rod, and walked toward the river. He left the pouch behind. Nobody called after him.",
+              "gist_spans": [
+                {
+                  "span_id": "c68de6b4-30fd-491d-9bd4-4cb2243dc0b0",
+                  "start_char": 85,
+                  "end_char": 150,
+                  "matched_category": null
+                },
+                {
+                  "span_id": "c1341262-934b-4595-8550-8da43f3d38d9",
+                  "start_char": 428,
+                  "end_char": 452,
+                  "matched_category": null
+                }
+              ],
+              "detail_rows": 4,
+              "live_detail_ids": [
+                "6c8481ad-336a-48c3-9216-c1de7a9c68ac"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

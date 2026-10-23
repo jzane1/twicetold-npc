@@ -6,10 +6,14 @@ is hidden in the code; all of it was inferable from four files, and inferable is
 
 ## The shape
 
+For the supported single-process topology, readiness semantics, upgrade limits and a tested
+backup/restore procedure, use [the deployment guide](deployment.md). For inspectable current
+verification and dated model examples, use [the evidence bundle](evidence.md).
+
 The service runs on a machine you control, with Postgres beside it. Your game talks HTTP to
 it, and it talks to whatever model provider you configured. One service serves as many
-agents as you like; the agent UUID is the unit, so shard by game, region or shard key when
-you need to. The Unity client is an embedded Unity package (`NpcMemory.Core`, netstandard2.1,
+agents within your measured workload; the agent UUID is the integration unit. Multiple API/worker
+processes against one database are outside the supported deployment boundary. The Unity client is an embedded Unity package (`NpcMemory.Core`, netstandard2.1,
 shipped as source) plus a MonoBehaviour adapter; `first-npc.md` is the thirty lines.
 
 ## Who pays, and how much
@@ -66,9 +70,9 @@ exactly like a database socket:
   the API (8000) on `127.0.0.1` only, so neither is reachable from off the host. Don't rebind
   them to a public interface without a firewall rule and the reverse proxy above.
 - **The Ledger is a designer tool.** It's served by the API at `/ledger` and reads the record
-  in full. Don't expose it to players. A Host-header guard for the inspector page (the
-  DNS-rebinding class of attack against localhost tools) lands in the release-hygiene pass
-  and is not in place today.
+  in full. Don't expose it to players. The API's Host-header guard is implemented and defaults
+  to loopback names; configure `TWICETOLD_ALLOWED_HOSTS` for private service names. This guard
+  does not authenticate callers or authorize access to agents.
 
 ## What Steam asks
 
@@ -87,8 +91,8 @@ content players consume, not about AI tools used in development; read the curren
 
 ## Content safety
 
-No moderation layer is included. The gist constraint and the drift budget bound what the
-character says about her own record; they do nothing about what a player can talk her into
+No moderation layer is included. The gist prompt and drift budget influence recall but do not
+guarantee factual faithfulness; they do nothing about what a player can talk her into
 saying. Content safety is the provider's filters plus whatever you build: a filter on the
 streamed prose before it reaches the screen, a filter on player lines before they reach the
 service, or both. The dialogue role streams pure prose and persists nothing, so a filtered

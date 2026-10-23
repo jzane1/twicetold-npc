@@ -16,7 +16,7 @@ from __future__ import annotations
 import asyncio
 import json
 from collections import deque
-from contextlib import asynccontextmanager
+from contextlib import AsyncExitStack, asynccontextmanager
 from uuid import UUID
 
 from pathlib import Path
@@ -30,6 +30,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from app.compiler import CompilerWorker
 from app.config import load_allowed_hosts, load_settings
 from app.runtime import open_runtime_pool
+from app.health import Readiness
 from app.db import ObservationConflictError
 from app.deferred import DeferredWriteWorker
 from app.dialogue import DialogueService
@@ -108,45 +109,61 @@ def _tee_turn(result: DialogueTurnResult) -> None:
 
 @asynccontextmanager
 async def _lifespan(app: FastAPI):
-    settings = load_settings()
-    pool = await open_runtime_pool(settings)
-    await asyncio.to_thread(warm_pipelines)  # model load is startup cost
-    providers = build_providers(settings)
-    app.state.retrieval = RetrievalService(pool, providers, settings)
-    app.state.service = IngestService(pool, providers, settings, app.state.retrieval)
-    app.state.dialogue = DialogueService(pool, providers, settings, app.state.retrieval)
-    # The dissonance seam (architecture.md §8): the
-    # diegetic-correction event's service — synchronous, no worker, nothing
-    # to start or stop.
-    app.state.dissonance = DissonanceService(pool, providers, settings)
-    # The deferred-write worker (deferred-writes.md, ruled 2026-08-12): one
-    # per process, stopped BEFORE the pool closes. It drains pending rows
-    # regardless of the deferral kill-switch, so flipping the knob off never
-    # strands a row.
-    app.state.deferred = DeferredWriteWorker(pool, providers, settings)
-    app.state.deferred.start()
-    # The reflection seam + its worker (reflection.md, ruled 2026-08-15):
-    # the C1 lifecycle contract verbatim — one worker per process, stopped
-    # BEFORE the pool closes. The per-agent reflection_worker_enabled knob
-    # (default 0.0) gates its auto-pull only; the reflect route is always
-    # live.
-    app.state.reflection = ReflectionService(pool, providers, settings)
-    app.state.reflection_worker = ReflectionWorker(pool, providers, settings)
-    app.state.reflection_worker.start()
-    # The parameter-compiler worker (parameter-compiler.md, ruled
-    # 2026-08-17): the same lifecycle contract, and C3's ONLY scheduler —
-    # no compile route exists. The per-agent compiler_worker_enabled knob
-    # (default 0.0) gates the component entirely.
-    app.state.compiler_worker = CompilerWorker(pool, providers, settings)
-    app.state.compiler_worker.start()
-    try:
-        yield
-    finally:
-        await app.state.compiler_worker.stop()
-        await app.state.reflection_worker.stop()
-        await app.state.deferred.stop()
-        providers.gate.shutdown()
-        await pool.close()
+    async with AsyncExitStack() as stack:
+        app.state.readiness = None
+        settings = load_settings()
+        pool = await open_runtime_pool(settings)
+        stack.push_async_callback(pool.close)
+        await asyncio.to_thread(warm_pipelines)  # model load is startup cost
+        providers = build_providers(settings)
+        stack.callback(providers.gate.shutdown)
+        app.state.retrieval = RetrievalService(pool, providers, settings)
+        app.state.service = IngestService(
+            pool, providers, settings, app.state.retrieval
+        )
+        app.state.dialogue = DialogueService(
+            pool, providers, settings, app.state.retrieval
+        )
+        # The dissonance seam (architecture.md §8): the
+        # diegetic-correction event's service — synchronous, no worker, nothing
+        # to start or stop.
+        app.state.dissonance = DissonanceService(pool, providers, settings)
+        # The deferred-write worker (deferred-writes.md, ruled 2026-08-12): one
+        # per process, stopped BEFORE the pool closes. It drains pending rows
+        # regardless of the deferral kill-switch, so flipping the knob off never
+        # strands a row.
+        app.state.deferred = DeferredWriteWorker(pool, providers, settings)
+        stack.push_async_callback(app.state.deferred.stop)
+        app.state.deferred.start()
+        # The reflection seam + its worker (reflection.md, ruled 2026-08-15):
+        # the C1 lifecycle contract verbatim — one worker per process, stopped
+        # BEFORE the pool closes. The per-agent reflection_worker_enabled knob
+        # (default 0.0) gates its auto-pull only; the reflect route is always
+        # live.
+        app.state.reflection = ReflectionService(pool, providers, settings)
+        app.state.reflection_worker = ReflectionWorker(pool, providers, settings)
+        stack.push_async_callback(app.state.reflection_worker.stop)
+        app.state.reflection_worker.start()
+        # The parameter-compiler worker (parameter-compiler.md, ruled
+        # 2026-08-17): the same lifecycle contract, and C3's ONLY scheduler —
+        # no compile route exists. The per-agent compiler_worker_enabled knob
+        # (default 0.0) gates the component entirely.
+        app.state.compiler_worker = CompilerWorker(pool, providers, settings)
+        stack.push_async_callback(app.state.compiler_worker.stop)
+        app.state.compiler_worker.start()
+        app.state.readiness = Readiness(
+            pool,
+            settings,
+            (
+                app.state.deferred,
+                app.state.reflection_worker,
+                app.state.compiler_worker,
+            ),
+        )
+        try:
+            yield
+        finally:
+            app.state.readiness = None
 
 
 app = FastAPI(title="twicetold-npc API", version="1", lifespan=_lifespan)
@@ -177,6 +194,26 @@ async def validation_error(request: Request, exc: RequestValidationError):
 # forbids adding it once the app has started -- so the allowlist is read here,
 # at import, via load_allowed_hosts, not from the lifespan-built Settings.
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(load_allowed_hosts()))
+
+
+@app.get("/health/live")
+async def live():
+    return {"status": "alive"}
+
+
+@app.get("/health/ready")
+async def ready():
+    monitor = getattr(app.state, "readiness", None)
+    result = (
+        await monitor.check()
+        if monitor is not None
+        else {"status": "not_ready", "checks": {"startup": "fail"}}
+    )
+    return JSONResponse(
+        result,
+        status_code=200 if result["status"] == "ready" else 503,
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 @app.post("/v1/dialogue/init", response_model=RetrievalResult)

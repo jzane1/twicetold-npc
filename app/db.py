@@ -2943,6 +2943,37 @@ async def purge_agent_memories(
 
 
 # Database-wide embedding compatibility (migration 010).
+async def check_runtime_database(pool, settings: Settings, *, require_binding=True):
+    """Read-only schema/vector compatibility, also used before startup binding.
+
+    The caller bounds the whole check, including waiting for a pooled connection.
+    Exact ledger equality refuses both pending migrations and a newer database.
+    This is not a schema checksum or a provider connectivity/quality check.
+    """
+    from app.config import REPO_ROOT
+
+    expected = {p.name for p in (REPO_ROOT / "db" / "migrations").glob("*.sql")}
+    async with pool.connection() as conn, conn.cursor() as cur:
+        await cur.execute("SET TRANSACTION READ ONLY")
+        await cur.execute("SELECT 1 FROM pg_extension WHERE extname = 'vector'")
+        if await cur.fetchone() is None:
+            raise ConfigError("pgvector is missing; apply the migrations.")
+        await cur.execute("SELECT version FROM schema_migrations")
+        applied = {r[0] for r in await cur.fetchall()}
+        if not expected or applied != expected:
+            raise ConfigError(
+                "Migration ledger differs from this service revision; run python -m app.doctor."
+            )
+        if require_binding:
+            await cur.execute(READ_BINDING)
+            row = await cur.fetchone()
+            if row is None:
+                raise ConfigError(
+                    "Embedding binding is missing; restart with the original configuration."
+                )
+            binding_status(row[0], embedding_configuration(settings), False)
+
+
 READ_BINDING = "SELECT configuration FROM embedding_space WHERE singleton = true"
 LOCK_BINDING = "LOCK TABLE embedding_space IN EXCLUSIVE MODE"
 INSERT_BINDING = "INSERT INTO embedding_space (configuration) VALUES (%s)"
@@ -3029,4 +3060,8 @@ def inspect_setup_database(
         pending = sorted(expected - applied)
         if pending:
             raise ConfigError("Pending migrations: " + ", ".join(pending))
+        if applied - expected:
+            raise ConfigError(
+                "Database has migrations unknown to this service revision; use the matching code revision."
+            )
         return inspect_embedding_space(conn, settings, adopt_existing=adopt_existing)

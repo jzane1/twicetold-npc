@@ -24,8 +24,21 @@ This is the same script CI runs. It:
    and waits for the API. A second migration invocation must exit successfully with nothing pending.
 4. Runs the full Python suite, including NLP/write scenarios, with `--require-db`.
 5. Runs the documented first-run walkthrough and the application-owned chat demo over HTTP.
-6. Saves logs, the image ID, resolved Python dependency versions and pytest XML under
+6. Runs the smoke evaluation on its own scratch database; scores structural ID checks only.
+7. Stops the disposable database and verifies HTTP 503 readiness with HTTP 200 liveness, then
+   restarts it and verifies readiness recovers.
+8. Stops the API, dumps the demo database, restores into a new empty database and compares every
+   public table's complete rows, including vectors, history and receipts. Checks doctor/runtime startup.
+9. Saves logs, image IDs, resolved Python dependency versions and pytest XML under
    `artifacts\verification\<project>`, then removes that project's containers, network and volume.
+
+The output folder is an evidence bundle: `run.json` records revision, working-tree changes,
+configuration, step exit codes and final status; `evaluation.json` preserves scenario results;
+`restore.json` records table counts/hashes; `demo.dump` is the disposable demo backup. Ready/outage/
+recovery JSON lives in the corresponding step logs. Failed runs retain their available artifacts
+and an unsuccessful status. Compare the [committed example bundle](evidence.md) and
+[deployment procedure](deployment.md). Local runs with changes are explicitly marked; a source
+archive without Git metadata is labeled as such, never attributed to an invented commit.
 
 The script uses `.env.example`, never your `.env`. It publishes no host ports, so it can run beside
 the ordinary demo without touching its database. Test inputs mount read-only; the application and

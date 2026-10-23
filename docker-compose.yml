@@ -73,15 +73,14 @@ services:
         bind:
           create_host_path: false
     healthcheck:
-      # No route was added for this (the route count is pinned): /openapi.json is
-      # served only after the lifespan finishes warming, so any 200 means fully
-      # warm. python, not curl (curl is absent in python:slim).
+      # Readiness checks the live pool, schema, embedding binding and workers.
+      # python, not curl (curl is absent in python:slim).
       test:
         [
           "CMD",
           "python",
           "-c",
-          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/openapi.json', timeout=5)",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3)",
         ]
       interval: 10s
       timeout: 5s

@@ -18,6 +18,11 @@ defense above it.
 database.* The claim axis is **controlled infidelity above an immutable record**: the character's
 telling of a memory can drift and be defended, while the ground-truth record underneath never lies.
 
+Here “ground truth” means the stored observation supplied to the system, not independently verified
+world truth. Immutability preserves that source and its gist spans; it does not guarantee that
+generated retellings faithfully express them. See [evidence and limitations](evidence.md) and
+[the single-process deployment boundary](deployment.md).
+
 ## 2. Non-negotiable principles
 
 - **Bi-temporal, non-destructive.** Every memory row carries `created_at` (when it was written),

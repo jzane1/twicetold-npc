@@ -26,6 +26,7 @@ services:
       - ./pytest.ini:/app/pytest.ini:ro
       - ./ruff.toml:/app/ruff.toml:ro
       - ./.env.example:/app/.env.example:ro
+      - ./.env.example:/app/.env:ro
       - ./docs/SETUP.md:/app/docs/SETUP.md:ro
       - ./data/eval/arms:/app/data/eval/arms:ro
       - ./data/eval/corpora:/app/data/eval/corpora:ro

@@ -4,6 +4,9 @@ From the repository root in PowerShell, with Docker Desktop running (Linux conta
 No host Python, Unity, manual database setup, or downloaded scenario files are needed.
 Compose 2.24.4 or newer is required for the real-provider overlay (`docker compose version`).
 
+After the walkthrough, use [the evidence bundle](evidence.md) to assess behavior and
+[the deployment guide](deployment.md) to operate a persistent private service.
+
 ## Fake providers: one command, no keys
 
 ```powershell

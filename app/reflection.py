@@ -538,6 +538,10 @@ class ReflectionWorker:
         if self._task is None:
             self._task = asyncio.create_task(self._run())
 
+    @property
+    def is_running(self) -> bool:
+        return self._task is not None and not self._task.done()
+
     async def stop(self) -> None:
         if self._task is None:
             return

@@ -2,9 +2,13 @@
 
 The measurement instrument for the demo and for judging the system's behavior: a judge-free metric
 layer feeding The Ledger's on-screen numbers, an evaluation runner driving Insert/Query scenarios over
-the existing session-runner loop, an LLM-judge layer with a hand-labeled gold set, and a fixed-gist
+the existing session-runner loop, an LLM-judge layer with model-generated reference labels, and a fixed-gist
 ON/OFF ablation. The demo-legibility artifact and the faithfulness evaluation are the same artifact, and
 the judge surface is designed in from the start rather than bolted on later.
+
+Start with [the evidence bundle](evidence.md) for reproducible commands, recorded results and
+limitations. Historical evaluations predate the current gist-selection and reconstruction prompts;
+their quality, cost and latency figures are not measurements of the current revision.
 
 ## The measured shape
 
@@ -25,9 +29,13 @@ the judge surface is designed in from the start rather than bolted on later.
 - **The Ledger binding is a small read route.** `GET /v1/memories/{id}/reconstruction-metrics`, computed
   server-side (lemmas need spaCy). It runs no retrieval, so the IDs-and-scores invariant does not bind; it
   returns IDs plus numbers and performs zero writes.
-- **A hand-labeled gold set.** The runner emits gold candidates from a run, a human labels a small set,
-  and the runner reports judge-agreement (raw percentage plus Cohen's kappa). Judged numbers are quotable
-  only once agreement clears the bar (kappa at least 0.6 per category).
+- **Reference labels with explicit provenance.** The checked-in natural and pairwise sets were labeled
+  by one blind model pass, not a human panel; see their adjacent provenance files under `data\eval\gold`.
+  `agreement` measures judge-vs-reference concordance (raw percentage plus Cohen's kappa), not accuracy
+  against human ground truth. The CLI retains `gold` names for compatibility. Constructed rows are
+  authored controls, not sampled production failures. A kappa of at least 0.6 is the project's reporting
+  threshold; clearing it against model labels does not establish human validity. Pairwise agreement
+  failed it (0.3697, n=30); the natural faithfulness references contain no negative labels.
 - **A fixed-gist ON/OFF ablation.** The same seeded set, bands, model, and drift budget, with the gist
   constraint in versus removed; gist-precision and fabrication rate per arm, with per-item cosine drift
   shown near-identical in both arms (the budget-is-blind proof).
@@ -58,6 +66,12 @@ There is no NLI model on gist sentences (the presence plus chain-diff floor stan
 stale-leakage or MemTrace trajectory categories (they queue behind the core four); no DB-persisted
 evaluation state; and no metric check at cache-write time. Held-out scenarios (`"held_out": true`) are
 excluded from tuning and compare runs by default.
+
+Stored gist spans and observation text are preserved by the write/chain rules. Generated retellings
+are constrained by a prompt, not a hard semantic validator: they can omit or contradict a protected
+fact while the source remains intact. The lexical metrics below are proxies, and cosine drift is a
+topic-distance guard. Neither is proof of factual faithfulness. Authorial correction supplies a new
+constraint anchor while preserving the prior record; it does not retroactively make past prose true.
 
 ## The judge-free metrics (`app\eval_metrics.py`)
 
@@ -190,11 +204,10 @@ partitions the call slots into a no-gist group and a normal group. The paired re
 deliberately not in `compose_cache_key` (arms live on separate scratch databases, and a live mid-process
 flip could serve stale-keyed text), so it is flipped at provisioning boundaries, never mid-scene.
 
-The ablation is the deciding data for whether the drift budget should also police facts. The empirical
-finding is that the budget is blind to the constraint (per-item drift is near-identical with the
-constraint in or out) while gist-precision drops materially when the constraint is removed. The
-conclusion: the budget keeps its mechanism and threshold and is a topic guard, and fact-policing belongs
-to gist-precision plus the judged faithfulness category.
+The historical ablation motivated treating the drift budget as a topic guard: similar distances
+can accompany different factual support. It has not been rerun for the current write-selected gist
+and reconstruction prompts. Reproduce both arms with your configured models before making a current
+quality claim; lexical gist presence and judge scores remain measurements, not enforcement at serving.
 
 ## Verification
 

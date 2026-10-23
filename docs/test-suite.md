@@ -1,9 +1,9 @@
 # twicetold-npc: Test suite
 
-The pytest suite in `tests\test_*.py` collects 373 cases across Sets A through Q plus the
+The pytest suite in `tests\test_*.py` collects 394 cases across Sets A through Q plus the
 route-contract, degradation, setup, first-run and application-integration scenarios. Eighteen carry
 the `nlp` marker (they call the write pass at the service level and pay the lazy spaCy and fastcoref
-load), so the turn-end subset that runs on every edit is `-m "not nlp"`, 355 cases. The full suite
+load), so the turn-end subset that runs on every edit is `-m "not nlp"`, 376 cases. The full suite
 runs in CI and at verification. It is offline, keyless, deterministic, and self-managing (it creates
 and drops its own scratch database, `twicetold_suite_<pid>`). With `--require-db`, or `CI=true`,
 missing database infrastructure fails the run. Local runs outside required mode warn and skip
@@ -16,6 +16,15 @@ after migration failure or timeout.
 
 The scenario suite is a first-class deliverable, with its own fixture and runner in `tests\`, not an
 afterthought.
+
+## Deployment checks
+
+`test_health.py` adds 15 cases for HTTP liveness/readiness, safe infrastructure failures, bounded
+waits, cancellation, worker status, startup cleanup, read-only embedding checks and pending/newer
+migration rejection. `test_deployment_verification.py` adds six checks that the restore comparator
+rejects missing or changed data. `tests\verify_deployment.py` is the Compose verification helper:
+it probes a real DB outage/recovery and compares all public table rows after a real dump/restore.
+It makes no provider calls and asserts no model semantics. See [deployment](deployment.md).
 
 ## Setup and configuration
 
