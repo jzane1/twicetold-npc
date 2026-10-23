@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "kind": "keyless_structural_verification",
+  "local_date": "2026-10-22",
+  "timezone": "America/Los_Angeles",
+  "run": {
+    "revision": "32f4dd156dfb4a186be470d02f723d4851726203",
+    "working_tree_changes": [],
+    "project": "twicetold-verify-e4319a5b68ed44408486310b1a9df01f",
+    "started_at": "2026-10-23T00:03:24.2560381+00:00",
+    "provider_mode": "fake",
+    "configuration": "compose.demo.yml + compose.verify.yml; .env.example; no private .env",
+    "quality_claim": "Structural checks only; fake embeddings and prose do not establish semantic quality.",
+    "completed_at": "2026-10-23T00:06:27.1054330+00:00",
+    "passed": true,
+    "step_exit_codes": {
+      "build": 0,
+      "image": 0,
+      "dependencies": 0,
+      "lint": 0,
+      "format": 0,
+      "startup": 0,
+      "database-image": 0,
+      "ready": 0,
+      "migration-rerun": 0,
+      "pytest": 0,
+      "first-run": 0,
+      "application": 0,
+      "evaluation": 0,
+      "database-stop": 0,
+      "unavailable": 0,
+      "database-recovery": 0,
+      "api-recovery": 0,
+      "recovered": 0,
+      "quiesce": 0,
+      "backup": 0,
+      "backup-copy": 0,
+      "restore-create": 0,
+      "restore": 0,
+      "restore-check": 0
+    }
+  },
+  "reproduce": "pwsh -File scripts\\verify-backend.ps1",
+  "pytest": {
+    "tests": "394",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "time": "99.827",
+    "timestamp": "2026-10-23T00:03:58.033289+00:00"
+  },
+  "smoke": {
+    "scenarios": 4,
+    "checks_passed": 6,
+    "checks_failed": 0,
+    "held_out_excluded": [
+      "held-out-probe"
+    ]
+  },
+  "readiness": {
+    "ready": {
+      "expected_ready": true,
+      "live_status": 200,
+      "ready_status": 200,
+      "readiness": {
+        "status": "ready",
+        "checks": {
+          "database": "pass",
+          "workers": "pass"
+        }
+      },
+      "passed": true
+    },
+    "unavailable": {
+      "expected_ready": false,
+      "live_status": 200,
+      "ready_status": 503,
+      "readiness": {
+        "status": "not_ready",
+        "checks": {
+          "database": "fail",
+          "workers": "pass"
+        }
+      },
+      "passed": true
+    },
+    "recovered": {
+      "expected_ready": true,
+      "live_status": 200,
+      "ready_status": 200,
+      "readiness": {
+        "status": "ready",
+        "checks": {
+          "database": "pass",
+          "workers": "pass"
+        }
+      },
+      "passed": true
+    }
+  },
+  "restore": {
+    "passed": true,
+    "public_tables": 17,
+    "all_rows_identical": true,
+    "doctor_passed": true,
+    "runtime_startup_passed": true
+  },
+  "images": {
+    "api": "sha256:7bbad666e5f8a769bb968a0d7e19ecfb7e6c7f525a6b09eb994b64b2a1bde330",
+    "database": {
+      "ID": "sha256:1d533553fefe4f12e5d80c7b80622ba0c382abb5758856f52983d8789179f0fb",
+      "Repository": "pgvector/pgvector",
+      "Tag": "pg16",
+      "Platform": "linux/amd64"
+    }
+  },
+  "input_sha256": {
+    "Dockerfile": "d66652b1c408642cc1faa25c1ece9054dc477b7902fd69526fc112606ebb4288",
+    "requirements.txt": "00055630d8e4014dab96de90bd468ad7461e606fed4be4e2d085be89d5bd1fb5",
+    "compose.demo.yml": "1401698b0bf5582168abf0812f513e3acfacb5b01bfc9ed6bb7cbdc3ca8c3a6c",
+    "compose.verify.yml": "7a1d41ad9ae82aaae2ef22ac899ea9af9738aa859c58a02c504fa7376cd648a3",
+    ".env.example": "84aa8c2612cf3b056a2c1a8813109f079c521b5621c2e999b8b65122d106db2f",
+    "scripts/verify-backend.ps1": "a7a557eb6a491941a1fd3fa77aba88b8cbabc773ce6ebbc0a43ef57bffcd66af",
+    "data/eval/scenarios/smoke.jsonl": "9c2cb1b07899933e5070db2598333854eb369c7fc96a42a3258cee7a3e810b7f"
+  },
+  "artifact_sha256": {
+    "application-2026-10-22.txt": "8393c354a322e01ffe112f6e35d4746bded5603cf6f231768a6f3844b525b9ee",
+    "dependencies-2026-10-22.txt": "929e1e7f0f56b953772a5d79e2ce9e05a5c0ed9569adfc817571321e44b62fc8",
+    "evaluation-2026-10-22.json": "2f1ec0dc1a4615056db253d73b2c2cb6cebe8b73a068145ad922243507914f60",
+    "first-run-2026-10-22.txt": "da279860e4a1faac136151a8c0a447a15877fddca9af238b4de21f4501060e66",
+    "restore-2026-10-22.json": "13736c88748d7499c4a41896a6017b2cfa7753d91b5217fbc0bff63a54df3f2c"
+  },
+  "limitations": [
+    "Fake providers only; generated prose, embedding similarity, latency, token counts and computed USD do not establish real-model quality, cost or performance.",
+    "Real-provider first-run reference is dated 2026-10-19 at a4c2f02; September examples lack captured Git/embedding provenance. No new paid calls.",
+    "Local clean clone with cached Docker dependency layers; not a claim that GitHub Actions has run.",
+    "Database restore uses a small quiesced fixture; several worker-feature tables are empty. No production recovery-time or concurrency claim.",
+    "Dependencies are recorded, not fully locked. Image identifiers describe this local build; the API image is not published.",
+    "Demo inspector URLs in preserved console output were not host-accessible in this port-free verification project; its containers/volume were removed after the run."
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "passed": true,
+  "nonempty_demo": true,
+  "all_rows_identical": true,
+  "tables": {
+    "agents": {
+      "rows": 2,
+      "sha256": "0c3d7811268827cf00e0091e70d0f435885b79946a0b7e918b30e6da41e72709"
+    },
+    "compiled_bundles": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "compiler_runs": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "corrections": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "embedding_space": {
+      "rows": 1,
+      "sha256": "84da73da970dc68608003b399f73e2bd31843919276a0198faadc386d3da4dfe"
+    },
+    "identity_components": {
+      "rows": 3,
+      "sha256": "84ef54e6d763e3f66a8872b8685ac9521aabf2f5cb8c2d744eb51d9147841da7"
+    },
+    "identity_documents": {
+      "rows": 2,
+      "sha256": "cd31c0064b409ed92d02af06b542d6bb5d9182947d65127ace91a9a6bc5c63cb"
+    },
+    "memories": {
+      "rows": 3,
+      "sha256": "5c61f91a7deec7fd9c15a77f8093244d8020204fdc62a0cae938c316eb36e7eb"
+    },
+    "memory_details": {
+      "rows": 7,
+      "sha256": "20d0fc41d24679255b51d3f4439f94ab1be25ba4b86f97ca0364059e054d147f"
+    },
+    "memory_enrichment_runs": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "memory_fact_versions": {
+      "rows": 5,
+      "sha256": "d975c5c4b575a3f62cd39e578a33e69d1a566b103ef74c6edd535263c9b46c02"
+    },
+    "memory_gist_spans": {
+      "rows": 11,
+      "sha256": "e0c64d8c395ac374c90e3aa41006b009e5455601df34ce11131aa2b70c7b1bf0"
+    },
+    "observation_receipts": {
+      "rows": 3,
+      "sha256": "cbef41504272004bb274851fb5944a8a024de50b1d3f0b38ebb21d57317d28a8"
+    },
+    "reconstruction_cache": {
+      "rows": 1,
+      "sha256": "c9df6af77340e7a4470e86cb48c531be94ed33aabbcd0bd2bfc65c3dfc3ca73e"
+    },
+    "reflection_runs": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "reflections": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "schema_migrations": {
+      "rows": 11,
+      "sha256": "7f06770914c3341e43ca097d6b65a2b98fb03806ebf08d1d476f63007450079a"
+    }
+  },
+  "doctor_passed": true,
+  "runtime_startup_passed": true
+}

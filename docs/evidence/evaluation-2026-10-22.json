@@ -1,0 +1,438 @@
+{
+  "verb": "run",
+  "started_at": "2026-10-23T00:05:48.711132+00:00",
+  "finished_at": "2026-10-23T00:05:57.667509+00:00",
+  "provider_mode": "fake",
+  "models": {
+    "provider_mode": "fake",
+    "write": "",
+    "escalation": "",
+    "dialogue": "",
+    "reconstruction": "",
+    "judge": "claude-opus-4-8",
+    "dialogue_thinking": ""
+  },
+  "excluded_held_out": [
+    "held-out-probe"
+  ],
+  "scenarios": [
+    {
+      "scenario_id": "ford-retrieval-basics",
+      "held_out": false,
+      "agent_id": "f9e842f1-90bf-4599-af21-afae698e2b4f",
+      "event_counts": {
+        "as_of": 1,
+        "observe": 3,
+        "scene": 1,
+        "utterance": 2
+      },
+      "checks": [
+        {
+          "event_index": 5,
+          "passed": true,
+          "missing": [],
+          "unexpected": []
+        },
+        {
+          "event_index": 6,
+          "passed": true,
+          "missing": [],
+          "unexpected": []
+        }
+      ],
+      "checks_passed": 2,
+      "checks_failed": 0,
+      "turns": 2,
+      "degraded_turns": 0,
+      "memories": [
+        {
+          "memory_ref": 0,
+          "memory_id": "18dbfc85-df8f-4480-ae56-87a0fe870650",
+          "agent_id": "f9e842f1-90bf-4599-af21-afae698e2b4f",
+          "live_detail_id": "c14dd782-c337-4bbb-a7a9-851cfbc20b7f",
+          "live_write_cause": "original",
+          "anchor_cause": "original",
+          "gist_facts_total": 1,
+          "gist_facts_present": 1,
+          "gist_precision": 1.0,
+          "detail_lemmas_total": 9,
+          "detail_lemmas_present": 9,
+          "detail_recall": 1.0,
+          "telling_entities": [
+            "ford"
+          ],
+          "fabricated_entities": [],
+          "fabrication_rate": 0.0,
+          "keyword_retention": 1.0,
+          "cache_bands": [],
+          "metrics_ms": 55.74,
+          "total_ms": 67.25
+        },
+        {
+          "memory_ref": 1,
+          "memory_id": "a792e01e-d034-44c7-9dc5-60c393e84639",
+          "agent_id": "f9e842f1-90bf-4599-af21-afae698e2b4f",
+          "live_detail_id": "1e1e9ca4-ab38-4776-a568-cd37ad33d55c",
+          "live_write_cause": "original",
+          "anchor_cause": "original",
+          "gist_facts_total": 1,
+          "gist_facts_present": 0,
+          "gist_precision": 0.0,
+          "detail_lemmas_total": 12,
+          "detail_lemmas_present": 12,
+          "detail_recall": 1.0,
+          "telling_entities": [
+            "Brandt"
+          ],
+          "fabricated_entities": [],
+          "fabrication_rate": 0.0,
+          "keyword_retention": 1.0,
+          "cache_bands": [],
+          "metrics_ms": 40.47,
+          "total_ms": 49.18
+        },
+        {
+          "memory_ref": 2,
+          "memory_id": "5b675c96-4641-45b1-ab8a-27bdb4a1c180",
+          "agent_id": "f9e842f1-90bf-4599-af21-afae698e2b4f",
+          "live_detail_id": "c1e3fa8b-be67-4cca-8c88-d9e0d20a68c2",
+          "live_write_cause": "original",
+          "anchor_cause": "original",
+          "gist_facts_total": 0,
+          "gist_facts_present": 0,
+          "gist_precision": null,
+          "detail_lemmas_total": 9,
+          "detail_lemmas_present": 9,
+          "detail_recall": 1.0,
+          "telling_entities": [],
+          "fabricated_entities": [],
+          "fabrication_rate": null,
+          "keyword_retention": null,
+          "cache_bands": [],
+          "metrics_ms": 37.54,
+          "total_ms": 46.17
+        }
+      ]
+    },
+    {
+      "scenario_id": "millers-correction",
+      "held_out": false,
+      "agent_id": "f8b0af7a-75d7-4e4a-b9a6-8b9ceca4fa69",
+      "event_counts": {
+        "as_of": 1,
+        "observe": 2,
+        "correct": 1,
+        "utterance": 1
+      },
+      "checks": [
+        {
+          "event_index": 4,
+          "passed": true,
+          "missing": [],
+          "unexpected": []
+        }
+      ],
+      "checks_passed": 1,
+      "checks_failed": 0,
+      "turns": 1,
+      "degraded_turns": 0,
+      "memories": [
+        {
+          "memory_ref": 0,
+          "memory_id": "7ca2272c-9ad6-4fd6-9597-569847e762ca",
+          "agent_id": "f8b0af7a-75d7-4e4a-b9a6-8b9ceca4fa69",
+          "live_detail_id": "75ce9026-5b8a-4bb6-bd48-a5c095c6215d",
+          "live_write_cause": "reconstruction",
+          "anchor_cause": "authorial_correction",
+          "gist_facts_total": 1,
+          "gist_facts_present": 1,
+          "gist_precision": 1.0,
+          "detail_lemmas_total": 0,
+          "detail_lemmas_present": 0,
+          "detail_recall": null,
+          "telling_entities": [
+            "Saint Anselm"
+          ],
+          "fabricated_entities": [],
+          "fabrication_rate": 0.0,
+          "keyword_retention": 0.5,
+          "cache_bands": [
+            3
+          ],
+          "metrics_ms": 30.28,
+          "total_ms": 41.28
+        },
+        {
+          "memory_ref": 1,
+          "memory_id": "234b65e0-66ab-4f06-908a-abe56275f532",
+          "agent_id": "f8b0af7a-75d7-4e4a-b9a6-8b9ceca4fa69",
+          "live_detail_id": "405f2194-3999-45a8-9de7-0e471e4244a6",
+          "live_write_cause": "original",
+          "anchor_cause": "original",
+          "gist_facts_total": 1,
+          "gist_facts_present": 1,
+          "gist_precision": 1.0,
+          "detail_lemmas_total": 8,
+          "detail_lemmas_present": 8,
+          "detail_recall": 1.0,
+          "telling_entities": [
+            "dyer",
+            "indigo"
+          ],
+          "fabricated_entities": [],
+          "fabrication_rate": 0.0,
+          "keyword_retention": 1.0,
+          "cache_bands": [],
+          "metrics_ms": 60.56,
+          "total_ms": 71.9
+        }
+      ]
+    },
+    {
+      "scenario_id": "frost-pin-and-decay",
+      "held_out": false,
+      "agent_id": "34909870-0ac5-43c0-b93d-b57caed0812c",
+      "event_counts": {
+        "as_of": 2,
+        "observe": 3,
+        "pin": 1,
+        "scene": 1,
+        "utterance": 1
+      },
+      "checks": [
+        {
+          "event_index": 7,
+          "passed": true,
+          "missing": [],
+          "unexpected": []
+        }
+      ],
+      "checks_passed": 1,
+      "checks_failed": 0,
+      "turns": 1,
+      "degraded_turns": 0,
+      "memories": [
+        {
+          "memory_ref": 0,
+          "memory_id": "27707b7c-5502-482c-8d41-8275daf887e3",
+          "agent_id": "34909870-0ac5-43c0-b93d-b57caed0812c",
+          "live_detail_id": "4d89282a-ab9b-4887-bb79-68be3192f6cf",
+          "live_write_cause": "original",
+          "anchor_cause": "original",
+          "gist_facts_total": 1,
+          "gist_facts_present": 1,
+          "gist_precision": 1.0,
+          "detail_lemmas_total": 12,
+          "detail_lemmas_present": 12,
+          "detail_recall": 1.0,
+          "telling_entities": [],
+          "fabricated_entities": [],
+          "fabrication_rate": null,
+          "keyword_retention": null,
+          "cache_bands": [],
+          "metrics_ms": 58.01,
+          "total_ms": 68.83
+        },
+        {
+          "memory_ref": 1,
+          "memory_id": "58e15b3d-b8e4-4b40-85d7-2c93764a8a95",
+          "agent_id": "34909870-0ac5-43c0-b93d-b57caed0812c",
+          "live_detail_id": "c8364f07-da6f-4e4e-be59-060e400b393c",
+          "live_write_cause": "reconstruction",
+          "anchor_cause": "original",
+          "gist_facts_total": 1,
+          "gist_facts_present": 1,
+          "gist_precision": 1.0,
+          "detail_lemmas_total": 9,
+          "detail_lemmas_present": 9,
+          "detail_recall": 1.0,
+          "telling_entities": [],
+          "fabricated_entities": [],
+          "fabrication_rate": null,
+          "keyword_retention": 1.0,
+          "cache_bands": [
+            3
+          ],
+          "metrics_ms": 56.24,
+          "total_ms": 67.15
+        },
+        {
+          "memory_ref": 2,
+          "memory_id": "1c5f78bb-9501-4bcc-bedb-96ac600b17bb",
+          "agent_id": "34909870-0ac5-43c0-b93d-b57caed0812c",
+          "live_detail_id": "38e92ec6-e268-48a1-a8a6-bf31ebe6364e",
+          "live_write_cause": "reconstruction",
+          "anchor_cause": "original",
+          "gist_facts_total": 0,
+          "gist_facts_present": 0,
+          "gist_precision": null,
+          "detail_lemmas_total": 9,
+          "detail_lemmas_present": 8,
+          "detail_recall": 0.8888888888888888,
+          "telling_entities": [
+            "miller"
+          ],
+          "fabricated_entities": [],
+          "fabrication_rate": 0.0,
+          "keyword_retention": 1.0,
+          "cache_bands": [
+            3
+          ],
+          "metrics_ms": 52.92,
+          "total_ms": 59.07
+        }
+      ]
+    },
+    {
+      "scenario_id": "market-context",
+      "held_out": false,
+      "agent_id": "3fa5586c-e05e-49de-a6ad-0459d4b8bdea",
+      "event_counts": {
+        "as_of": 1,
+        "observe": 2,
+        "context": 1,
+        "utterance": 2,
+        "scene": 1
+      },
+      "checks": [
+        {
+          "event_index": 4,
+          "passed": true,
+          "missing": [],
+          "unexpected": []
+        },
+        {
+          "event_index": 6,
+          "passed": true,
+          "missing": [],
+          "unexpected": []
+        }
+      ],
+      "checks_passed": 2,
+      "checks_failed": 0,
+      "turns": 2,
+      "degraded_turns": 0,
+      "memories": [
+        {
+          "memory_ref": 0,
+          "memory_id": "ed38a9e5-ceff-4283-9bb9-99477a7d78d7",
+          "agent_id": "3fa5586c-e05e-49de-a6ad-0459d4b8bdea",
+          "live_detail_id": "63f31265-fba0-43cf-8036-af5fdc8ac6c2",
+          "live_write_cause": "reconstruction",
+          "anchor_cause": "original",
+          "gist_facts_total": 0,
+          "gist_facts_present": 0,
+          "gist_precision": null,
+          "detail_lemmas_total": 12,
+          "detail_lemmas_present": 12,
+          "detail_recall": 1.0,
+          "telling_entities": [
+            "Maren"
+          ],
+          "fabricated_entities": [],
+          "fabrication_rate": 0.0,
+          "keyword_retention": 1.0,
+          "cache_bands": [
+            3
+          ],
+          "metrics_ms": 41.5,
+          "total_ms": 48.11
+        },
+        {
+          "memory_ref": 1,
+          "memory_id": "92e3b1bc-47ab-42d7-b9bb-0b5f86e2a3b0",
+          "agent_id": "3fa5586c-e05e-49de-a6ad-0459d4b8bdea",
+          "live_detail_id": "3c4b515e-bd40-4652-837c-fa3d2f996f60",
+          "live_write_cause": "original",
+          "anchor_cause": "original",
+          "gist_facts_total": 0,
+          "gist_facts_present": 0,
+          "gist_precision": null,
+          "detail_lemmas_total": 11,
+          "detail_lemmas_present": 11,
+          "detail_recall": 1.0,
+          "telling_entities": [
+            "Col"
+          ],
+          "fabricated_entities": [],
+          "fabrication_rate": 0.0,
+          "keyword_retention": 1.0,
+          "cache_bands": [],
+          "metrics_ms": 47.68,
+          "total_ms": 54.24
+        }
+      ]
+    }
+  ],
+  "turns": 6,
+  "observes": 10,
+  "degraded_turns": 0,
+  "write_backs": 4,
+  "drift_refusals": 0,
+  "cache_hits": 0,
+  "metrics_summary": {
+    "gist_precision": {
+      "mean": 0.8333,
+      "measured": 6,
+      "null": 4
+    },
+    "detail_recall": {
+      "mean": 0.9877,
+      "measured": 9,
+      "null": 1
+    },
+    "fabrication_rate": {
+      "mean": 0.0,
+      "measured": 7,
+      "null": 3
+    },
+    "keyword_retention": {
+      "mean": 0.9375,
+      "measured": 8,
+      "null": 2
+    },
+    "fabricated_entities_total": 0
+  },
+  "latency_ms": {
+    "perceived_first_word": {
+      "p50": 20.98,
+      "p95": 35.99
+    },
+    "turn_total": {
+      "p50": 21.3,
+      "p95": 36.6
+    }
+  },
+  "cost": {
+    "dialogue": {
+      "input_tokens": 636,
+      "output_tokens": 85,
+      "usd": 0.001061
+    },
+    "write": {
+      "input_tokens": 200,
+      "output_tokens": 200,
+      "usd": 0.0012
+    },
+    "escalation": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "usd": null
+    },
+    "reconstruction": {
+      "input_tokens": 868,
+      "output_tokens": 91,
+      "usd": 0.001323
+    },
+    "embedding": {
+      "tokens": 447,
+      "usd": 9e-06
+    }
+  },
+  "checks_passed_total": 6,
+  "checks_failed_total": 0,
+  "scenario_files": [
+    "data/eval/scenarios/smoke.jsonl"
+  ],
+  "database_name": "twicetold_eval_1"
+}

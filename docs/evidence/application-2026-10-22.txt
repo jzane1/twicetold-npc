@@ -1,0 +1,20 @@
+Created agent: 231a03c9-9f7c-4740-8a06-570f0cc7e056 (save this ID if local persistence fails)
+Agent: 231a03c9-9f7c-4740-8a06-570f0cc7e056
+Inspector: http://api:8000/ledger?agent=231a03c9-9f7c-4740-8a06-570f0cc7e056
+Application dialogue: fake. Memory-service provider mode is configured separately.
+The dialogue stub proves message plumbing only, not answer quality.
+Recorded memory: 6e46adb8-8971-4c8c-b1f6-9662e54abc9b (detail: 11588508-42ef-4c5d-891d-fed23e67efb0)
+[fake dialogue] What did the guest leave at the inn? (0 recent messages, 1 memory records)
+Recent messages sent: 0; retained turns: 1
+  6e46adb8-8971-4c8c-b1f6-9662e54abc9b | verbatim | score=0.1058 | sent_to_model=True
+Retrieval 34ms; dialogue 0ms; model usage: {}
+[fake dialogue] Where was it left? (2 recent messages, 1 memory records)
+Recent messages sent: 2; retained turns: 2
+  6e46adb8-8971-4c8c-b1f6-9662e54abc9b | verbatim | score=0.0951 | sent_to_model=True
+Retrieval 14ms; dialogue 0ms; model usage: {}
+Corrected memory: 6e46adb8-8971-4c8c-b1f6-9662e54abc9b; recent conversation cleared.
+[fake dialogue] What did the guest leave at the inn? (0 recent messages, 1 memory records)
+Recent messages sent: 0; retained turns: 1
+  6e46adb8-8971-4c8c-b1f6-9662e54abc9b | verbatim | score=0.1031 | sent_to_model=True
+Retrieval 15ms; dialogue 0ms; model usage: {}
+PASS application integration: replay, follow-up context, correction and scene reset.

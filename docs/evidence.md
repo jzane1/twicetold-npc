@@ -14,6 +14,14 @@ claim. The operating contract is in [deployment](deployment.md).
 | [October 19 real-provider walkthrough](verification/reference-real-2026-10-19.txt) | Successful observed/fresh/aged/pinned/cache/dialogue/correction lifecycle on revision `a4c2f02d2874e4e711803ffeaaeaecfb35183b8c` | A live recheck of later revisions or judged factual correctness |
 | [September 28 rehearsal examples](evidence/rehearsals-2026-09-28.json) | Unedited target-memory timelines from one accepted and one rejected real-model take, with source, gist spans, IDs and qualitative notes | A random sample, a success rate, or an exactly reproducible benchmark: original Git/embedding configuration was not captured |
 
+The clean run tested **`32f4dd156dfb4a186be470d02f723d4851726203`** with no working-tree changes.
+The smoke scenario checks passed 6/6; all 394 tests passed with zero skips. Preserved console output:
+[first-run demo](evidence/first-run-2026-10-22.txt),
+[application integration](evidence/application-2026-10-22.txt), and
+[resolved dependencies](evidence/dependencies-2026-10-22.txt).
+The filename date uses America/Los_Angeles; machine timestamps are UTC. Inspector URLs in the
+console transcripts belong to ephemeral containers; this verification project publishes no host port.
+
 The current record identifies the implementation commit tested; its companion evidence commit only
 publishes the results. The full verification directory also retains the dependency resolution,
 image IDs, logs, pytest XML and demo dump. The committed JSON files are compact extracts; the

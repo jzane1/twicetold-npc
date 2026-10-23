@@ -1,0 +1,41 @@
+First-run demo: fake providers. Deterministic plumbing check; no remote model calls.
+Agent: ab465312-a021-44c5-b5d6-9015f78b2c52
+Inspector: http://127.0.0.1:8001/ledger?agent=ab465312-a021-44c5-b5d6-9015f78b2c52
+Recorded memory: 3657bf13-8761-4bf5-b7b7-f1530f61214e
+Recorded memory: 6a9319a7-bbbe-4b96-a182-c210117f9286
+PASS agent and two observations created without degradation
+
+fresh (2026-10-23T00:05:42+00:00):
+  3657bf13-8761-4bf5-b7b7-f1530f61214e | verbatim | score=0.276563 | pinned=False
+  [fake render] Mara returned my lost ledger at the Waystone Inn. She found it beside the well and kept every page dry. I thanked her and promised to help repair her market stall. Rain tapped the green shutters while a fiddler played near the fireplace. My tea had gone cold and three copper coins lay on the table. I left feeling grateful that a neighbor had looked out for me.
+  6a9319a7-bbbe-4b96-a182-c210117f9286 | verbatim | score=0.103278 | pinned=True
+  [fake render] Mara runs the market stall beside the Waystone Inn. We agreed to meet there on market mornings.
+PASS fresh recall serves stored tellings with IDs and scores
+
+aged (2026-10-30T00:05:42+00:00):
+  6a9319a7-bbbe-4b96-a182-c210117f9286 | verbatim | score=0.103278 | pinned=True
+  [fake render] Mara runs the market stall beside the Waystone Inn. We agreed to meet there on market mornings.
+  3657bf13-8761-4bf5-b7b7-f1530f61214e | reconstructed | score=0.004083 | pinned=False
+  [fake render] Mara returned my lost ledger at the Waystone Inn. She found it beside the well and kept every page dry. I thanked her and promised to help repair her market stall. Rain tapped the green shutters while a fiddler played near the fireplace. My tea had gone cold and three copper coins lay on the table. I left feeling grateful that a neighbor had looked out for me. [retold 484f72e3]
+PASS seven days later: reconstruction persisted; pinned memory stays verbatim
+
+repeat (2026-10-30T00:05:42+00:00):
+  6a9319a7-bbbe-4b96-a182-c210117f9286 | verbatim | score=0.103278 | pinned=True
+  [fake render] Mara runs the market stall beside the Waystone Inn. We agreed to meet there on market mornings.
+  3657bf13-8761-4bf5-b7b7-f1530f61214e | reconstructed | score=0.004083 | pinned=False
+  [fake render] Mara returned my lost ledger at the Waystone Inn. She found it beside the well and kept every page dry. I thanked her and promised to help repair her market stall. Rain tapped the green shutters while a fiddler played near the fireplace. My tea had gone cold and three copper coins lay on the table. I left feeling grateful that a neighbor had looked out for me. [retold 484f72e3]
+PASS same scene returns identical stored tellings from cache
+
+Dialogue: [fake dialogue] What do I remember about Mara, my lost ledger, and the Waystone Inn?
+PASS dialogue uses the recalled memories
+
+corrected (2026-10-30T00:05:44+00:00):
+  6a9319a7-bbbe-4b96-a182-c210117f9286 | verbatim | score=0.103278 | pinned=True
+  [fake render] Mara runs the market stall beside the Waystone Inn. We agreed to meet there on market mornings.
+  3657bf13-8761-4bf5-b7b7-f1530f61214e | reconstructed | score=0.004573 | pinned=False
+  Mara returned my lost ledger at the Waystone Inn. She found it in the market, not beside the well. I thanked her and promised to help repair her market stall. [retold 16837395]
+PASS correction replaces the fact head; subsequent recall serves the new chain; history survives
+
+PASS first-run demo (fake)
+Inspector: http://127.0.0.1:8001/ledger?agent=ab465312-a021-44c5-b5d6-9015f78b2c52&memory=3657bf13-8761-4bf5-b7b7-f1530f61214e
+Token usage (fake counts are synthetic): {"embedding_tokens": 180, "escalation_input_tokens": 0, "escalation_output_tokens": 0, "haiku_input_tokens": 85, "haiku_output_tokens": 85, "reconstruction_embed_tokens": 204, "reconstruction_input_tokens": 641, "reconstruction_output_tokens": 104, "sonnet_input_tokens": 151, "sonnet_output_tokens": 15}
