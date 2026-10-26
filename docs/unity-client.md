@@ -1,5 +1,7 @@
 # twicetold-npc: Unity client
 
+[All guides](README.md) | [First NPC sample](first-npc.md) | [Python integration](python-integration.md)
+
 The client side of twicetold-npc ships in four parts:
 
 1. **`NpcMemory.Core`**, an engine-agnostic .NET class library: HTTP + JSON plus `NpcSession`, the
@@ -7,15 +9,15 @@ The client side of twicetold-npc ships in four parts:
    abstraction ceremony.
 2. **A `dotnet run` console harness** that drives the core through every integration beat headless
    against a live backend. It is the wire-contract go/no-go, provable without opening Unity.
-3. **A Unity adapter plus a gray-box reference scene**: a thin MonoBehaviour wrapper over the core,
-   plus one room, an NPC with a nameplate, and dialogue text on screen. No navmesh, no animation, no
-   art on the critical path.
+3. **A Unity adapter and starter sample**: a thin MonoBehaviour wrapper over the core, readiness
+   and failure handling, and a minimal dialogue UI. The gray-box `SampleScene` remains a development
+   rig; the optional [village recording](../data/demo/README.md) is a separate demonstration.
 4. **The Ledger**, a browser page (not Unity UI) that shows ground truth beside the character's
    telling.
 
 The client ships as an embedded Unity package at `unity\Packages\com.jacksonzane.twicetold-npc\`
-(`Runtime\Core` the engine-agnostic core, `Runtime\` the adapter). `first-npc.md` is the starter
-integration; `shipping.md` is the hosting and platform guide.
+(`Runtime\Core` the engine-agnostic core, `Runtime\` the adapter). [Your first NPC](first-npc.md)
+is the starter integration; [shipping](shipping.md) is the game-hosting and platform guide.
 
 ## Principles
 

@@ -1,5 +1,7 @@
 # Connect your application to memory
 
+[All guides](README.md) | [First-run demo](first-run.md) | [Deployment](deployment.md)
+
 This example puts an application-owned conversation in front of the memory service. It uses
 only public HTTP routes and `httpx`; it does not import the backend, load NLP models, or connect
 to Postgres. Your application chooses what to remember and supplies its own dialogue model.
@@ -31,15 +33,30 @@ The following host-based path retains the agent ID and pending observations acro
 
 ## Use the interactive application
 
-Keep the demo service running. With Python installed, these are the only client dependencies;
+Run from the repository root. With Python installed, install the client dependency;
 the backend requirements are unnecessary for this client:
 
 ```powershell
 python -m pip install -r examples\requirements.txt
+```
+
+Choose the service you already started. For the fake demo, keep it running and use the default
+endpoint, `http://127.0.0.1:8001`:
+
+```powershell
 python -m examples.chat
 ```
 
-Run from the repository root. The default endpoint is `http://127.0.0.1:8001`. Try:
+If you started the ordinary backend from the root README or [setup](SETUP.md), connect to
+port 8000 with a separate state file instead:
+
+```powershell
+python -m examples.chat --base-url http://127.0.0.1:8000 --state data\integration-example\service.json
+```
+
+The real-provider demo uses port 8002; its command is in [Connect a real dialogue model](#connect-a-real-dialogue-model).
+See [the connection table](SETUP.md#which-service-to-connect-to) for all three stacks.
+Once connected, try:
 
 ```text
 /observe The guest left a blue suitcase at the Waystone Inn.
@@ -193,7 +210,7 @@ security boundary.
   memories, because purge removes their idempotency receipts. Keep state files private.
 
 This is a local integration path. Network deployment still needs the authentication and access
-controls described in [setup](SETUP.md); the service does not enforce application user isolation.
+controls described in [deployment](deployment.md); the service does not enforce application user isolation.
 The [Unity first-NPC sample](first-npc.md) remains the game-client path, including readiness,
 first-scene initialization, cancellation and visible failures.
 

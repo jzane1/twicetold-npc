@@ -181,9 +181,12 @@ The entity and topic index: gist matching plus the entity-gate tripwire.
   live fact heads, architecture.md §6); 005 (the `memories.escalation_failed` soft-degrade flag, now
   retired and always false); 006 (deferred-write columns plus `memory_enrichment_runs`,
   [deferred-writes.md](deferred-writes.md)); 007 (`reflection_runs`, [reflection.md](reflection.md));
-  008 (`compiled_bundles` plus `compiler_runs`, [parameter-compiler.md](parameter-compiler.md)); and
+  008 (`compiled_bundles` plus `compiler_runs`, [parameter-compiler.md](parameter-compiler.md));
   009 (`memory_gist_spans.is_gist`, splitting the minimal gist from component evidence,
-  architecture.md §4.1).
+  [architecture §4.1](architecture.md#41-gist-and-detail)); 010 (`embedding_space`, the database-wide
+  [embedding binding](SETUP.md#changing-providers-safely)); and 011 (`observation_receipts`,
+  [keyed observation retries](first-npc.md#7-retrying-an-observation-safely)). Read the
+  [numbered SQL files](../db/migrations/) for the current schema.
 - Docker: `pgvector/pgvector` for Postgres 16, with the connection string from `.env`.
 
 ## Verification

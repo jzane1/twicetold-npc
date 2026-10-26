@@ -1,55 +1,67 @@
 # twicetold-npc — setup
 
-From a fresh clone to a running system. **Windows 11 / PowerShell**; every command below is
-PowerShell with backslash paths throughout (a project rule, not a preference).
+[All guides](README.md) | [First-run demo](first-run.md) | [Python integration](python-integration.md)
 
-Written 2026-07-28. Before it existed, the bring-up path lived only inside `requirements.txt`'s
-header comment and scattered session-log entries, and `docker compose up` appeared in no document
-at all. If you change how the project starts, change it here.
+This page covers a persistent backend, provider configuration, diagnostics, and host development.
+Commands use **PowerShell**; Docker runs Linux containers. Choose the path that matches your goal:
 
----
+| Goal | Start with | Prerequisites |
+| --- | --- | --- |
+| Try the complete lifecycle | [First-run Compose demo](first-run.md) | Docker; no host Python, Unity, or keys for the fake path |
+| Connect your application | [Python integration](python-integration.md) | Docker for its demo; Python and `httpx` for the interactive host client |
+| Add the Unity client | [Your first NPC](first-npc.md) | A running backend and Unity |
+| Operate a persistent service | [Deployment](deployment.md) and the Compose setup below | Docker and application-owned access controls |
+| Check a checkout | [Verification](verification.md) | Docker and PowerShell 7; the pinned .NET SDK for separate C# checks |
+
+After the demo, [the evidence guide](evidence.md) explains what the checks and model examples prove.
+The host installation sections are for backend development; the Python client does not need the
+backend's NLP dependencies.
+
+## Which service to connect to
+
+| Stack | Compose files | API URL from your host | Configuration |
+| --- | --- | --- | --- |
+| Keyless first-run / application demo | `compose.demo.yml` | `http://127.0.0.1:8001` | `.env.example`, forced fake mode, isolated demo database |
+| Real-provider first-run demo | `compose.demo.yml` + `compose.demo-real.yml` | `http://127.0.0.1:8002` | `.env` providers, forced real mode, separate demo database |
+| Persistent backend | `docker-compose.yml` | `http://127.0.0.1:8000` | `.env`, your chosen provider mode and database |
+
+These are separate stores: an agent UUID from one will not exist in another. The Python client
+defaults to port 8001; [connecting to the persistent backend](python-integration.md#use-the-interactive-application)
+requires `--base-url http://127.0.0.1:8000` and a separate state file. Inside a demo container,
+use `http://api:8000` for that project's API instead of a host URL. Keep state files tied to
+one agent and API origin. Fake and real embeddings cannot share a bound database; see
+[changing providers safely](#changing-providers-safely).
 
 ## The one-command backend (compose)
 
-For a complete executable trial, start with [the first-run Compose demo](first-run.md).
-It provisions an isolated database, exercises the HTTP API from ingestion through reconstruction
-and correction, and prints a populated inspector link. Both fake and real-provider paths are included.
-
-To connect your own application's conversation and dialogue model, continue with the
-[standalone Python integration](python-integration.md). Its client needs only `httpx` and includes
-an executable demo, bounded recent chat, persistent agent identity and safe observation retries.
-
-[Clean-checkout verification](verification.md) runs the build, migrations, tests and both examples
-in an isolated stack. It also describes the separate C# checks and recorded real-provider run.
-
-For a persistent service, read [deployment](deployment.md): one private API process per database,
-readiness checks, worker/concurrency limits and backup/restore. [Evidence](evidence.md) contains
-reproducible checks, representative model outputs and explicit quality limitations.
-
-The fastest path to a running backend, and the one an integrator should use, is docker compose.
-It needs only Docker Desktop, no host Python:
+Use this stack for a persistent service with your own configuration. For an automatically
+populated trial, use [the first-run demo](first-run.md) instead. Both paths need Docker only:
 
 ```powershell
-Copy-Item .env.example .env    # then edit it, or keep the fake-mode defaults
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+# Edit .env for this database, or keep the fake-mode defaults for a new store.
 docker compose up -d --build
 ```
 
 This builds the API image, starts Postgres with pgvector, runs migrations 001 through 011 as a
 one-shot `migrate` service, and starts the API, in dependency order. `docker compose ps` shows
 progress; the `api` service reports `healthy` after its pipelines warm and database/schema/embedding
-and worker readiness checks pass, within about a
-minute of a cached `up`. The first build is a one-time few minutes (the image is about 4.9 GB on
-disk, 1.7 GB to pull; the fastcoref weights are baked in, so a cold container needs no network).
-Then open `http://127.0.0.1:8000/ledger` (The Ledger) or `/docs` (the OpenAPI surface). Both
+and worker readiness checks pass. The first build downloads large Python/NLP dependencies and
+model weights; allow several minutes and several GB of disk space. Later builds reuse cached
+layers. NLP assets are baked into the image, so runtime NLP needs no downloads.
+Then open [The Ledger](http://127.0.0.1:8000/ledger) or [the API docs](http://127.0.0.1:8000/docs). Both
 published ports, Postgres 5432 and the API 8000, bind `127.0.0.1` only.
+
+This starts an empty service. Provision an agent through [the Python client](python-integration.md#use-the-interactive-application)
+or [the Unity guide](first-npc.md) before expecting memories in the Ledger.
 
 If `up` fails at once on the `api` mount, you skipped `Copy-Item .env.example .env`: the API
 reads `.env` from a read-only bind mount and compose refuses to invent it. Provider mode, real
 keys, and the OpenAI-compatible backend are all configured through that same `.env`, exactly as
 in the numbered sections below. Teardown is under [Teardown](#teardown) at the end.
 
-**The numbered installation steps below describe the bare-metal dev path** (host Python running
-the app directly). Provider settings apply to both paths; section 4b includes the Compose-specific
+**Sections 0–5 below describe the host development path** (Python running the backend directly).
+Provider settings apply to both paths; [section 4b](#4b-self-hosted--openai-compatible-servers-the-provider-path-2026-09-02) includes the Compose-specific
 host address. For host development, `docker compose up -d db`
 brings up just the database and you run `python -m app.serve` on the host beside it. Do not run
 the full compose stack and a host `python -m app.serve` at once: they both bind port 8000 and
@@ -171,7 +183,7 @@ bare-metal dev path and the C# and Unity clients:
 |---|---|---|
 | Python | 3.14, on PATH | global install, not a venv — the project assumes this |
 | Docker Desktop | current | must be *running*, not just installed |
-| .NET SDK | 8.0+ | only for the C# client and console harness |
+| .NET SDK | 8.0.423 | pinned by [global.json](../global.json); only for the C# tools and checks |
 | Unity | 6.x | only for the demo scene |
 
 Check:
@@ -194,16 +206,16 @@ installed for the Postgres MCP) and fails outside a venv. `en_core_web_lg` is th
 `en_core_web_sm` is fastcoref's internal tokenizer and is required even though nothing calls it
 directly.
 
-The first observe in a process pays a multi-minute lazy load of spaCy + fastcoref. That is
-expected, and it is why the test suite marks those scenarios `nlp` and the turn-end hook skips
-them.
+The API warms spaCy and fastcoref during startup, before readiness succeeds. The host REPL and
+some direct service tests load them on first use instead; those tests carry the `nlp` marker.
+Initial model loading can take several minutes.
 
 ---
 
 ## 2. Environment file
 
 ```powershell
-Copy-Item .env.example .env
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
 Then edit `.env`. The template documents every key. A few things that have actually caused
@@ -251,12 +263,12 @@ Apply the schema:
 python db\migrate.py
 ```
 
-First run applies migrations 001–009 and records each in `schema_migrations` **in the same
+First run applies migrations 001–011 and records each in `schema_migrations` **in the same
 transaction as its DDL** — a half-applied migration can never be logged complete. Re-running is a
 clean no-op:
 
 ```
-Up to date: 8 migration(s) applied, 0 pending.
+Up to date: 11 migration(s) applied, 0 pending.
 ```
 
 Point it elsewhere with `--database-uri <uri>` (this is how the fixtures migrate scratch
@@ -275,9 +287,9 @@ python -m app.serve
 
 Useful once it is up:
 
-- `http://127.0.0.1:8000/docs` — the generated OpenAPI surface (sixteen routes; `/ledger` and
-  `/v1/ledger/turns` are deliberately `include_in_schema=False`)
-- `http://127.0.0.1:8000/ledger` — **The Ledger**, the browser inspector. Paste an agent UUID to
+- [API docs](http://127.0.0.1:8000/docs): the generated OpenAPI surface, including health checks.
+  `/ledger` and `/v1/ledger/turns` are deliberately excluded from that schema.
+- [The Ledger](http://127.0.0.1:8000/ledger): paste an agent UUID to
   see its memories, and click one to see the immutable observation beside both version chains
   with superseded rows greyed but present.
 
@@ -326,7 +338,7 @@ This listens beyond loopback; restrict inbound port 11434 with the host firewall
 local/Docker clients. Keep this window open. For host Python only, use the same start procedure
 with `$env:OLLAMA_HOST = "127.0.0.1:11434"` so the context setting reaches the server process.
 After changing `.env`, restart the API (`docker compose restart api` or restart the host process),
-then run the doctor with `--probe-providers`. If the database already contains fake embeddings,
+then run the doctor with `--probe-providers`. If the database is already bound to fake mode,
 follow [Changing providers safely](#changing-providers-safely) first. Startup rejects a mismatched
 binding instead of silently mixing the vectors.
 
@@ -372,10 +384,10 @@ reflection, compiler) are the most exposed to a weak model.
 
 ## 5. Drive it from the REPL
 
-Provision an agent (`POST /v1/agents`), then:
+Provision an agent (`POST /v1/agents`), then replace the UUID placeholder below:
 
 ```powershell
-python -m app.cli --agent <agent-uuid> --debug
+python -m app.cli --agent "<agent-uuid>" --debug
 ```
 
 `--debug` is the point: it prints retrieved memory IDs, scores, `read_mode`, gate decisions,
@@ -392,16 +404,21 @@ python -m app.load_driver
 
 ## 6. Tests
 
-Two systems, deliberately distinct — see `docs\README.md` for what each is for.
+For the complete Docker-based check, use [clean-checkout verification](verification.md). It runs
+the build, migrations, full suite, both examples, smoke evaluation, and recovery/restore checks.
 
-**The suite** (228 scenarios, self-managing scratch DB, no arguments needed):
+**The host suite** creates and drops its own scratch database. It needs the backend dependencies
+and a Postgres role with database-creation privileges. Use required-database mode:
 
 ```powershell
-python -m pytest tests -q
-python -m pytest tests -q -m "not nlp"   # 213, the turn-end subset — seconds, not minutes
+python -m pytest tests --require-db -q
+python -m pytest tests --require-db -q -m "not nlp"   # faster structural subset
 ```
 
-Postgres unreachable ⇒ every scenario skips loudly and the run exits green, by ruling.
+Missing Postgres fails these commands; `CI=true` also enables required-database mode. Outside CI,
+omitting `--require-db` allows unavailable database cases to warn and skip. Such a run is not a
+passing backend verification. [The suite guide](test-suite.md) has the current coverage/counts;
+[verification](verification.md#database-tests-cannot-silently-pass-without-postgres) explains the policy.
 
 **The walkers** (sixteen structural done-when scripts) need a scratch DB you create yourself:
 
@@ -445,6 +462,11 @@ python -m ruff check .
 
 ## 7. The C# client
 
+Use the SDK pinned in [global.json](../global.json). Start with the independent
+[C# contract checks](verification.md#check-the-c-integration-separately) to compile the core,
+adapter, and starter sample and exercise loopback HTTP without a running backend.
+For the live-backend harness, build:
+
 ```powershell
 dotnet build client\NpcMemory.Core\NpcMemory.Core.csproj -c Release
 dotnet build client\NpcMemory.Harness\NpcMemory.Harness.csproj
@@ -457,10 +479,8 @@ interop gate. With the service up on a scratch database:
 dotnet run --project client\NpcMemory.Harness -- --base-url http://127.0.0.1:8000
 ```
 
-It provisions its own agent and ends with `ALL HARNESS BEATS PASSED (N checks)` — the count
-grows with each client build, so trust the line, not a number here (this sentence pinned "32"
-while the gate stood at 36, its second rot; reworded 2026-08-17). Point it
-at a scratch DB, not the product one — it writes.
+It provisions its own agent and ends with `ALL HARNESS BEATS PASSED (N checks)`.
+Use a scratch database: this harness writes observations and corrections.
 
 ### The Unity client is source, not a DLL
 
@@ -484,9 +504,11 @@ Newtonsoft.Json.
 `Assets/Scenes/VillageScene.unity` is the only scene in player Build Settings. It is the
 playable low-poly village presentation: five dressed skinned Humanoids, the replayable
 forgotten-gold event, and stable dialogue/observation anchors for Henry and Joan. Open that
-scene for presentation work. The scene deliberately has no direct backend transport; its
-integration seam, stable IDs, callbacks, and hand/socket anchors are documented in
-`unity/Assets/Scripts/Village/NPC_INTEGRATION.md`.
+scene for presentation work. For its real-provider recording, follow [the village reproduction
+guide](../data/demo/README.md). `VillageDemoBackend` attaches when that guide's local session
+manifest exists and connects the scene callbacks to the provisioned witnesses. The underlying
+[scene integration seam](../unity/Assets/Scripts/Village/NPC_INTEGRATION.md) defines stable IDs,
+callbacks, and hand/socket anchors. This Unity workflow is optional for backend or Python use.
 
 `SampleScene` remains on disk only as the old adapter/dev-tool rig. It is not a source of
 VillageScene content and is not in Build Settings. If the embedded client package needs a

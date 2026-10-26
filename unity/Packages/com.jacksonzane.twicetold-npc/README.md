@@ -5,10 +5,14 @@ self-hosted backend. This package carries the engine-agnostic core
 (`NpcMemoryClient`, `NpcSession`, the wire models) and a thin MonoBehaviour
 adapter (`NpcMemoryNpc`).
 
+Start with the [keyless backend demo](https://github.com/jzane1/twicetold-npc/blob/main/docs/first-run.md),
+then follow [your first NPC](https://github.com/jzane1/twicetold-npc/blob/main/docs/first-npc.md).
+For an application that owns its dialogue model, use the
+[Python integration](https://github.com/jzane1/twicetold-npc/blob/main/docs/python-integration.md).
+
 ## Install
 
-- Package Manager, Install package from git URL (once the repository is public;
-  the `?path=` segment uses forward slashes):
+- Package Manager, Install package from git URL (the `?path=` segment uses forward slashes):
 
   ```
   https://github.com/jzane1/twicetold-npc.git?path=unity/Packages/com.jacksonzane.twicetold-npc
@@ -23,11 +27,12 @@ dependency. Never add your own Newtonsoft DLL beside it.
 ## The four calls, in order
 
 1. Create the agent and keep the UUID: it is the character.
-2. `ObserveAndForget` from gameplay; dialogue never blocks on a write.
+2. Await `ReadyTask` on the adapter (or `InitializeAsync` on the core session), then call
+   `ObserveAndForget` from gameplay; dialogue never blocks on a write.
 3. `SayStreamAsync` to talk; the result carries the memory IDs and scores.
 4. `DrainObservesAsync`, then `SceneBoundaryAsync`, at the scene edge.
 
-`docs/first-npc.md` in the repository is the full walk. The First NPC sample in
+[Your first NPC](https://github.com/jzane1/twicetold-npc/blob/main/docs/first-npc.md) is the full walk. The First NPC sample in
 the Package Manager window mirrors it and ships the `link.xml` that IL2CPP
 builds need.
 

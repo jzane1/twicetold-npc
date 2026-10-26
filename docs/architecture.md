@@ -1,8 +1,12 @@
 # twicetold-npc: Architecture
 
-This is the design truth: what each layer does and why. The first schema is specced in
-`migration-01.md`; test discipline is in `test-suite.md`; the integrator-facing guides are
-`first-npc.md`, `shipping.md`, and `identity-authoring.md`.
+[All guides](README.md) | [First-run demo](first-run.md) | [Python integration](python-integration.md)
+
+This is the design reference: what each layer does and why. Start with [the demo](first-run.md)
+and [application integration](python-integration.md) to use the system. The [foundational
+schema](migration-01.md) covers migration 001; [test discipline](test-suite.md) explains the
+checks. Game-specific guides cover [the Unity client](first-npc.md), [shipping](shipping.md),
+and [identity authoring](identity-authoring.md).
 
 ## 1. What this is
 

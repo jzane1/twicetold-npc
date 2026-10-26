@@ -1,5 +1,7 @@
 # Verify a clean checkout
 
+[All guides](README.md) | [First-run demo](first-run.md) | [Python integration](python-integration.md)
+
 The [GitHub Actions workflow](../.github/workflows/verify.yml) runs on pushes, pull requests and
 manual dispatch. It requires no repository secrets and makes no paid model calls. The backend
 job uses Ubuntu 24.04 and the repository's Dockerfile; independent C# jobs use Ubuntu 24.04 and

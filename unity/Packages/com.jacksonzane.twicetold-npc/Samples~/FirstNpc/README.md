@@ -1,7 +1,7 @@
 # First NPC sample
 
-The thirty-line integration from docs/first-npc.md in the repository, plus the
-smallest possible DialogueBox so it compiles out of the box.
+The starter integration from [your first NPC](https://github.com/jzane1/twicetold-npc/blob/main/docs/first-npc.md),
+including readiness and failure handling, plus a minimal DialogueBox so it compiles out of the box.
 
 - `TavernScene.cs` is verbatim from docs/first-npc.md. That page is the
   contract; keep the two in step.

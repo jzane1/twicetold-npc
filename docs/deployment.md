@@ -1,5 +1,7 @@
 # Run a private memory service
 
+[All guides](README.md) | [Setup](SETUP.md) | [Python integration](python-integration.md)
+
 The supported starting topology is **one application server → one private memory API process
 → one PostgreSQL 16/pgvector database and the configured model providers**. Run the application
 server on the same host as the ordinary Compose stack. It calls `http://127.0.0.1:8000`;

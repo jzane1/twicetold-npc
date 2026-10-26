@@ -22,7 +22,7 @@
   "samples": [
     {
       "displayName": "First NPC",
-      "description": "The thirty-line integration from docs/first-npc.md, plus the link.xml that IL2CPP builds need.",
+      "description": "The starter integration from docs/first-npc.md, including readiness and failure handling, plus the link.xml that IL2CPP builds need.",
       "path": "Samples~/FirstNpc"
     }
   ]

@@ -1,5 +1,10 @@
 # Village demo
 
+[All guides](../../docs/README.md) | [First-run demo](../../docs/first-run.md) | [Python integration](../../docs/python-integration.md)
+
+This is the optional Unity recording workflow with real providers. To evaluate the backend first,
+use [the keyless Compose walkthrough](../../docs/first-run.md); it needs no Unity or host Python.
+
 The recording uses real model output, two authored identities, and one shared event.
 The canonical event is `village-event.json`; both village corpora end with that exact text.
 
@@ -67,13 +72,17 @@ the recorded C# stream at its original chunk timings in an editorial overlay.
 Backend verification: 232 tests passed, the affected write/reconstruction/deferred/provider
 walkers passed, and the C# harness passed all 53 checks. Model prose was reviewed separately.
 
+Those are the September recording results. See [current verification](../../docs/verification.md)
+and [the evidence bundle](../../docs/evidence.md) for the later integration and deployment checks.
+
 ## Build the review cut
 
 Install Pillow for the editing script and make ffmpeg available. The script uses Windows
-Segoe UI fonts. With the selected run's portraits, Ledger captures, and stream trace saved:
+Segoe UI fonts. With the selected run's portraits, Ledger captures, and stream trace saved,
+replace the three path placeholders below:
 
 ```powershell
-python data\demo\build_video.py --take data\demo\runs\<selected-take> --event-video <event-capture.mp4> --ffmpeg <ffmpeg.exe>
+python data\demo\build_video.py --take "data\demo\runs\<selected-take>" --event-video "<event-capture.mp4>" --ffmpeg "<ffmpeg.exe>"
 ```
 
 It writes a 116-second 1080p review cut, SRT/ASS captions, and a provenance manifest under

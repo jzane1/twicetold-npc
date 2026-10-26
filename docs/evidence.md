@@ -1,5 +1,7 @@
 # Assess the system before integrating it
 
+[All guides](README.md) | [Repeat the checks](verification.md)
+
 Start with the [keyless Compose demo](first-run.md), then [connect an application](python-integration.md).
 This bundle gives an evaluator inspectable results, commands to repeat them, and the limits of each
 claim. The operating contract is in [deployment](deployment.md).

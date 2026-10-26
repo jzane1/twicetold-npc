@@ -1,5 +1,10 @@
 # Village NPC integration seam
 
+For the complete recording, follow [the village demo guide](../../../../data/demo/README.md).
+The separate [VillageDemoBackend](../VillageDemoBackend.cs) attaches to this seam when the
+local session manifest exists. For a backend-only trial, start with
+[the first-run Compose demo](../../../../docs/first-run.md).
+
 `VillageScene` creates its five characters during `VillageSceneBootstrap.Awake`. Backend adapters
 should discover them in `Start` (or later) through `VillageNpcAnchor`; the scene has no dependency on
 the NPC package or on `SampleScene`.

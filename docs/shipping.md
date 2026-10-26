@@ -1,5 +1,7 @@
 # Shipping a game with this
 
+[All guides](README.md) | [First-run demo](first-run.md) | [Deployment](deployment.md)
+
 This is the page I'd have wanted before adopting anything like this: who hosts it, who pays,
 what it costs per player, what Steam asks, and what is deliberately not included. None of it
 is hidden in the code; all of it was inferable from four files, and inferable isn't a plan.
@@ -14,7 +16,8 @@ The service runs on a machine you control, with Postgres beside it. Your game ta
 it, and it talks to whatever model provider you configured. One service serves as many
 agents within your measured workload; the agent UUID is the integration unit. Multiple API/worker
 processes against one database are outside the supported deployment boundary. The Unity client is an embedded Unity package (`NpcMemory.Core`, netstandard2.1,
-shipped as source) plus a MonoBehaviour adapter; `first-npc.md` is the thirty lines.
+shipped as source) plus a MonoBehaviour adapter; [your first NPC](first-npc.md) is the starter
+integration with readiness and failure handling.
 
 ## Who pays, and how much
 
