@@ -3,7 +3,9 @@
 Plainly put:
 
 This project is a long-term memory backend that attaches onto NPC agents in simulated worlds such as video games. It builds on the well-trodden LLM + memory-database architecture by introducing new methods aimed at increasing believability through deliberately biased memories and tellings. It's primarily made from a PostgreSQL/pgvector database of memories + self-hosted FastAPI to communicate with LLM APIs + a Unity C# client. 
-As I've seen it, a large number of projects and products that pursue believable agents in narrative worlds, neglect design choices that would decrease objective truthfulness. Surely an honest goal, but one that omits aspects of making interactions believable, such as when many people witness the same event but tell it differently. I introduce 'identity conditioned retelling' to address this in which memories are largely reconstructed based on the agent's identity in proportion to variables such as time passed and importance of the original memory. 
+As I've seen it, a large number of projects and products that pursue believable agents in narrative worlds, neglect design choices that would decrease objective truthfulness. Surely an honest goal, but one that omits aspects of making interactions believable, such as when many people witness the same event but tell it differently. 
+
+Thesis: I introduce 'identity conditioned retelling' to address this in which memories are largely reconstructed based on the agent's identity in proportion to variables such as time passed and importance of the original memory. 
 
 Other components: compounding drift over many retellings, an LLM evaluator of quality, an immutable bi-temporal record underneath, only fetching new memories once given new information, etc.
 
